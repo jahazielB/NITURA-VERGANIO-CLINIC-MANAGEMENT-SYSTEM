@@ -10,10 +10,10 @@ import AddIcon from "@mui/icons-material/Add";
 
 export default function PatientHeaderCard({ patient, onAddVisit }) {
   return (
-    <Card className="rounded-2xl shadow-2xl">
-      <CardContent>
-        <Box className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <Box className="flex items-start gap-4">
+    <Card className="rounded-2xl shadow-2xl ">
+      <CardContent className="bg-slate-200 ">
+        <Box className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 ">
+          <Box className="flex items-start gap-4 ">
             <Avatar
               variant="rounded"
               sx={{ width: 110, height: 110 }}

@@ -13,8 +13,11 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
+import { useState } from "react";
+import VisitDetailsModal from "./modals/VisitDetailsModal";
 
 export default function VisitHistoryTable({ rows }) {
+  const [open, setOpen] = useState(false);
   return (
     <Card className="rounded-2xl shadow-2xl">
       <CardContent>
@@ -44,6 +47,7 @@ export default function VisitHistoryTable({ rows }) {
                         size="small"
                         variant="contained"
                         startIcon={<VisibilityIcon />}
+                        onClick={() => setOpen(true)}
                       >
                         View
                       </Button>
@@ -69,6 +73,7 @@ export default function VisitHistoryTable({ rows }) {
             </TableBody>
           </Table>
         </TableContainer>
+        <VisitDetailsModal open={open} onClose={() => setOpen(false)} />
       </CardContent>
     </Card>
   );

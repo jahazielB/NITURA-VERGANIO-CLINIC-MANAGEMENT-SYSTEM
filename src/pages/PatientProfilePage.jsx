@@ -7,6 +7,41 @@ import PatientTabs from "../components/PatientTabs";
 export default function PatientProfilePage() {
   const [tab, setTab] = useState(1); // Visits default
 
+  const [selectedVisitId, setSelectedVisitId] = useState("");
+
+  const vitalsByVisit = [
+    {
+      visitId: "V3",
+      visitDate: "2026-01-22T10:30",
+      temp: 37.8,
+      bpS: 120,
+      bpD: 80,
+      pulse: 86,
+      weight: 72,
+      spo2: 97,
+    },
+    {
+      visitId: "V2",
+      visitDate: "2026-01-10T09:00",
+      temp: 37.2,
+      bpS: 118,
+      bpD: 78,
+      pulse: 82,
+      weight: 72,
+      spo2: 98,
+    },
+    {
+      visitId: "V1",
+      visitDate: "2025-12-15T14:15",
+      temp: 36.9,
+      bpS: 125,
+      bpD: 85,
+      pulse: 90,
+      weight: 73,
+      spo2: 97,
+    },
+  ];
+
   const patient = useMemo(
     () => ({
       name: "John Doe",
@@ -29,6 +64,18 @@ export default function PatientProfilePage() {
         reason: "Follow-up Checkup",
       },
       { id: 2, date: "03/10/2024", doctor: "Dr. Alex", reason: "Flu Symptoms" },
+      {
+        id: 3,
+        date: "01/15/2024",
+        doctor: "Dr. Bea",
+        reason: "Annual Physical",
+      },
+      {
+        id: 3,
+        date: "01/15/2024",
+        doctor: "Dr. Bea",
+        reason: "Annual Physical",
+      },
       {
         id: 3,
         date: "01/15/2024",
@@ -71,6 +118,9 @@ export default function PatientProfilePage() {
         visits={visits}
         prescriptions={prescriptions}
         latestSoap={latestSoap}
+        vitalsByVisit={vitalsByVisit}
+        selectedVisitId={selectedVisitId}
+        onSelectVisit={setSelectedVisitId}
       />
     </Box>
   );

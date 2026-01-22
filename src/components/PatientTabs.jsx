@@ -11,6 +11,7 @@ import {
 import VisitHistoryTable from "./VisitHistoryTable";
 import RecentPrescriptionsCard from "./RecentPrescriptionsCard";
 import LatestSoapNoteCard from "./LatestSoapNoteCard";
+import OverviewVitalsCard from "./OverviewVitalsCard";
 
 function TabPanel({ value, index, children }) {
   return value === index ? <Box className="pt-4">{children}</Box> : null;
@@ -22,6 +23,9 @@ export default function PatientTabs({
   visits,
   prescriptions,
   latestSoap,
+  vitalsByVisit,
+  selectedVisitId,
+  onSelectVisit,
 }) {
   return (
     <Card className="rounded-2xl shadow-2xl">
@@ -40,27 +44,11 @@ export default function PatientTabs({
 
       <CardContent>
         <TabPanel value={tab} index={0}>
-          <Card className="rounded-2xl shadow">
-            <CardContent>
-              <Typography className="font-semibold mb-2">
-                Latest Vitals (sample)
-              </Typography>
-              <Box className="flex flex-wrap gap-2">
-                <Chip label="Temp: 37.8°C" />
-                <Chip label="BP: 120/80" />
-                <Chip label="Pulse: 86" />
-                <Chip label="Weight: 72kg" />
-                <Chip label="SpO₂: 97%" />
-              </Box>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                className="mt-2"
-              >
-                Vitals should be stored per visit.
-              </Typography>
-            </CardContent>
-          </Card>
+          <OverviewVitalsCard
+            vitalsByVisit={vitalsByVisit}
+            selectedVisitId={selectedVisitId}
+            onSelectVisit={onSelectVisit}
+          />
         </TabPanel>
 
         <TabPanel value={tab} index={1}>
