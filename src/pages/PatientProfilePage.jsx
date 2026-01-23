@@ -107,10 +107,7 @@ export default function PatientProfilePage() {
 
   return (
     <Box className="space-y-4 p-4">
-      <PatientHeaderCard
-        patient={patient}
-        onAddVisit={() => alert("Add Visit")}
-      />
+      <PatientHeaderCard patient={patient} />
 
       <PatientTabs
         tab={tab}

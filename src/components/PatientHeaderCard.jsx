@@ -7,8 +7,10 @@ import {
   Typography,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-
-export default function PatientHeaderCard({ patient, onAddVisit }) {
+import AddVisitDialog from "./modals/AddvisitDialog";
+import { useState } from "react";
+export default function PatientHeaderCard({ patient, onAddVisit, onClose }) {
+  const [openAddVisit, setOpenAddVisit] = useState(false);
   return (
     <Card className="rounded-2xl shadow-2xl ">
       <CardContent className="bg-slate-200 ">
@@ -60,12 +62,16 @@ export default function PatientHeaderCard({ patient, onAddVisit }) {
             <Button
               variant="contained"
               startIcon={<AddIcon />}
-              onClick={onAddVisit}
+              onClick={() => setOpenAddVisit(true)}
             >
               Add Visit
             </Button>
           </Box>
         </Box>
+        <AddVisitDialog
+          open={openAddVisit}
+          onClose={() => setOpenAddVisit(false)}
+        />
       </CardContent>
     </Card>
   );
