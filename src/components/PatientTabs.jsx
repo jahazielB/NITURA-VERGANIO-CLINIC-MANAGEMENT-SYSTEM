@@ -12,7 +12,8 @@ import VisitHistoryTable from "./VisitHistoryTable";
 import RecentPrescriptionsCard from "./RecentPrescriptionsCard";
 import LatestSoapNoteCard from "./LatestSoapNoteCard";
 import OverviewVitalsCard from "./OverviewVitalsCard";
-
+import PrescriptionsTab from "./PrescriptionsTab";
+import SoapTab from "./SoapTab";
 function TabPanel({ value, index, children }) {
   return value === index ? <Box className="pt-4">{children}</Box> : null;
 }
@@ -39,6 +40,7 @@ export default function PatientTabs({
         <Tab label="Visits" />
         <Tab label="Prescriptions" />
         <Tab label="Lab Results" />
+        <Tab label="SOAP" />
       </Tabs>
       <Divider />
 
@@ -62,24 +64,7 @@ export default function PatientTabs({
         </TabPanel>
 
         <TabPanel value={tab} index={2}>
-          <Card className="rounded-2xl shadow">
-            <CardContent>
-              <Typography className="font-semibold mb-3">
-                All Prescriptions
-              </Typography>
-              <Box className="space-y-2">
-                {prescriptions.map((m, idx) => (
-                  <Box
-                    key={idx}
-                    className="flex items-center justify-between gap-3"
-                  >
-                    <Typography variant="body2">{m}</Typography>
-                    <Chip label="Active" size="small" color="success" />
-                  </Box>
-                ))}
-              </Box>
-            </CardContent>
-          </Card>
+          <PrescriptionsTab />
         </TabPanel>
 
         <TabPanel value={tab} index={3}>
@@ -91,6 +76,9 @@ export default function PatientTabs({
               </Typography>
             </CardContent>
           </Card>
+        </TabPanel>
+        <TabPanel value={tab} index={4}>
+          <SoapTab visits={visits} />
         </TabPanel>
       </CardContent>
     </Card>

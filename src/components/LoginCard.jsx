@@ -1,6 +1,6 @@
 import { Paper, Box } from "@mui/material";
 import Logo from "./Logo";
-import LoginForm from "./LoginForm";
+import LoginForm from "./forms/LoginForm";
 
 export default function LoginCard() {
   return (

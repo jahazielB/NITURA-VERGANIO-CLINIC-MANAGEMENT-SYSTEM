@@ -55,6 +55,7 @@ export default function VisitHistoryTable({ rows }) {
                         size="small"
                         variant="outlined"
                         startIcon={<EditIcon />}
+                        onClick={() => setOpen(true)}
                       >
                         Edit
                       </Button>

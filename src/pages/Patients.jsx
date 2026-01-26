@@ -1,5 +1,5 @@
 import AdminLayout from "../layout/AdminLayout";
-import PatientFormDialog from "../components/PatientFormDialog";
+import PatientFormDialog from "../components/forms/PatientFormDialog";
 import {
   Card,
   CardContent,
