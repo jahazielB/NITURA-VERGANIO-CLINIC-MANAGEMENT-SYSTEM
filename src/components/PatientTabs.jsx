@@ -14,6 +14,7 @@ import LatestSoapNoteCard from "./LatestSoapNoteCard";
 import OverviewVitalsCard from "./OverviewVitalsCard";
 import PrescriptionsTab from "./PrescriptionsTab";
 import SoapTab from "./SoapTab";
+import LabResultsTab from "./LabResultsTab";
 function TabPanel({ value, index, children }) {
   return value === index ? <Box className="pt-4">{children}</Box> : null;
 }
@@ -68,14 +69,7 @@ export default function PatientTabs({
         </TabPanel>
 
         <TabPanel value={tab} index={3}>
-          <Card className="rounded-2xl shadow">
-            <CardContent>
-              <Typography className="font-semibold">Lab Results</Typography>
-              <Typography variant="body2" color="text.secondary">
-                Build later: lab requests + result file + status.
-              </Typography>
-            </CardContent>
-          </Card>
+          <LabResultsTab visits={visits} />
         </TabPanel>
         <TabPanel value={tab} index={4}>
           <SoapTab visits={visits} />
