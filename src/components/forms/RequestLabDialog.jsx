@@ -13,9 +13,14 @@ import { todayISO } from "../helpers/labHelpers";
 
 const TEST_TYPES = [
   "Blood Chemistry",
-  "Urinalysis",
+  "Blood Typing",
   "Clinical Chemistry",
-  "Lipid Profile",
+  "Fecalysis",
+  "HEMOGLOBIN(HBA1C)",
+  "HEMATOLOGY",
+  "KOH",
+  "Urinalysis",
+  "Serology",
   "Pregnancy Test",
 ];
 const PRIORITIES = ["Routine", "Urgent"];

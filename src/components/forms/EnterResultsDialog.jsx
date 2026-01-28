@@ -13,6 +13,14 @@ import {
 import { todayISO } from "../helpers/labHelpers";
 import BloodChemTemplate from "../labTemplates/BloodChemistry";
 import ClinicalChemistry from "../labTemplates/ClinicalChemistry";
+import Urinalysis from "../labTemplates/Urinalysis";
+import Serology from "../labTemplates/Serology";
+import PregnancyTestTemplate from "../labTemplates/PregnancyTest";
+import Hba1cTemplate from "../labTemplates/HBA1C";
+import BloodTyping from "../labTemplates/BloodTyping";
+import Fecalysis from "../labTemplates/Fecalysis";
+import HematologyTemplate from "../labTemplates/Hematology";
+import KOHTemplate from "../labTemplates/KOH";
 
 export default function EnterResultsDialog({ open, onClose, item, onSave }) {
   const [form, setForm] = useState(null);
@@ -50,7 +58,15 @@ export default function EnterResultsDialog({ open, onClose, item, onSave }) {
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Enter Lab Results</DialogTitle>
       {/* <BloodChemTemplate /> */}
-      <ClinicalChemistry />
+      {/* <ClinicalChemistry /> */}
+      {/* <Urinalysis /> */}
+      {/* <Serology /> */}
+      {/* <PregnancyTestTemplate /> */}
+      {/* <Hba1cTemplate /> */}
+      {/* <BloodTyping /> */}
+      {/* <Fecalysis /> */}
+      {/* <HematologyTemplate /> */}
+      <KOHTemplate />
 
       {/* <DialogContent dividers>
         <Box className="mb-3">
