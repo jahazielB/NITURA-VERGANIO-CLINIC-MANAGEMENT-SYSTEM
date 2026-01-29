@@ -4,6 +4,8 @@ import Patients from "./pages/patients";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "./layout/AdminLayout";
 import PatientProfilePage from "./pages/PatientProfilePage";
+import AppointmentsPage from "./components/appointments/AppointmentsPage";
+import LaboratorySidebarPage from "./pages/LaboratorySidebarPage";
 
 export default function App() {
   return (
@@ -16,6 +18,8 @@ export default function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="patients" element={<Patients />} />
           <Route path="patients/:id" element={<PatientProfilePage />} />
+          <Route path="appointments" element={<AppointmentsPage />} />
+          <Route path="laboratory" element={<LaboratorySidebarPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

@@ -71,8 +71,8 @@ export const DoctorCard = ({ name, status, patientsToday }) => (
 );
 
 export const AppointmentTable = () => (
-  <Card className="p-4">
-    <CardContent>
+  <Card className="p-4 h-full">
+    <CardContent className="">
       <div className="flex justify-between ">
         <Typography className="font-extrabold mb-2 ">
           Today's Appointments
@@ -89,14 +89,7 @@ export const AppointmentTable = () => (
           </TableRow>
         </TableHead>
         <TableBody>
-          {[
-            { p: "Juan Dela Cruz", t: "9:00 AM", d: "Dr. A", s: "Waiting" },
-            { p: "Maria Santos", t: "10:00 AM", d: "Dr. B", s: "Consulting" },
-            { p: "Maria Santos", t: "10:00 AM", d: "Dr. B", s: "Consulting" },
-            { p: "Maria Santos", t: "10:00 AM", d: "Dr. B", s: "Consulting" },
-            { p: "Maria Santos", t: "10:00 AM", d: "Dr. B", s: "Consulting" },
-            { p: "Maria Santos", t: "10:00 AM", d: "Dr. B", s: "Consulting" },
-          ].map((row, i) => (
+          {[].map((row, i) => (
             <TableRow key={i}>
               <TableCell>{row.p}</TableCell>
               <TableCell>{row.t}</TableCell>
@@ -177,7 +170,7 @@ export default function DashboardPage() {
         </Box>
 
         <Box className="p-4 grid grid-cols-1 lg:grid-cols-3 gap-4">
-          <Box className=" lg:col-span-2 rounded-2xl shadow-2xl">
+          <Box className=" lg:col-span-2 rounded-2xl shadow-2xl ">
             <AppointmentTable />
           </Box>
           <Box className="flex flex-col gap-1 bg-white p-4 rounded-2xl shadow-2xl h-fit">

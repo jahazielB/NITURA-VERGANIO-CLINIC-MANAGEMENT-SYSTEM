@@ -30,54 +30,72 @@ export const drawerWidth = 250;
 export const SidebarContent = ({ onItemClick }) => {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const menuItems = [
+    { text: "Dashboard", icon: <DashboardIcon />, path: "dashboard" },
+    { text: "Appointments", icon: <EventIcon />, path: "appointments" },
+    { text: "Patients", icon: <PeopleIcon />, path: "patients" },
+    { text: "Laboratory", icon: <ScienceIcon />, path: "laboratory" },
+    { text: "Billing", icon: <PaymentsIcon />, path: "billing" },
+  ];
+
   return (
     <Box className="flex flex-col h-full">
       <div className="flex justify-center mt-5">
         <Logo />
       </div>
 
-      <List className="flex-1 text-gray-200 cursor-pointer">
-        {[
-          {
-            text: "Dashboard",
-            icon: <DashboardIcon className="text-gray-300" />,
-            path: "dashboard",
-          },
-          {
-            text: "Appointments",
-            icon: <EventIcon className="text-gray-300" />,
-          },
-          {
-            text: "Patients",
-            icon: <PeopleIcon className="text-gray-300" />,
-            path: "patients",
-          },
-          {
-            text: "Laboratory",
-            icon: <ScienceIcon className="text-gray-300" />,
-          },
-          { text: "Billing", icon: <PaymentsIcon className="text-gray-300" /> },
-        ].map((item) => (
-          <ListItem
-            button
-            key={item.text}
-            onClick={() => {
-              navigate(item.path);
-              onItemClick;
-            }}
-          >
-            <ListItemIcon className="text-white">{item.icon}</ListItemIcon>
-            <ListItemText primary={item.text} />
-          </ListItem>
-        ))}
+      <List className="flex-1 text-gray-200 cursor-pointer px-2">
+        {menuItems.map((item) => {
+          const isActive = location.pathname.startsWith(`/admin/${item.path}`);
+          console.log(item.path);
+
+          return (
+            <ListItem
+              key={item.text}
+              button
+              onClick={() => {
+                navigate(item.path);
+                onItemClick?.(); // close mobile drawer if exists
+              }}
+              sx={{
+                borderRadius: 2,
+                mb: 0.5,
+                backgroundColor: isActive ? "#1e293b" : "transparent",
+                "&:hover": {
+                  backgroundColor: "#3c495e",
+                },
+              }}
+            >
+              <ListItemIcon
+                sx={{
+                  color: isActive ? "#38bdf8" : "#cbd5e1",
+                  minWidth: 36,
+                }}
+              >
+                {item.icon}
+              </ListItemIcon>
+
+              <ListItemText
+                primary={item.text}
+                sx={{
+                  "& .MuiTypography-root": {
+                    fontWeight: isActive ? 600 : 400,
+                    color: isActive ? "#ffffff" : "#e2e8f0",
+                  },
+                }}
+              />
+            </ListItem>
+          );
+        })}
       </List>
 
       <Box className="p-4 border-t border-slate-600 cursor-pointer">
-        <ListItem button onClick={onItemClick}>
-          <ListItemIcon className="text-gray-300">
-            <DashboardIcon className="text-gray-300" />
+        <ListItem button>
+          <ListItemIcon sx={{ color: "#cbd5e1" }}>
+            <DashboardIcon />
           </ListItemIcon>
-          <ListItemText primary="Logout" className="text-gray-300" />
+          <ListItemText primary="Logout" />
         </ListItem>
       </Box>
     </Box>
