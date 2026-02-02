@@ -110,6 +110,7 @@ export default function PatientProfilePage() {
       <PatientHeaderCard patient={patient} />
 
       <PatientTabs
+        patient={patient}
         tab={tab}
         setTab={setTab}
         visits={visits}

@@ -6,6 +6,9 @@ import AdminLayout from "./layout/AdminLayout";
 import PatientProfilePage from "./pages/PatientProfilePage";
 import AppointmentsPage from "./components/appointments/AppointmentsPage";
 import LaboratorySidebarPage from "./pages/LaboratorySidebarPage";
+import BillingPage from "./pages/BillingPage";
+import AccountsPage from "./pages/accounts/AccountsPage";
+import DoctorDashboardPage from "./pages/doctor/DoctorDashboardPage";
 
 export default function App() {
   return (
@@ -20,6 +23,8 @@ export default function App() {
           <Route path="patients/:id" element={<PatientProfilePage />} />
           <Route path="appointments" element={<AppointmentsPage />} />
           <Route path="laboratory" element={<LaboratorySidebarPage />} />
+          <Route path="billing" element={<BillingPage />} />
+          <Route path="accounts" element={<AccountsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

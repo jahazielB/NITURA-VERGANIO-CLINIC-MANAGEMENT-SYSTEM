@@ -19,6 +19,7 @@ import PeopleIcon from "@mui/icons-material/People";
 import ScienceIcon from "@mui/icons-material/Science";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 
 import Logo from "./Logo";
 
@@ -37,6 +38,7 @@ export const SidebarContent = ({ onItemClick }) => {
     { text: "Patients", icon: <PeopleIcon />, path: "patients" },
     { text: "Laboratory", icon: <ScienceIcon />, path: "laboratory" },
     { text: "Billing", icon: <PaymentsIcon />, path: "billing" },
+    { text: "Manage Accounts", icon: <ManageAccountsIcon />, path: "accounts" },
   ];
 
   return (

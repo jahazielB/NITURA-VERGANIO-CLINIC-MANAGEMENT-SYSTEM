@@ -15,6 +15,7 @@ import OverviewVitalsCard from "./OverviewVitalsCard";
 import PrescriptionsTab from "./PrescriptionsTab";
 import SoapTab from "./SoapTab";
 import LabResultsTab from "./LabResultsTab";
+import BillingTab from "./BillingTab";
 function TabPanel({ value, index, children }) {
   return value === index ? <Box className="pt-4">{children}</Box> : null;
 }
@@ -28,6 +29,7 @@ export default function PatientTabs({
   vitalsByVisit,
   selectedVisitId,
   onSelectVisit,
+  patient,
 }) {
   return (
     <Card className="rounded-2xl shadow-2xl">
@@ -42,6 +44,7 @@ export default function PatientTabs({
         <Tab label="Prescriptions" />
         <Tab label="Lab Results" />
         <Tab label="SOAP" />
+        <Tab label="BILLING" />
       </Tabs>
       <Divider />
 
@@ -73,6 +76,9 @@ export default function PatientTabs({
         </TabPanel>
         <TabPanel value={tab} index={4}>
           <SoapTab visits={visits} />
+        </TabPanel>
+        <TabPanel value={tab} index={5}>
+          <BillingTab patient={patient} />
         </TabPanel>
       </CardContent>
     </Card>
