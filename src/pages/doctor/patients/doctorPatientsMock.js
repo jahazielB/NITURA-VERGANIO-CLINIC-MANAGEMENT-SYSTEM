@@ -1,0 +1,38 @@
+export const doctorPatientsMock = [
+  {
+    id: "PT001",
+    firstName: "Juan",
+    lastName: "Dela Cruz",
+    age: 33,
+    gender: "Male",
+    lastVisit: "2026-02-03",
+    lastReason: "Cough",
+  },
+  {
+    id: "PT002",
+    firstName: "Maria",
+    lastName: "Santos",
+    age: 28,
+    gender: "Female",
+    lastVisit: "2026-02-02",
+    lastReason: "Follow-up",
+  },
+  {
+    id: "PT003",
+    firstName: "Pedro",
+    lastName: "Reyes",
+    age: 41,
+    gender: "Male",
+    lastVisit: "2026-01-30",
+    lastReason: "Fever",
+  },
+  {
+    id: "PT004",
+    firstName: "Ana",
+    lastName: "Lim",
+    age: 52,
+    gender: "Female",
+    lastVisit: "2026-01-29",
+    lastReason: "BP Check",
+  },
+];

@@ -10,7 +10,10 @@ import {
   Chip,
   Box,
   Button,
+  TablePagination,
 } from "@mui/material";
+
+import { useLocation } from "react-router-dom";
 
 const statusColor = (s) => {
   if (s === "Waiting") return "warning";
@@ -25,6 +28,7 @@ export default function DoctorQueueTable({
   onOpenChart,
   onDone,
 }) {
+  const location = useLocation();
   return (
     <Card className="p-2 h-full rounded-2xl shadow-2xl">
       <CardContent>
@@ -64,13 +68,13 @@ export default function DoctorQueueTable({
                 </TableCell>
                 <TableCell align="right">
                   <Box className="flex justify-end gap-1 flex-wrap">
-                    <Button
+                    {/* <Button
                       size="small"
                       variant="outlined"
                       onClick={() => onOpenChart(row)}
                     >
                       Open Chart
-                    </Button>
+                    </Button> */}
 
                     <Button
                       size="small"
@@ -104,6 +108,7 @@ export default function DoctorQueueTable({
           </TableBody>
         </Table>
       </CardContent>
+      {location.pathname === "/doctor/queue" && <TablePagination />}
     </Card>
   );
 }

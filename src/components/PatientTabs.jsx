@@ -30,6 +30,7 @@ export default function PatientTabs({
   selectedVisitId,
   onSelectVisit,
   patient,
+  role,
 }) {
   return (
     <Card className="rounded-2xl shadow-2xl">
@@ -44,7 +45,7 @@ export default function PatientTabs({
         <Tab label="Prescriptions" />
         <Tab label="Lab Results" />
         <Tab label="SOAP" />
-        <Tab label="BILLING" />
+        {role === "admin" && <Tab label="BILLING" />}
       </Tabs>
       <Divider />
 
@@ -72,14 +73,16 @@ export default function PatientTabs({
         </TabPanel>
 
         <TabPanel value={tab} index={3}>
-          <LabResultsTab visits={visits} />
+          <LabResultsTab visits={visits} role={role} />
         </TabPanel>
         <TabPanel value={tab} index={4}>
           <SoapTab visits={visits} />
         </TabPanel>
-        <TabPanel value={tab} index={5}>
-          <BillingTab patient={patient} />
-        </TabPanel>
+        {role === "admin" && (
+          <TabPanel value={tab} index={5}>
+            <BillingTab patient={patient} />
+          </TabPanel>
+        )}
       </CardContent>
     </Card>
   );

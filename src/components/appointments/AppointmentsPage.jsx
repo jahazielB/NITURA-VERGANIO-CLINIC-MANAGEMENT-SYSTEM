@@ -207,7 +207,7 @@ export default function AppointmentsPage() {
             placeholder="Search name or contact..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            fullWidth
+            sx={{ width: "50%" }}
           />
 
           <Tabs

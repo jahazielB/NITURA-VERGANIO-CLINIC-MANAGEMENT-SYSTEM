@@ -25,7 +25,7 @@ import RequestLabDialog from "./forms/RequestLabDialog";
 import EnterResultsDialog from "./forms/EnterResultsDialog";
 import ViewLabModal from "./modals/ViewLabModal";
 
-export default function LabResultsTab({ visits = [] }) {
+export default function LabResultsTab({ visits = [], role }) {
   const latestVisitId = useMemo(() => latestVisitIdFrom(visits), [visits]);
 
   const visitLabel = (visitId) =>
@@ -169,17 +169,20 @@ export default function LabResultsTab({ visits = [] }) {
                             View
                           </Button>
 
-                          <Button
-                            size="small"
-                            variant="outlined"
-                            startIcon={<EditNoteIcon />}
-                            onClick={() => {
-                              setSelected(x);
-                              setOpenEnter(true);
-                            }}
-                          >
-                            Enter Results
-                          </Button>
+                          {role === "admin" ||
+                            (role === "MedTech" && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<EditNoteIcon />}
+                                onClick={() => {
+                                  setSelected(x);
+                                  setOpenEnter(true);
+                                }}
+                              >
+                                Enter Results
+                              </Button>
+                            ))}
 
                           {x.status === "Ready" && (
                             <Button

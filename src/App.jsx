@@ -9,6 +9,8 @@ import LaboratorySidebarPage from "./pages/LaboratorySidebarPage";
 import BillingPage from "./pages/BillingPage";
 import AccountsPage from "./pages/accounts/AccountsPage";
 import DoctorDashboardPage from "./pages/doctor/DoctorDashboardPage";
+import DoctorQueuePage from "./pages/doctor/queue/page/DoctorQueuePage";
+import DoctorPatientsPage from "./pages/doctor/patients/DoctorPatientPage";
 
 export default function App() {
   return (
@@ -25,6 +27,12 @@ export default function App() {
           <Route path="laboratory" element={<LaboratorySidebarPage />} />
           <Route path="billing" element={<BillingPage />} />
           <Route path="accounts" element={<AccountsPage />} />
+        </Route>
+        <Route path="/doctor" element={<AdminLayout />}>
+          <Route path="dashboard" element={<DoctorDashboardPage />} />
+          <Route path="queue" element={<DoctorQueuePage />} />
+          <Route path="patients" element={<DoctorPatientsPage />} />
+          <Route path="/doctor/patients/:id" element={<PatientProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

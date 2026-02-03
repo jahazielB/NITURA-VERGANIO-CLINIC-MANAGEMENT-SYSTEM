@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import PatientHeaderCard from "../components/PatientHeaderCard";
 import PatientTabs from "../components/PatientTabs";
 
-export default function PatientProfilePage() {
+export default function PatientProfilePage({ role = "Doctor" }) {
   const [tab, setTab] = useState(1); // Visits default
 
   const [selectedVisitId, setSelectedVisitId] = useState("");
@@ -110,6 +110,7 @@ export default function PatientProfilePage() {
       <PatientHeaderCard patient={patient} />
 
       <PatientTabs
+        role={role}
         patient={patient}
         tab={tab}
         setTab={setTab}

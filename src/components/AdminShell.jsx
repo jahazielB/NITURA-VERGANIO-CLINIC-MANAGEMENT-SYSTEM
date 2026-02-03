@@ -25,21 +25,21 @@ import Logo from "./Logo";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
+import { NAV_BY_ROLE, ROLE_TOPBAR } from "../layout/navConfig";
+
+/**
+ * role: "Admin" | "Doctor" | "Med Tech" | "Nurse"
+ * basePath: "/admin" | "/doctor" | "/medtech" | "/nurse"
+ */
+
 export const drawerWidth = 250;
 
 /** Drawer content reused for mobile + desktop */
-export const SidebarContent = ({ onItemClick }) => {
+export const SidebarContent = ({ onItemClick, role = "Doctor", basePath }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const menuItems = [
-    { text: "Dashboard", icon: <DashboardIcon />, path: "dashboard" },
-    { text: "Appointments", icon: <EventIcon />, path: "appointments" },
-    { text: "Patients", icon: <PeopleIcon />, path: "patients" },
-    { text: "Laboratory", icon: <ScienceIcon />, path: "laboratory" },
-    { text: "Billing", icon: <PaymentsIcon />, path: "billing" },
-    { text: "Manage Accounts", icon: <ManageAccountsIcon />, path: "accounts" },
-  ];
+  const menuItems = NAV_BY_ROLE[role];
 
   return (
     <Box className="flex flex-col h-full">
@@ -49,7 +49,7 @@ export const SidebarContent = ({ onItemClick }) => {
 
       <List className="flex-1 text-gray-200 cursor-pointer px-2">
         {menuItems.map((item) => {
-          const isActive = location.pathname.startsWith(`/admin/${item.path}`);
+          const isActive = location.pathname.startsWith(`/doctor/${item.path}`);
           console.log(item.path);
 
           return (
@@ -71,7 +71,7 @@ export const SidebarContent = ({ onItemClick }) => {
             >
               <ListItemIcon
                 sx={{
-                  color: isActive ? "#38bdf8" : "#cbd5e1",
+                  color: "#ffffff",
                   minWidth: 36,
                 }}
               >
@@ -83,7 +83,7 @@ export const SidebarContent = ({ onItemClick }) => {
                 sx={{
                   "& .MuiTypography-root": {
                     fontWeight: isActive ? 600 : 400,
-                    color: isActive ? "#ffffff" : "#e2e8f0",
+                    color: "#ffffff",
                   },
                 }}
               />
@@ -114,7 +114,7 @@ export const SidebarPermanent = () => (
       "& .MuiDrawer-paper": {
         width: drawerWidth,
         boxSizing: "border-box",
-        backgroundColor: "#334155",
+        backgroundColor: "#338bd4",
         color: "#fff",
         overflowX: "hidden",
       },
@@ -148,32 +148,35 @@ export const SidebarMobile = ({ open, onClose }) => (
   </Drawer>
 );
 
-export const TopBar = ({ onMenuClick }) => (
-  <AppBar position="static" color="inherit" elevation={0}>
-    <Toolbar className="flex justify-between bg-slate-100 py-5">
-      <Box className="flex items-center gap-2">
-        {/* Hamburger only on small screens */}
-        <IconButton
-          onClick={onMenuClick}
-          sx={{ display: { xs: "inline-flex", md: "none" } }}
-        >
-          <MenuIcon />
-        </IconButton>
+export const TopBar = ({ onMenuClick, role = "Doctor" }) => {
+  const meta = ROLE_TOPBAR[role];
+  return (
+    <AppBar position="static" color="inherit" elevation={0}>
+      <Toolbar className="flex justify-between bg-slate-100 py-5">
+        <Box className="flex items-center gap-2">
+          {/* Hamburger only on small screens */}
+          <IconButton
+            onClick={onMenuClick}
+            sx={{ display: { xs: "inline-flex", md: "none" } }}
+          >
+            <MenuIcon />
+          </IconButton>
 
-        <Box>
-          <Typography variant="h6">Welcome, Admin</Typography>
-          <Typography variant="body2" sx={{ color: "#94a3b8" }}>
-            Manage clinic activities and view reports
-          </Typography>
+          <Box>
+            <Typography variant="h6">{meta.title}</Typography>
+            <Typography variant="body2" sx={{ color: "#94a3b8" }}>
+              {meta.subtitle}
+            </Typography>
+          </Box>
         </Box>
-      </Box>
 
-      <Box className="flex items-center gap-4">
-        <IconButton>
-          <NotificationsIcon />
-        </IconButton>
-        <Avatar>AD</Avatar>
-      </Box>
-    </Toolbar>
-  </AppBar>
-);
+        <Box className="flex items-center gap-4">
+          <IconButton>
+            <NotificationsIcon />
+          </IconButton>
+          <Avatar>{meta.avatar}</Avatar>
+        </Box>
+      </Toolbar>
+    </AppBar>
+  );
+};
