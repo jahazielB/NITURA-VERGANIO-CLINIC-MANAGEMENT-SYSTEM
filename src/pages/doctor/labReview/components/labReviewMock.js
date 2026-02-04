@@ -1,0 +1,38 @@
+export const labReviewMock = [
+  {
+    id: "LAB-001",
+    patientId: "PT001",
+    patientName: "Dela Cruz, Juan",
+    visitId: "V1001",
+    testType: "CBC",
+    dateCollected: "2026-02-04",
+    dateReleased: "2026-02-04 11:10",
+    status: "Ready", // Ready | Reviewed
+    releasedBy: "MedTech Pedro",
+    resultSummary: "WBC slightly elevated",
+  },
+  {
+    id: "LAB-002",
+    patientId: "PT003",
+    patientName: "Reyes, Pedro",
+    visitId: "V0998",
+    testType: "Urinalysis",
+    dateCollected: "2026-02-03",
+    dateReleased: "2026-02-03 16:40",
+    status: "Ready",
+    releasedBy: "MedTech Pedro",
+    resultSummary: "Normal",
+  },
+  {
+    id: "LAB-003",
+    patientId: "PT002",
+    patientName: "Santos, Maria",
+    visitId: "V1002",
+    testType: "FBS",
+    dateCollected: "2026-02-02",
+    dateReleased: "2026-02-02 14:05",
+    status: "Reviewed",
+    releasedBy: "MedTech Ana",
+    resultSummary: "Within range",
+  },
+];

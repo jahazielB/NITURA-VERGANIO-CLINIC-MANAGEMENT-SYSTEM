@@ -1,0 +1,32 @@
+export const rxMock = [
+  {
+    id: "RX-001",
+    patientId: "PT001",
+    patientName: "Dela Cruz, Juan",
+    dateTime: "2026-02-04 09:25",
+    visitId: "V1001",
+    medsSummary: "Amoxicillin 500mg • Ibuprofen 200mg",
+    diagnosis: "URTI",
+    lastUpdated: "2026-02-04 09:30",
+  },
+  {
+    id: "RX-002",
+    patientId: "PT002",
+    patientName: "Santos, Maria",
+    dateTime: "2026-02-04 10:15",
+    visitId: "V1002",
+    medsSummary: "Losartan 50mg • Amlodipine 5mg",
+    diagnosis: "Hypertension",
+    lastUpdated: "2026-02-04 10:18",
+  },
+  {
+    id: "RX-003",
+    patientId: "PT003",
+    patientName: "Reyes, Pedro",
+    dateTime: "2026-02-03 16:05",
+    visitId: "V0998",
+    medsSummary: "Paracetamol 500mg",
+    diagnosis: "Fever",
+    lastUpdated: "2026-02-03 16:10",
+  },
+];

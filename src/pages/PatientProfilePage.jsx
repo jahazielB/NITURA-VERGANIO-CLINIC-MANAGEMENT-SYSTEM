@@ -1,13 +1,28 @@
 import { Box, Typography } from "@mui/material";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import PatientHeaderCard from "../components/PatientHeaderCard";
 import PatientTabs from "../components/PatientTabs";
 
 export default function PatientProfilePage({ role = "Doctor" }) {
+  const [searchParams] = useSearchParams();
   const [tab, setTab] = useState(1); // Visits default
 
   const [selectedVisitId, setSelectedVisitId] = useState("");
+  const tabParam = searchParams.get("tab");
+
+  useEffect(() => {
+    if (tabParam === "soap") {
+      setTab(4);
+    }
+    if (tabParam === "prescriptions") {
+      setTab(2);
+    }
+    if (tabParam === "lab") {
+      setTab(3);
+    }
+  }, [tabParam]);
 
   const vitalsByVisit = [
     {

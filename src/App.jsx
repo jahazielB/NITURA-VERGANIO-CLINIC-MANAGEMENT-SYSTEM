@@ -11,7 +11,9 @@ import AccountsPage from "./pages/accounts/AccountsPage";
 import DoctorDashboardPage from "./pages/doctor/DoctorDashboardPage";
 import DoctorQueuePage from "./pages/doctor/queue/page/DoctorQueuePage";
 import DoctorPatientsPage from "./pages/doctor/patients/DoctorPatientPage";
-
+import DoctorSoapPage from "./pages/doctor/Soap/DoctorSoapPage";
+import DoctorPrescriptionsPage from "./pages/doctor/Prescriptions/DoctorPrescriptionsPage";
+import DoctorLabReviewPage from "./pages/doctor/labReview/DoctorLabReviewPage";
 export default function App() {
   return (
     <BrowserRouter>
@@ -33,6 +35,9 @@ export default function App() {
           <Route path="queue" element={<DoctorQueuePage />} />
           <Route path="patients" element={<DoctorPatientsPage />} />
           <Route path="/doctor/patients/:id" element={<PatientProfilePage />} />
+          <Route path="soap" element={<DoctorSoapPage />} />
+          <Route path="prescriptions" element={<DoctorPrescriptionsPage />} />
+          <Route path="lab-review" element={<DoctorLabReviewPage />} />
         </Route>
       </Routes>
     </BrowserRouter>
