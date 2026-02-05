@@ -1,0 +1,46 @@
+export const nurseQueueMock = [
+  {
+    id: "Q001",
+    patientId: "PT001",
+    patientName: "Dela Cruz, Juan",
+    time: "08:10",
+    reason: "Cough",
+    status: "Waiting", // Waiting | In Triage | Ready for Doctor
+    vitals: null,
+    triageNotes: "",
+  },
+  {
+    id: "Q002",
+    patientId: "PT002",
+    patientName: "Santos, Maria",
+    time: "08:25",
+    reason: "Follow-up",
+    status: "In Triage",
+    vitals: {
+      temp: 37.2,
+      bpS: 118,
+      bpD: 78,
+      pulse: 82,
+      weight: 56,
+      spo2: 98,
+    },
+    triageNotes: "Patient calm, here for follow-up BP check.",
+  },
+  {
+    id: "Q003",
+    patientId: "PT003",
+    patientName: "Reyes, Pedro",
+    time: "08:40",
+    reason: "Fever",
+    status: "Ready for Doctor",
+    vitals: {
+      temp: 38.2,
+      bpS: 120,
+      bpD: 80,
+      pulse: 96,
+      weight: 70,
+      spo2: 97,
+    },
+    triageNotes: "Fever x2 days, no SOB reported.",
+  },
+];

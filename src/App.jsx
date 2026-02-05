@@ -14,6 +14,11 @@ import DoctorPatientsPage from "./pages/doctor/patients/DoctorPatientPage";
 import DoctorSoapPage from "./pages/doctor/Soap/DoctorSoapPage";
 import DoctorPrescriptionsPage from "./pages/doctor/Prescriptions/DoctorPrescriptionsPage";
 import DoctorLabReviewPage from "./pages/doctor/labReview/DoctorLabReviewPage";
+import MedTechDashboardPage from "./pages/medTech/MedTechDashboardPage";
+import MedTechLaboratoryPage from "./pages/medTech/laboratory/MedTechLaboratoryPage";
+import MedTechPatientsPage from "./pages/medTech/patients/MedTechPatientsPage";
+import NurseDashboardPage from "./pages/nurse/NurseDashboardPage";
+import NurseQueuePage from "./pages/nurse/queue/NurseQueuePage";
 export default function App() {
   return (
     <BrowserRouter>
@@ -38,6 +43,19 @@ export default function App() {
           <Route path="soap" element={<DoctorSoapPage />} />
           <Route path="prescriptions" element={<DoctorPrescriptionsPage />} />
           <Route path="lab-review" element={<DoctorLabReviewPage />} />
+        </Route>
+        <Route path="/medtech" element={<AdminLayout />}>
+          <Route path="dashboard" element={<MedTechDashboardPage />} />
+          <Route path="laboratory" element={<MedTechLaboratoryPage />} />
+          <Route path="patients" element={<MedTechPatientsPage />} />
+          <Route
+            path="/medtech/patients/:id"
+            element={<PatientProfilePage />}
+          />
+        </Route>
+        <Route path="nurse" element={<AdminLayout />}>
+          <Route path="dashboard" element={<NurseDashboardPage />} />
+          <Route path="queue" element={<NurseQueuePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

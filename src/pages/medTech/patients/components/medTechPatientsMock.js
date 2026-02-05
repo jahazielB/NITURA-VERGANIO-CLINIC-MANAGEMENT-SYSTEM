@@ -1,0 +1,38 @@
+export const medtechPatientsMock = [
+  {
+    id: "PT001",
+    firstName: "Juan",
+    lastName: "Dela Cruz",
+    age: 33,
+    gender: "Male",
+    lastLab: "2026-02-05",
+    lastTest: "CBC",
+  },
+  {
+    id: "PT002",
+    firstName: "Maria",
+    lastName: "Santos",
+    age: 28,
+    gender: "Female",
+    lastLab: "2026-02-05",
+    lastTest: "Urinalysis",
+  },
+  {
+    id: "PT003",
+    firstName: "Pedro",
+    lastName: "Reyes",
+    age: 41,
+    gender: "Male",
+    lastLab: "2026-02-04",
+    lastTest: "FBS",
+  },
+  {
+    id: "PT004",
+    firstName: "Ana",
+    lastName: "Lim",
+    age: 52,
+    gender: "Female",
+    lastLab: "2026-02-03",
+    lastTest: "Lipid Panel",
+  },
+];

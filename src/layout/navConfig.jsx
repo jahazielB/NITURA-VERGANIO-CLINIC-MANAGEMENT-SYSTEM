@@ -60,7 +60,7 @@ export const ROLE_TOPBAR = {
     subtitle: "View your queue, write SOAP notes, and review labs",
     avatar: "DR",
   },
-  "Med Tech": {
+  MedTech: {
     title: "Welcome, Med Tech",
     subtitle: "Process and release laboratory results",
     avatar: "MT",

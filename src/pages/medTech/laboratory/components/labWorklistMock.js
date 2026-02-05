@@ -1,0 +1,50 @@
+export const labWorklistMock = [
+  {
+    id: "LAB-2001",
+    dateRequested: "2026-02-05 08:45",
+    patientId: "PT001",
+    patientName: "Dela Cruz, Juan",
+    testType: "CBC",
+    priority: "STAT", // Routine | STAT
+    status: "Pending", // Pending | Processing | Ready | Released
+    requestedBy: "Dr. Alex",
+    releasedBy: "",
+    results: null, // will be filled on Enter Results
+  },
+  {
+    id: "LAB-2002",
+    dateRequested: "2026-02-05 09:10",
+    patientId: "PT002",
+    patientName: "Santos, Maria",
+    testType: "Urinalysis",
+    priority: "Routine",
+    status: "Processing",
+    requestedBy: "Dr. Bea",
+    releasedBy: "",
+    results: { summary: "Draft: awaiting confirmation" },
+  },
+  {
+    id: "LAB-2003",
+    dateRequested: "2026-02-05 09:30",
+    patientId: "PT003",
+    patientName: "Reyes, Pedro",
+    testType: "FBS",
+    priority: "Routine",
+    status: "Ready",
+    requestedBy: "Dr. Alex",
+    releasedBy: "",
+    results: { summary: "FBS within range" },
+  },
+  {
+    id: "LAB-2004",
+    dateRequested: "2026-02-05 10:05",
+    patientId: "PT004",
+    patientName: "Lim, Ana",
+    testType: "Lipid Panel",
+    priority: "Routine",
+    status: "Released",
+    requestedBy: "Dr. Bea",
+    releasedBy: "MedTech Pedro",
+    results: { summary: "Cholesterol slightly high" },
+  },
+];

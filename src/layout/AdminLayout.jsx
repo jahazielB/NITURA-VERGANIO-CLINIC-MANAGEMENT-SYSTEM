@@ -14,7 +14,7 @@ export default function AdminLayout() {
   const handleOpen = () => setMobileOpen(true);
   const handleClose = () => setMobileOpen(false);
   return (
-    <Box className="flex min-h-screen gap-1.5  bg-slate-100 overflow-x-hidden">
+    <Box className="flex min-h-screen   bg-slate-100 overflow-x-hidden">
       {/* Desktop sidebar */}
       <SidebarPermanent />
       {/* Mobile sidebar */}
