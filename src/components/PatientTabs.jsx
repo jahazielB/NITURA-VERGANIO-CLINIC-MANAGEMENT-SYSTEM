@@ -45,7 +45,7 @@ export default function PatientTabs({
         <Tab label="Prescriptions" />
         <Tab label="Lab Results" />
         <Tab label="SOAP" />
-        {role === "admin" && <Tab label="BILLING" />}
+        {role === "Admin" && <Tab label="BILLING" />}
       </Tabs>
       <Divider />
 
@@ -78,7 +78,7 @@ export default function PatientTabs({
         <TabPanel value={tab} index={4}>
           <SoapTab visits={visits} />
         </TabPanel>
-        {role === "admin" && (
+        {role === "Admin" && (
           <TabPanel value={tab} index={5}>
             <BillingTab patient={patient} />
           </TabPanel>

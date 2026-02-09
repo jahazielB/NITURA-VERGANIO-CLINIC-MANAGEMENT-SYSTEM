@@ -50,7 +50,6 @@ export const SidebarContent = ({ onItemClick, role = "Nurse", basePath }) => {
       <List className="flex-1 text-gray-200 cursor-pointer px-2">
         {menuItems.map((item) => {
           const isActive = location.pathname.startsWith(`/doctor/${item.path}`);
-          console.log(item.path);
 
           return (
             <ListItem
@@ -152,7 +151,7 @@ export const TopBar = ({ onMenuClick, role = "Nurse" }) => {
   const meta = ROLE_TOPBAR[role];
   return (
     <AppBar position="static" color="inherit" elevation={0}>
-      <Toolbar className="flex justify-between bg-amber-300 py-5">
+      <Toolbar className={`flex justify-between bg-[#${meta.color}] py-5`}>
         <Box className="flex items-center gap-2 ">
           {/* Hamburger only on small screens */}
           <IconButton
@@ -164,7 +163,7 @@ export const TopBar = ({ onMenuClick, role = "Nurse" }) => {
 
           <Box>
             <Typography variant="h6">{meta.title}</Typography>
-            <Typography variant="body2" sx={{ color: "#94a3b8" }}>
+            <Typography variant="body2" sx={{ color: "#757575" }}>
               {meta.subtitle}
             </Typography>
           </Box>

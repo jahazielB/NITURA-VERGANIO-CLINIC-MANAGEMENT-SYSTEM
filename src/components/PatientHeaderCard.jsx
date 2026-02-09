@@ -9,7 +9,12 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import AddVisitDialog from "./modals/AddvisitDialog";
 import { useState } from "react";
-export default function PatientHeaderCard({ patient, onAddVisit, onClose }) {
+export default function PatientHeaderCard({
+  patient,
+  onAddVisit,
+  onClose,
+  role,
+}) {
   const [openAddVisit, setOpenAddVisit] = useState(false);
   return (
     <Card className="rounded-2xl shadow-2xl ">
@@ -58,15 +63,18 @@ export default function PatientHeaderCard({ patient, onAddVisit, onClose }) {
             </Box>
           </Box>
 
-          <Box className="flex md:justify-end">
-            <Button
-              variant="contained"
-              startIcon={<AddIcon />}
-              onClick={() => setOpenAddVisit(true)}
-            >
-              Add Visit
-            </Button>
-          </Box>
+          {role === "Admin" ||
+            (role === "Nurse" && (
+              <Box className="flex md:justify-end">
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  onClick={() => setOpenAddVisit(true)}
+                >
+                  Add Visit
+                </Button>
+              </Box>
+            ))}
         </Box>
         <AddVisitDialog
           open={openAddVisit}

@@ -19,6 +19,7 @@ import MedTechLaboratoryPage from "./pages/medTech/laboratory/MedTechLaboratoryP
 import MedTechPatientsPage from "./pages/medTech/patients/MedTechPatientsPage";
 import NurseDashboardPage from "./pages/nurse/NurseDashboardPage";
 import NurseQueuePage from "./pages/nurse/queue/NurseQueuePage";
+import NursePatientsPage from "./pages/nurse/patients/NursePatientsPage";
 export default function App() {
   return (
     <BrowserRouter>
@@ -56,6 +57,8 @@ export default function App() {
         <Route path="nurse" element={<AdminLayout />}>
           <Route path="dashboard" element={<NurseDashboardPage />} />
           <Route path="queue" element={<NurseQueuePage />} />
+          <Route path="patients" element={<NursePatientsPage />} />
+          <Route path="/nurse/patients/:id" element={<PatientProfilePage />} />
         </Route>
       </Routes>
     </BrowserRouter>

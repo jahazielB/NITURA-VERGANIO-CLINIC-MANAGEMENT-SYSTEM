@@ -72,7 +72,7 @@ export default function NurseQueuePage() {
   };
 
   return (
-    <Box className="space-y-4">
+    <Box className="space-y-4 p-5.5">
       <Box>
         <Typography variant="h6" className="font-bold">
           Queue (Triage)

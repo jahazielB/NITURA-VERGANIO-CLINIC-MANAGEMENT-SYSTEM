@@ -35,7 +35,6 @@ export const NAV_BY_ROLE = {
     { text: "Lab Review", icon: <ScienceIcon />, path: "lab-review" },
   ],
 
-  // later
   MedTech: [
     { text: "Dashboard", icon: <DashboardIcon />, path: "dashboard" },
     { text: "Laboratory", icon: <ScienceIcon />, path: "laboratory" },
@@ -54,20 +53,24 @@ export const ROLE_TOPBAR = {
     title: "Welcome, Admin",
     subtitle: "Manage clinic activities and view reports",
     avatar: "AD",
+    color: "BBD4FC",
   },
   Doctor: {
     title: "Welcome, Doctor",
     subtitle: "View your queue, write SOAP notes, and review labs",
     avatar: "DR",
+    color: "BBFCDB",
   },
   MedTech: {
     title: "Welcome, Med Tech",
     subtitle: "Process and release laboratory results",
     avatar: "MT",
+    color: "F28D8D",
   },
   Nurse: {
     title: "Welcome, Nurse",
     subtitle: "Manage vitals, queue, and patient intake",
     avatar: "NR",
+    color: "FAEA9B",
   },
 };
