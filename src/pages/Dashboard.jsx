@@ -18,6 +18,10 @@ import ScienceIcon from "@mui/icons-material/Science";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import { drawerWidth } from "../components/AdminShell";
 
+import { useEffect, useState } from "react";
+
+import { supabase } from "../lib/supabaseClient";
+
 /* ---------------- Dashboard Widgets ---------------- */
 
 export const StatCard = ({
@@ -130,6 +134,16 @@ export const QuickActionsCard = () => (
 /* ---------------- Main Dashboard Page ---------------- */
 
 export default function DashboardPage() {
+  const [sampleData, setSampleData] = useState();
+
+  const sampleFetch = async () => {
+    const { data, error } = await supabase
+      .from("patients")
+      .select("first_name");
+    if (error) return console.log("error:", error);
+    setSampleData(data);
+  };
+
   return (
     <Box className="flex min-h-screen bg-slate-100">
       <Box

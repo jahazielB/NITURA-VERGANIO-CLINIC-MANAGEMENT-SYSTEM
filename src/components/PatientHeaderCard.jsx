@@ -63,18 +63,17 @@ export default function PatientHeaderCard({
             </Box>
           </Box>
 
-          {role === "Admin" ||
-            (role === "Nurse" && (
-              <Box className="flex md:justify-end">
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setOpenAddVisit(true)}
-                >
-                  Add Visit
-                </Button>
-              </Box>
-            ))}
+          {(role === "Admin" || role === "Nurse") && (
+            <Box className="flex md:justify-end">
+              <Button
+                variant="contained"
+                startIcon={<AddIcon />}
+                onClick={() => setOpenAddVisit(true)}
+              >
+                Add Visit
+              </Button>
+            </Box>
+          )}
         </Box>
         <AddVisitDialog
           open={openAddVisit}

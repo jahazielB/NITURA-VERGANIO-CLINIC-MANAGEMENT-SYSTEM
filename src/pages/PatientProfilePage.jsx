@@ -5,7 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import PatientHeaderCard from "../components/PatientHeaderCard";
 import PatientTabs from "../components/PatientTabs";
 
-export default function PatientProfilePage({ role = "Nurse" }) {
+export default function PatientProfilePage({ role = "Admin" }) {
   const [searchParams] = useSearchParams();
   const [tab, setTab] = useState(1); // Visits default
 

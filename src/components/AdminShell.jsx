@@ -35,7 +35,7 @@ import { NAV_BY_ROLE, ROLE_TOPBAR } from "../layout/navConfig";
 export const drawerWidth = 250;
 
 /** Drawer content reused for mobile + desktop */
-export const SidebarContent = ({ onItemClick, role = "Nurse", basePath }) => {
+export const SidebarContent = ({ onItemClick, role = "Admin", basePath }) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -147,11 +147,12 @@ export const SidebarMobile = ({ open, onClose }) => (
   </Drawer>
 );
 
-export const TopBar = ({ onMenuClick, role = "Nurse" }) => {
+export const TopBar = ({ onMenuClick, role = "Admin" }) => {
   const meta = ROLE_TOPBAR[role];
+  const color = meta.color;
   return (
     <AppBar position="static" color="inherit" elevation={0}>
-      <Toolbar className={`flex justify-between bg-[#${meta.color}] py-5`}>
+      <Toolbar className={`flex justify-between bg-[#${color}] py-5`}>
         <Box className="flex items-center gap-2 ">
           {/* Hamburger only on small screens */}
           <IconButton
