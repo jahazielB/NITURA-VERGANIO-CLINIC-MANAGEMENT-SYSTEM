@@ -25,12 +25,13 @@ import NurseQueuePage from "../pages/nurse/queue/NurseQueuePage";
 import NursePatientsPage from "../pages/nurse/patients/NursePatientsPage";
 
 import ProtectedRoute from "../auth/ProtectedRoute";
+import RootRedirect from "../auth/RootRedirect";
 
 export default function Router() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<Login />} />
 
         {/* Admin */}

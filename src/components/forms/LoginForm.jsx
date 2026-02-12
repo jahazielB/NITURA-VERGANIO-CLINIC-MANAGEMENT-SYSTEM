@@ -1,10 +1,9 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
 
-import { data, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { signIn } from "../../auth/auth";
 import { supabase } from "../../lib/supabaseClient";
 import { useEffect, useState } from "react";
-import { Email, Password } from "@mui/icons-material";
 export default function LoginForm() {
   const [loginCredentials, setLoginCredentials] = useState({
     Email: "",

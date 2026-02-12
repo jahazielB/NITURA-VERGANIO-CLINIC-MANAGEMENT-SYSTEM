@@ -21,6 +21,7 @@ import { drawerWidth } from "../components/AdminShell";
 import { useEffect, useState } from "react";
 
 import { supabase } from "../lib/supabaseClient";
+import { useSelector } from "react-redux";
 
 /* ---------------- Dashboard Widgets ---------------- */
 
@@ -135,6 +136,10 @@ export const QuickActionsCard = () => (
 
 export default function DashboardPage() {
   const [sampleData, setSampleData] = useState();
+  const { role } = useSelector((s) => s.auth);
+  useEffect(() => {
+    console.log(role);
+  }, []);
 
   const sampleFetch = async () => {
     const { data, error } = await supabase
