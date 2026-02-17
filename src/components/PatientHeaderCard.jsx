@@ -9,13 +9,10 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import AddVisitDialog from "./modals/AddvisitDialog";
 import { useState } from "react";
-export default function PatientHeaderCard({
-  patient,
-  onAddVisit,
-  onClose,
-  role,
-}) {
+import { useSelector } from "react-redux";
+export default function PatientHeaderCard({ patient, onAddVisit, onClose }) {
   const [openAddVisit, setOpenAddVisit] = useState(false);
+  const { role } = useSelector((s) => s.auth);
   return (
     <Card className="rounded-2xl shadow-2xl ">
       <CardContent className="bg-slate-200 ">

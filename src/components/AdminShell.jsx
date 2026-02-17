@@ -14,19 +14,15 @@ import {
 
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
-import EventIcon from "@mui/icons-material/Event";
-import PeopleIcon from "@mui/icons-material/People";
-import ScienceIcon from "@mui/icons-material/Science";
-import PaymentsIcon from "@mui/icons-material/Payments";
 import NotificationsIcon from "@mui/icons-material/Notifications";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
 
 import Logo from "./Logo";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
 import { NAV_BY_ROLE, ROLE_TOPBAR } from "../layout/navConfig";
-
+import { useDispatch, useSelector } from "react-redux";
+import { logout } from "../store/authSlice";
 /**
  * role: "Admin" | "Doctor" | "Med Tech" | "Nurse"
  * basePath: "/admin" | "/doctor" | "/medtech" | "/nurse"
@@ -35,11 +31,18 @@ import { NAV_BY_ROLE, ROLE_TOPBAR } from "../layout/navConfig";
 export const drawerWidth = 250;
 
 /** Drawer content reused for mobile + desktop */
-export const SidebarContent = ({ onItemClick, role = "Admin", basePath }) => {
+export const SidebarContent = ({ onItemClick, basePath }) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
+  const { role } = useSelector((s) => s.auth);
 
   const menuItems = NAV_BY_ROLE[role];
+
+  const handleLogout = async () => {
+    await dispatch(logout()).unwrap();
+    navigate("/");
+  };
 
   return (
     <Box className="flex flex-col h-full">
@@ -49,7 +52,9 @@ export const SidebarContent = ({ onItemClick, role = "Admin", basePath }) => {
 
       <List className="flex-1 text-gray-200 cursor-pointer px-2">
         {menuItems.map((item) => {
-          const isActive = location.pathname.startsWith(`/doctor/${item.path}`);
+          const isActive = location.pathname.startsWith(
+            `/${role}/${item.path}/`,
+          );
 
           return (
             <ListItem
@@ -92,7 +97,7 @@ export const SidebarContent = ({ onItemClick, role = "Admin", basePath }) => {
       </List>
 
       <Box className="p-4 border-t border-slate-600 cursor-pointer">
-        <ListItem button>
+        <ListItem button onClick={() => handleLogout()}>
           <ListItemIcon sx={{ color: "#cbd5e1" }}>
             <DashboardIcon />
           </ListItemIcon>
@@ -147,7 +152,8 @@ export const SidebarMobile = ({ open, onClose }) => (
   </Drawer>
 );
 
-export const TopBar = ({ onMenuClick, role = "Admin" }) => {
+export const TopBar = ({ onMenuClick }) => {
+  const { role } = useSelector((s) => s.auth);
   const meta = ROLE_TOPBAR[role];
   const color = meta.color;
   return (

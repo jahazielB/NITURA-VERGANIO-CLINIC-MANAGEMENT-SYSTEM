@@ -14,12 +14,13 @@ export const initializeAuth = createAsyncThunk(
 
       const { data: prof, error: profErr } = await supabase
         .from("user_profiles")
-        .select("role")
+        .select("role,full_name")
         .eq("id", user.id)
         .maybeSingle();
 
       if (profErr) throw profErr;
-      return { user, role: prof?.role ?? null };
+
+      return { user, role: prof?.role ?? null, userName: prof.full_name };
     } catch (e) {
       return rejectWithValue(e.message);
     }
@@ -58,7 +59,13 @@ export const logout = createAsyncThunk(
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: { user: null, role: null, loading: true, error: true },
+  initialState: {
+    user: null,
+    role: null,
+    userName: null,
+    loading: true,
+    error: true,
+  },
   reducers: {
     // setUser: (state, action) => {},
     // logOut: (state, action) => {},
@@ -72,12 +79,14 @@ const authSlice = createSlice({
       .addCase(initializeAuth.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.role = action.payload.role;
+        state.userName = action.payload.userName;
         state.loading = false;
       })
       .addCase(initializeAuth.rejected, (state, action) => {
         state.loading = false;
         state.user = null;
         state.role = null;
+        state.userName = null;
         state.error = action.payload || action.error.message;
       })
       .addCase(login.pending, (state) => {

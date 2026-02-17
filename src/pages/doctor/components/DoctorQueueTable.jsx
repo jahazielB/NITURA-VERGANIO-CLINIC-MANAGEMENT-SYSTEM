@@ -108,7 +108,16 @@ export default function DoctorQueueTable({
           </TableBody>
         </Table>
       </CardContent>
-      {location.pathname === "/doctor/queue" && <TablePagination />}
+      {location.pathname === "/doctor/queue" && (
+        <TablePagination
+          component="div"
+          count={rows.length}
+          page={0}
+          rowsPerPage={10}
+          onPageChange={() => {}}
+          onRowsPerPageChange={() => {}}
+        />
+      )}
     </Card>
   );
 }

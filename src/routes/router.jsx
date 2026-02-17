@@ -32,7 +32,7 @@ export default function Router() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<RootRedirect />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/login" element={<RootRedirect />} />
 
         {/* Admin */}
         <Route element={<ProtectedRoute allowRoles={["Admin"]} />}>

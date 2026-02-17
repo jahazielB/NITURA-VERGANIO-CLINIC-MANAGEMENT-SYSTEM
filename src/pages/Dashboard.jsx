@@ -136,10 +136,6 @@ export const QuickActionsCard = () => (
 
 export default function DashboardPage() {
   const [sampleData, setSampleData] = useState();
-  const { role } = useSelector((s) => s.auth);
-  useEffect(() => {
-    console.log(role);
-  }, []);
 
   const sampleFetch = async () => {
     const { data, error } = await supabase

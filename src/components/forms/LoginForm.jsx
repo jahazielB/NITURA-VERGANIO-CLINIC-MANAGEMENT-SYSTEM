@@ -4,33 +4,34 @@ import { useNavigate } from "react-router-dom";
 import { signIn } from "../../auth/auth";
 import { supabase } from "../../lib/supabaseClient";
 import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { login } from "../../store/authSlice";
 export default function LoginForm() {
   const [loginCredentials, setLoginCredentials] = useState({
     Email: "",
     Password: "",
   });
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { role } = useSelector((s) => s.auth);
   const handleLogin = async (e) => {
     try {
       e.preventDefault();
-      await signIn(loginCredentials.Email, loginCredentials.Password);
+      await dispatch(
+        login({
+          email: loginCredentials.Email,
+          password: loginCredentials.Password,
+        }),
+      ).unwrap();
+      // const { data: sessRes, error: sessError } =
+      //   await supabase.auth.getSession();
+      // if (sessError) throw sessError;
 
-      const { data: userRes } = await supabase.auth.getUser();
-      const user = userRes?.user;
+      // const user = sessRes?.data.user ?? null;
 
-      const { data: prof, error } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (error) throw error;
-      if (!prof?.role) throw new Error("No role assigned to this account");
-
-      const role = prof.role;
-      navigate(`/${role}/dashboard`, { replace: true });
+      navigate(`/`);
     } catch (e) {
-      alert(e.message);
+      console.error(e.message);
     }
   };
 

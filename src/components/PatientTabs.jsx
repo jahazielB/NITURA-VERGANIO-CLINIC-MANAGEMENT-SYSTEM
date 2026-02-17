@@ -16,6 +16,7 @@ import PrescriptionsTab from "./PrescriptionsTab";
 import SoapTab from "./SoapTab";
 import LabResultsTab from "./LabResultsTab";
 import BillingTab from "./BillingTab";
+import { useSelector } from "react-redux";
 function TabPanel({ value, index, children }) {
   return value === index ? <Box className="pt-4">{children}</Box> : null;
 }
@@ -30,8 +31,8 @@ export default function PatientTabs({
   selectedVisitId,
   onSelectVisit,
   patient,
-  role,
 }) {
+  const { role } = useSelector((s) => s.auth);
   return (
     <Card className="rounded-2xl shadow-2xl">
       <Tabs

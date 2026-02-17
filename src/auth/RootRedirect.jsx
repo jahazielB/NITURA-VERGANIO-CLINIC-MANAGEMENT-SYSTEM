@@ -1,57 +1,19 @@
-import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
-import { supabase } from "../lib/supabaseClient";
+import { useSelector } from "react-redux";
+import Login from "../pages/Login";
 
 export default function RootRedirect() {
-  const [to, setTo] = useState(null);
+  const { user, role, loading } = useSelector((s) => s.auth);
 
-  useEffect(() => {
-    let alive = true;
+  if (loading) return <div className="p-4">Loading...</div>;
 
-    const run = async () => {
-      try {
-        const { data, error } = await supabase.auth.getUser();
-        if (error) throw error;
+  if (!user) return <Login />;
 
-        const user = data?.user;
-        if (!user) {
-          if (!alive) return;
-          setTo("/login");
-          return;
-        }
+  if (!role) {
+    return (
+      <div className="p-4 text-red-600">No role assigned to this account.</div>
+    );
+  }
 
-        const { data: prof, error: profErr } = await supabase
-          .from("user_profiles")
-          .select("role")
-          .eq("id", user.id)
-          .maybeSingle();
-
-        if (profErr) throw profErr;
-
-        const role = prof?.role;
-        if (!role) {
-          if (!alive) return;
-          // if you prefer, redirect to login or show message page
-          setTo("/login");
-          return;
-        }
-
-        if (!alive) return;
-        setTo(`/${role}/dashboard`);
-      } catch (e) {
-        console.error("[RootRedirect] error:", e);
-        if (!alive) return;
-        setTo("/login");
-      }
-    };
-
-    run();
-
-    return () => {
-      alive = false;
-    };
-  }, []);
-
-  if (!to) return <div className="p-4">Loading...</div>;
-  return <Navigate to={to} replace />;
+  return <Navigate to={`/${role}/dashboard`} replace />;
 }
