@@ -17,7 +17,10 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+
+import { fetchPatients } from "../store/patientSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const money = (n) =>
   new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(
@@ -74,6 +77,14 @@ export default function Patients() {
       contact: "09987654321",
     },
   ]);
+  const dispatch = useDispatch();
+  const { rows, loading, error } = useSelector((s) => s.patients);
+
+  useEffect(() => {
+    dispatch(fetchPatients());
+  }, [dispatch]);
+
+  console.log(rows);
 
   // ✅ UI-only mock invoices (ties to patient.id)
   const [mockInvoices] = useState([
@@ -163,17 +174,19 @@ export default function Patients() {
             </TableHead>
 
             <TableBody>
-              {filteredPatients.map((patient) => {
+              {rows.map((patient) => {
                 const bill = patientBillingSummary(patient.id, mockInvoices);
 
                 return (
                   <TableRow key={patient.id} hover>
                     <TableCell>
-                      {patient.firstName} {patient.lastName}
+                      {patient.first_name}{" "}
+                      {patient.middle_name[0].toUpperCase()}.{" "}
+                      {patient.last_name}
                     </TableCell>
                     <TableCell>{patient.gender}</TableCell>
-                    <TableCell>{patient.contact}</TableCell>
-                    <TableCell>01/01/01</TableCell>
+                    <TableCell>{patient.contact_number}</TableCell>
+                    <TableCell>{patient.birth_date}</TableCell>
 
                     <TableCell>
                       <Box className="flex items-center gap-2 flex-wrap">
