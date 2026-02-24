@@ -22,6 +22,7 @@ export const addPatient = createAsyncThunk(
       const firstName = (form.firstName || "").trim();
       const lastName = (form.lastName || "").trim();
       const contact = (form.contact || "").trim();
+      const date = form.dateOfBirth;
 
       if (!firstName || !lastName || !contact) {
         throw new Error("First name, last name, and contact are required.");
@@ -30,9 +31,10 @@ export const addPatient = createAsyncThunk(
       const payload = {
         first_name: form.firstName,
         last_name: form.lastName,
-        contact,
+        middle_name: form.middleName,
+        contact_number: form.contact,
         gender: form.gender || null,
-        birth_date: form.dateOfbirth,
+        birth_date: date.$d || null,
       };
 
       const { data, error } = await supabase

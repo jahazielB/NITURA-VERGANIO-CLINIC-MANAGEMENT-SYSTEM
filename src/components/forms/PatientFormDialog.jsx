@@ -10,13 +10,20 @@ import {
   FormControl,
   Select,
   InputLabel,
+  CircularProgress,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
+import CustomSnackbar from "../modals/CustomSnackBar";
 
-export default function PatientFormDialog({ open, onClose, onSave, patient }) {
+import { useSelector, useDispatch } from "react-redux";
+import { addPatient } from "../../store/patientSlice";
+
+export default function PatientFormDialog({ open, onClose, patient }) {
+  const { adding } = useSelector((p) => p.patients);
+  const dispatch = useDispatch();
   const [form, setForm] = useState({
     firstName: "",
     middleName: "",
@@ -25,15 +32,11 @@ export default function PatientFormDialog({ open, onClose, onSave, patient }) {
     contact: "",
     dateOfBirth: null,
   });
-
-  useEffect(() => {
-    if (patient) {
-      setForm({
-        ...patient,
-        dateOfBirth: patient.dateOfBirth ? dayjs(patient.dateOfBirth) : null,
-      });
-    }
-  }, [patient]);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    severity: "",
+    message: "",
+  });
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -48,17 +51,21 @@ export default function PatientFormDialog({ open, onClose, onSave, patient }) {
     if (!form.gender.trim()) return alert("please put gender");
     if (!form.dateOfBirth) return alert("please date of birth");
   };
-  const handleSubmit = () => {
-    validation();
-    onSave({
-      ...form,
-      dateOfBirth: form.dateOfBirth
-        ? form.dateOfBirth.format("YYYY-MM-DD")
-        : null,
-    });
-    const date = form.dateOfBirth;
-    console.log(date.$d, form);
-    // onClose();
+  const handleSubmit = async () => {
+    try {
+      validation();
+      await dispatch(addPatient(form)).unwrap();
+      setSnackbar({
+        ...snackbar,
+        open: true,
+        severity: "success",
+        message: "Patient Saved Successfully!",
+      });
+
+      onClose();
+    } catch (e) {
+      setSnackbar({ ...snackbar, severity: "error", message: e });
+    }
   };
 
   return (
@@ -137,11 +144,24 @@ export default function PatientFormDialog({ open, onClose, onSave, patient }) {
 
         <DialogActions>
           <Button onClick={onClose}>Cancel</Button>
-          <Button variant="contained" onClick={handleSubmit}>
-            Save
+          <Button
+            variant="contained"
+            disabled={adding}
+            onClick={handleSubmit}
+            startIcon={
+              adding ? <CircularProgress color="inherit" size={20} /> : null
+            }
+          >
+            {adding ? "Saving" : "Save"}
           </Button>
         </DialogActions>
       </Dialog>
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
     </LocalizationProvider>
   );
 }

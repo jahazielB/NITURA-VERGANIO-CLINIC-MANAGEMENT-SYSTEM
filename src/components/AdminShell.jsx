@@ -53,7 +53,7 @@ export const SidebarContent = ({ onItemClick, basePath }) => {
       <List className="flex-1 text-gray-200 cursor-pointer px-2">
         {menuItems.map((item) => {
           const isActive = location.pathname.startsWith(
-            `/${role}/${item.path}/`,
+            `/${role}/${item.path}`,
           );
 
           return (

@@ -61,30 +61,12 @@ export default function Patients() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
 
-  const [patients, setPatients] = useState([
-    {
-      id: 1,
-      firstName: "Juan",
-      lastName: "Dela Cruz",
-      gender: "Male",
-      contact: "09123456789",
-    },
-    {
-      id: 2,
-      firstName: "Maria",
-      lastName: "Santos",
-      gender: "Female",
-      contact: "09987654321",
-    },
-  ]);
   const dispatch = useDispatch();
   const { rows, loading, error } = useSelector((s) => s.patients);
 
   useEffect(() => {
     dispatch(fetchPatients());
   }, [dispatch]);
-
-  console.log(rows);
 
   // ✅ UI-only mock invoices (ties to patient.id)
   const [mockInvoices] = useState([
@@ -112,26 +94,9 @@ export default function Patients() {
 
   const filteredPatients = useMemo(() => {
     const s = search.toLowerCase();
-    return patients.filter((p) =>
-      `${p.firstName} ${p.lastName}`.toLowerCase().includes(s),
-    );
-  }, [patients, search]);
+  }, [search]);
 
-  const handleSave = (patient) => {
-    if (patient.id) {
-      setPatients((prev) =>
-        prev.map((p) => (p.id === patient.id ? patient : p)),
-      );
-    } else {
-      setPatients((prev) => [...prev, { ...patient, id: Date.now() }]);
-    }
-  };
-
-  const handleDelete = (id) => {
-    if (confirm("Delete this patient?")) {
-      setPatients((prev) => prev.filter((p) => p.id !== id));
-    }
-  };
+  const handleDelete = (id) => {};
 
   return (
     <Box className="p-4">
@@ -168,6 +133,7 @@ export default function Patients() {
                 <TableCell>Gender</TableCell>
                 <TableCell>Contact</TableCell>
                 <TableCell>Birthday</TableCell>
+                <TableCell>Address</TableCell>
                 <TableCell>Billing</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
@@ -176,17 +142,27 @@ export default function Patients() {
             <TableBody>
               {rows.map((patient) => {
                 const bill = patientBillingSummary(patient.id, mockInvoices);
+                const fullName =
+                  patient.first_name +
+                  " " +
+                  patient.middle_name.charAt(0) +
+                  ". " +
+                  patient.last_name;
+
+                const upperCaseName = fullName
+                  .split(" ")
+                  .map((letters) => {
+                    return letters.charAt(0).toUpperCase() + letters.slice(1);
+                  })
+                  .join(" ");
 
                 return (
                   <TableRow key={patient.id} hover>
-                    <TableCell>
-                      {patient.first_name}{" "}
-                      {patient.middle_name[0].toUpperCase()}.{" "}
-                      {patient.last_name}
-                    </TableCell>
+                    <TableCell>{upperCaseName}</TableCell>
                     <TableCell>{patient.gender}</TableCell>
                     <TableCell>{patient.contact_number}</TableCell>
                     <TableCell>{patient.birth_date}</TableCell>
+                    <TableCell>{patient.address}</TableCell>
 
                     <TableCell>
                       <Box className="flex items-center gap-2 flex-wrap">
@@ -223,13 +199,13 @@ export default function Patients() {
                 );
               })}
 
-              {filteredPatients.length === 0 && (
+              {/* {filteredPatients.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     No patients found
                   </TableCell>
                 </TableRow>
-              )}
+              )} */}
             </TableBody>
           </Table>
         </CardContent>
@@ -238,7 +214,6 @@ export default function Patients() {
       <PatientFormDialog
         open={openForm}
         onClose={() => setOpenForm(false)}
-        onSave={handleSave}
         patient={selectedPatient}
       />
     </Box>
