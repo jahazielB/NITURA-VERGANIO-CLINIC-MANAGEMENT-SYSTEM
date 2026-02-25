@@ -13,14 +13,19 @@ import {
   TableBody,
   IconButton,
   Chip,
+  TablePagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import ConfirmDeleteCancel from "../components/modals/ConfirmDelete";
+import CustomSnackbar from "../components/modals/CustomSnackBar";
 
 import { useMemo, useState, useEffect } from "react";
 
-import { fetchPatients } from "../store/patientSlice";
+import { deletePatient, fetchPatients } from "../store/patientSlice";
 import { useDispatch, useSelector } from "react-redux";
+
+import useDebounce from "../hooks/useDebounce";
 
 const money = (n) =>
   new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(
@@ -60,14 +65,29 @@ export default function Patients() {
   const [search, setSearch] = useState("");
   const [openForm, setOpenForm] = useState(false);
   const [selectedPatient, setSelectedPatient] = useState(null);
+  const [page, setPage] = useState(0);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    severity: "",
+    message: "",
+  });
+
+  const rowsPerPage = 7;
 
   const dispatch = useDispatch();
-  const { rows, loading, error } = useSelector((s) => s.patients);
+  const { rows, loading, error, total } = useSelector((s) => s.patients);
+
+  const debouncedSearch = useDebounce(search, 500);
 
   useEffect(() => {
-    dispatch(fetchPatients());
-  }, [dispatch]);
+    dispatch(fetchPatients({ page, rowsPerPage, search: debouncedSearch }));
+  }, [dispatch, page, debouncedSearch]);
 
+  const refetchPatients = () => {
+    dispatch(fetchPatients({ page, rowsPerPage, search: debouncedSearch }));
+    setPage(0);
+  };
   // ✅ UI-only mock invoices (ties to patient.id)
   const [mockInvoices] = useState([
     {
@@ -96,7 +116,23 @@ export default function Patients() {
     const s = search.toLowerCase();
   }, [search]);
 
-  const handleDelete = (id) => {};
+  const handleDelete = async () => {
+    try {
+      await dispatch(deletePatient(selectedPatient)).unwrap();
+      setSnackbar({
+        ...snackbar,
+        open: true,
+        severity: "success",
+        message: "Patient Deleted Successfully!",
+      });
+      dispatch(fetchPatients({ page, rowsPerPage, search: debouncedSearch }));
+      setOpenDeleteDialog(false);
+      setSelectedPatient(null);
+      setPage(0);
+    } catch (e) {
+      setSnackbar({ ...snackbar, open: true, severity: "error", message: e });
+    }
+  };
 
   return (
     <Box className="p-4">
@@ -148,21 +184,25 @@ export default function Patients() {
                   patient.middle_name.charAt(0) +
                   ". " +
                   patient.last_name;
-
-                const upperCaseName = fullName
-                  .split(" ")
-                  .map((letters) => {
-                    return letters.charAt(0).toUpperCase() + letters.slice(1);
-                  })
-                  .join(" ");
+                const address = patient.address;
+                const upperCaseFirstLetter = (word) => {
+                  if (!word) return "";
+                  return word
+                    .trim()
+                    .split(" ")
+                    .map((letters) => {
+                      return letters.charAt(0).toUpperCase() + letters.slice(1);
+                    })
+                    .join(" ");
+                };
 
                 return (
                   <TableRow key={patient.id} hover>
-                    <TableCell>{upperCaseName}</TableCell>
+                    <TableCell>{upperCaseFirstLetter(fullName)}</TableCell>
                     <TableCell>{patient.gender}</TableCell>
                     <TableCell>{patient.contact_number}</TableCell>
                     <TableCell>{patient.birth_date}</TableCell>
-                    <TableCell>{patient.address}</TableCell>
+                    <TableCell>{upperCaseFirstLetter(address)}</TableCell>
 
                     <TableCell>
                       <Box className="flex items-center gap-2 flex-wrap">
@@ -190,7 +230,10 @@ export default function Patients() {
                       </IconButton>
                       <IconButton
                         color="error"
-                        onClick={() => handleDelete(patient.id)}
+                        onClick={() => {
+                          setOpenDeleteDialog(true);
+                          setSelectedPatient(patient.id);
+                        }}
                       >
                         <DeleteIcon />
                       </IconButton>
@@ -199,22 +242,43 @@ export default function Patients() {
                 );
               })}
 
-              {/* {filteredPatients.length === 0 && (
+              {rows.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
                     No patients found
                   </TableCell>
                 </TableRow>
-              )} */}
+              )}
             </TableBody>
           </Table>
         </CardContent>
+        <TablePagination
+          component="div"
+          count={total} // use total from supabase
+          page={page}
+          onPageChange={(e, newPage) => setPage(newPage)}
+          rowsPerPage={rowsPerPage}
+          rowsPerPageOptions={[]}
+        />
       </Card>
 
       <PatientFormDialog
         open={openForm}
         onClose={() => setOpenForm(false)}
         patient={selectedPatient}
+        onSaved={refetchPatients}
+      />
+      <ConfirmDeleteCancel
+        open={openDeleteDialog}
+        cancel={() => setOpenDeleteDialog(false)}
+        loading={loading}
+        handleDelete={() => handleDelete()}
+      />
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        severity={snackbar.severity}
       />
     </Box>
   );

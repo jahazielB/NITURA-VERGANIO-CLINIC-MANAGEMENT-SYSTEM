@@ -5,23 +5,23 @@ import {
   DialogActions,
   TextField,
   Button,
-  Grid,
+  Stack,
   MenuItem,
   FormControl,
   Select,
   InputLabel,
   CircularProgress,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useEffect, useState } from "react";
-import dayjs from "dayjs";
+import { useState } from "react";
 import CustomSnackbar from "../modals/CustomSnackBar";
-
 import { useSelector, useDispatch } from "react-redux";
 import { addPatient } from "../../store/patientSlice";
 
-export default function PatientFormDialog({ open, onClose, patient }) {
+export default function PatientFormDialog({ open, onClose, patient, onSaved }) {
   const { adding } = useSelector((p) => p.patients);
   const dispatch = useDispatch();
   const [form, setForm] = useState({
@@ -30,6 +30,7 @@ export default function PatientFormDialog({ open, onClose, patient }) {
     lastName: "",
     gender: "",
     contact: "",
+    address: "",
     dateOfBirth: null,
   });
   const [snackbar, setSnackbar] = useState({
@@ -38,74 +39,89 @@ export default function PatientFormDialog({ open, onClose, patient }) {
     message: "",
   });
 
-  const handleChange = (e) => {
+  const theme = useTheme();
+  const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
+  const handleChange = (e) =>
     setForm({ ...form, [e.target.name]: e.target.value });
+  const handleDateChange = (value) => setForm({ ...form, dateOfBirth: value });
+
+  const validation = () => {
+    if (!form.firstName.trim()) return alert("Please enter first name");
+    if (!form.lastName.trim()) return alert("Please enter last name");
+    if (!form.gender.trim()) return alert("Please select gender");
+    if (!form.dateOfBirth) return alert("Please select date of birth");
   };
 
-  const handleDateChange = (value) => {
-    setForm({ ...form, dateOfBirth: value });
-  };
-  const validation = () => {
-    if (!form.firstName.trim()) return alert("please put first name");
-    if (!form.lastName.trim()) return alert("please put last name");
-    if (!form.gender.trim()) return alert("please put gender");
-    if (!form.dateOfBirth) return alert("please date of birth");
-  };
   const handleSubmit = async () => {
     try {
       validation();
       await dispatch(addPatient(form)).unwrap();
       setSnackbar({
-        ...snackbar,
         open: true,
         severity: "success",
         message: "Patient Saved Successfully!",
       });
-
+      onSaved?.();
+      setForm({
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        gender: "",
+        contact: "",
+        address: "",
+        dateOfBirth: null,
+      });
       onClose();
     } catch (e) {
-      setSnackbar({ ...snackbar, severity: "error", message: e });
+      setSnackbar({ open: true, severity: "error", message: e });
     }
   };
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
-      <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-        <DialogTitle sx={{ pb: 1 }}>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        fullWidth
+        maxWidth="sm"
+        fullScreen={fullScreen}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            p: 2,
+            boxShadow: 6,
+            backgroundColor: "#fdfdfd",
+          },
+        }}
+      >
+        <DialogTitle sx={{ fontWeight: 600, fontSize: "1.25rem" }}>
           {patient ? "Edit Patient" : "Add Patient"}
         </DialogTitle>
 
-        <DialogContent container spacing={3} sx={{ mt: 0 }}>
-          <Grid container spacing={2} mt={1}>
-            <Grid item xs={4}>
-              <TextField
-                label="First Name"
-                name="firstName"
-                fullWidth
-                value={form.firstName}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                label="Middle Name"
-                name="middleName"
-                fullWidth
-                value={form.middleName}
-                onChange={handleChange}
-              />
-            </Grid>
-            <Grid item xs={4}>
-              <TextField
-                label="Last Name"
-                name="lastName"
-                fullWidth
-                value={form.lastName}
-                onChange={handleChange}
-              />
-            </Grid>
+        <DialogContent>
+          <Stack spacing={3} mt={1}>
+            {/* Name Fields */}
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              {["firstName", "middleName", "lastName"].map((field) => (
+                <TextField
+                  key={field}
+                  label={field
+                    .replace(/([A-Z])/g, " $1")
+                    .replace(/^./, (str) => str.toUpperCase())}
+                  name={field}
+                  fullWidth
+                  value={form[field]}
+                  onChange={handleChange}
+                  disabled={adding}
+                  size="small"
+                  sx={{ borderRadius: 2 }}
+                />
+              ))}
+            </Stack>
 
-            <Grid item xs={6}>
+            {/* Contact and Gender */}
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <TextField
                 label="Contact Number"
                 type="number"
@@ -113,49 +129,71 @@ export default function PatientFormDialog({ open, onClose, patient }) {
                 fullWidth
                 value={form.contact}
                 onChange={handleChange}
+                disabled={adding}
+                size="small"
+                sx={{ borderRadius: 2 }}
               />
-            </Grid>
-            <Grid item xs={6}>
-              <FormControl sx={{ m: 1, minWidth: 100 }}>
+              <FormControl fullWidth size="small">
                 <InputLabel>Gender</InputLabel>
                 <Select
                   name="gender"
                   value={form.gender}
-                  label="Gender"
                   onChange={handleChange}
+                  disabled={adding}
+                  sx={{ borderRadius: 2 }}
                 >
                   <MenuItem value="Male">Male</MenuItem>
                   <MenuItem value="Female">Female</MenuItem>
                 </Select>
               </FormControl>
-            </Grid>
-            <Grid item xs={12}>
+            </Stack>
+
+            {/* Address and Date of Birth */}
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
+              <TextField
+                label="Address"
+                name="address"
+                fullWidth
+                value={form.address}
+                onChange={handleChange}
+                disabled={adding}
+                size="small"
+                sx={{ borderRadius: 2 }}
+              />
               <DatePicker
                 label="Date of Birth"
                 value={form.dateOfBirth}
                 onChange={handleDateChange}
-                slotProps={{
-                  textField: { fullWidth: true },
-                }}
+                disabled={adding}
+                slotProps={{ textField: { fullWidth: true, size: "small" } }}
               />
-            </Grid>
-          </Grid>
+            </Stack>
+          </Stack>
         </DialogContent>
 
-        <DialogActions>
-          <Button onClick={onClose}>Cancel</Button>
+        <DialogActions sx={{ px: 3, py: 2 }}>
+          <Button
+            onClick={onClose}
+            disabled={adding}
+            variant="outlined"
+            sx={{ borderRadius: 2 }}
+          >
+            Cancel
+          </Button>
           <Button
             variant="contained"
-            disabled={adding}
             onClick={handleSubmit}
+            disabled={adding}
             startIcon={
-              adding ? <CircularProgress color="inherit" size={20} /> : null
+              adding ? <CircularProgress size={20} color="inherit" /> : null
             }
+            sx={{ borderRadius: 2 }}
           >
-            {adding ? "Saving" : "Save"}
+            {adding ? "Saving..." : "Save"}
           </Button>
         </DialogActions>
       </Dialog>
+
       <CustomSnackbar
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}

@@ -3,12 +3,32 @@ import { supabase } from "../lib/supabaseClient";
 
 export const fetchPatients = createAsyncThunk(
   "patients/fetchPatients",
-  async (_, { rejectWithValue }) => {
+  async ({ page, rowsPerPage, search }, { rejectWithValue }) => {
     try {
-      const { data, error } = await supabase.from("patients").select("*");
+      const from = page * rowsPerPage;
+      const to = from + rowsPerPage - 1;
+
+      let query = supabase
+        .from("patients")
+        .select("*", { count: "exact" })
+        .order("created_at", { ascending: false });
+
+      if (search?.trim()) {
+        const value = search.trim();
+
+        query = query.or(
+          `first_name.ilike.%${value}%,last_name.ilike.%${value}%,address.ilike.%${value}%`,
+        );
+      }
+
+      const { data, error, count } = await query.range(from, to);
 
       if (error) throw error;
-      return data || [];
+
+      return {
+        rows: data ?? [],
+        total: count ?? 0,
+      };
     } catch (e) {
       return rejectWithValue(e.message);
     }
@@ -35,6 +55,7 @@ export const addPatient = createAsyncThunk(
         contact_number: form.contact,
         gender: form.gender || null,
         birth_date: date.$d || null,
+        address: form.address,
       };
 
       const { data, error } = await supabase
@@ -50,11 +71,26 @@ export const addPatient = createAsyncThunk(
     }
   },
 );
+export const deletePatient = createAsyncThunk(
+  "patients/deletePatient",
+  async (id, { rejectWithValue }) => {
+    try {
+      const { error } = await supabase.from("patients").delete().eq("id", id);
+
+      if (error) throw error;
+
+      return id; // return deleted id
+    } catch (e) {
+      return rejectWithValue(e.message);
+    }
+  },
+);
 
 const patientsSlice = createSlice({
   name: "patients",
   initialState: {
     rows: [],
+    total: 0,
     loading: false,
     adding: false,
     error: null,
@@ -69,11 +105,13 @@ const patientsSlice = createSlice({
       })
       .addCase(fetchPatients.fulfilled, (state, action) => {
         state.loading = false;
-        state.rows = action.payload;
+        state.rows = action.payload.rows;
+        state.total = action.payload.total;
       })
       .addCase(fetchPatients.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to load patients";
+        state.total = 0;
       })
 
       // add
@@ -88,6 +126,26 @@ const patientsSlice = createSlice({
       .addCase(addPatient.rejected, (state, action) => {
         state.adding = false;
         state.error = action.payload || "Failed to add patient";
+      })
+
+      //delete
+      .addCase(deletePatient.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(deletePatient.fulfilled, (state, action) => {
+        state.loading = false;
+
+        // remove deleted patient from state
+        state.rows = state.rows.filter(
+          (patient) => patient.id !== action.payload,
+        );
+
+        // decrease total count
+        state.total = state.total - 1;
+      })
+      .addCase(deletePatient.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Failed to delete patient";
       });
   },
 });
