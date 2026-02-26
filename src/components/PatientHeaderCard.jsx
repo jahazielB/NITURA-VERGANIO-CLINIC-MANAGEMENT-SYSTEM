@@ -8,11 +8,12 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import AddVisitDialog from "./modals/AddvisitDialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 export default function PatientHeaderCard({ patient, onAddVisit, onClose }) {
   const [openAddVisit, setOpenAddVisit] = useState(false);
   const { role } = useSelector((s) => s.auth);
+
   return (
     <Card className="rounded-2xl shadow-2xl ">
       <CardContent className="bg-slate-200 ">
@@ -38,7 +39,10 @@ export default function PatientHeaderCard({ patient, onAddVisit, onClose }) {
                   <span className="text-slate-900">{patient.patientId}</span>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Age: <span className="text-slate-900">{patient.age}</span>
+                  Age:{" "}
+                  <span className="text-slate-900">
+                    auto calculate age coming
+                  </span>
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Gender:{" "}

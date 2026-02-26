@@ -17,10 +17,12 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ConfirmDeleteCancel from "../components/modals/ConfirmDelete";
 import CustomSnackbar from "../components/modals/CustomSnackBar";
 
 import { useMemo, useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { deletePatient, fetchPatients } from "../store/patientSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -74,6 +76,7 @@ export default function Patients() {
   });
 
   const rowsPerPage = 7;
+  const navigate = useNavigate();
 
   const dispatch = useDispatch();
   const { rows, loading, error, total } = useSelector((s) => s.patients);
@@ -221,9 +224,14 @@ export default function Patients() {
 
                     <TableCell align="right">
                       <IconButton
+                        disabled={!patient?.id}
+                        onClick={() => navigate(`${patient.id}`)}
+                      >
+                        <OpenInNewIcon />
+                      </IconButton>
+                      <IconButton
                         onClick={() => {
                           setSelectedPatient(patient);
-                          console.log(patient);
                           setOpenForm(true);
                         }}
                       >
