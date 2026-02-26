@@ -157,8 +157,13 @@ export const TopBar = ({ onMenuClick }) => {
   const meta = ROLE_TOPBAR[role];
   const color = meta.color;
   return (
-    <AppBar position="static" color="inherit" elevation={0}>
-      <Toolbar className={`flex justify-between bg-[#${color}] py-5`}>
+    <AppBar
+      position="static"
+      color="inherit"
+      elevation={0}
+      sx={{ backgroundColor: meta.color }}
+    >
+      <Toolbar className={`flex justify-between  py-5`}>
         <Box className="flex items-center gap-2 ">
           {/* Hamburger only on small screens */}
           <IconButton

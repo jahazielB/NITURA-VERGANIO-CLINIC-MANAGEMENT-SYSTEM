@@ -223,6 +223,7 @@ export default function Patients() {
                       <IconButton
                         onClick={() => {
                           setSelectedPatient(patient);
+                          console.log(patient);
                           setOpenForm(true);
                         }}
                       >
@@ -264,7 +265,10 @@ export default function Patients() {
 
       <PatientFormDialog
         open={openForm}
-        onClose={() => setOpenForm(false)}
+        onClose={() => {
+          setOpenForm(false);
+          setSelectedPatient(null);
+        }}
         patient={selectedPatient}
         onSaved={refetchPatients}
       />

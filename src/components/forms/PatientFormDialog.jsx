@@ -16,13 +16,14 @@ import {
 } from "@mui/material";
 import { LocalizationProvider, DatePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CustomSnackbar from "../modals/CustomSnackBar";
 import { useSelector, useDispatch } from "react-redux";
-import { addPatient } from "../../store/patientSlice";
+import dayjs from "dayjs";
+import { addPatient, editPatient } from "../../store/patientSlice";
 
 export default function PatientFormDialog({ open, onClose, patient, onSaved }) {
-  const { adding } = useSelector((p) => p.patients);
+  const { adding, updating } = useSelector((p) => p.patients);
   const dispatch = useDispatch();
   const [form, setForm] = useState({
     firstName: "",
@@ -55,14 +56,33 @@ export default function PatientFormDialog({ open, onClose, patient, onSaved }) {
 
   const handleSubmit = async () => {
     try {
-      validation();
-      await dispatch(addPatient(form)).unwrap();
-      setSnackbar({
-        open: true,
-        severity: "success",
-        message: "Patient Saved Successfully!",
-      });
+      if (patient) {
+        // ✅ EDIT MODE
+        await dispatch(
+          editPatient({
+            id: patient.id,
+            updatedData: form,
+          }),
+        ).unwrap();
+
+        setSnackbar({
+          open: true,
+          severity: "success",
+          message: "Patient Updated Successfully!",
+        });
+      } else {
+        // ✅ ADD MODE
+        await dispatch(addPatient(form)).unwrap();
+
+        setSnackbar({
+          open: true,
+          severity: "success",
+          message: "Patient Saved Successfully!",
+        });
+      }
+
       onSaved?.();
+
       setForm({
         firstName: "",
         middleName: "",
@@ -72,11 +92,43 @@ export default function PatientFormDialog({ open, onClose, patient, onSaved }) {
         address: "",
         dateOfBirth: null,
       });
+
       onClose();
     } catch (e) {
-      setSnackbar({ open: true, severity: "error", message: e });
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: e,
+      });
     }
   };
+  useEffect(() => {
+    if (patient) {
+      setForm({
+        firstName: patient.first_name || "",
+        middleName: patient.middle_name || "",
+        lastName: patient.last_name || "",
+        gender: patient.gender || "",
+        contact: patient.contact_number || "",
+        address: patient.address || "",
+        dateOfBirth: patient.birth_date ? dayjs(patient.birth_date) : null,
+      });
+    }
+  }, [patient]);
+
+  useEffect(() => {
+    if (!open) {
+      setForm({
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        gender: "",
+        contact: "",
+        address: "",
+        dateOfBirth: null,
+      });
+    }
+  }, [open]);
 
   return (
     <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -183,13 +235,21 @@ export default function PatientFormDialog({ open, onClose, patient, onSaved }) {
           <Button
             variant="contained"
             onClick={handleSubmit}
-            disabled={adding}
+            disabled={adding || updating}
             startIcon={
-              adding ? <CircularProgress size={20} color="inherit" /> : null
+              adding || updating ? (
+                <CircularProgress size={20} color="inherit" />
+              ) : null
             }
             sx={{ borderRadius: 2 }}
           >
-            {adding ? "Saving..." : "Save"}
+            {adding
+              ? "Saving..."
+              : updating
+                ? "Updating..."
+                : patient
+                  ? "Update"
+                  : "Save"}
           </Button>
         </DialogActions>
       </Dialog>

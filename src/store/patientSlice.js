@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../lib/supabaseClient";
+import LatestSoapNoteCard from "../components/LatestSoapNoteCard";
 
 export const fetchPatients = createAsyncThunk(
   "patients/fetchPatients",
@@ -40,22 +41,24 @@ export const addPatient = createAsyncThunk(
     try {
       // ✅ trim + validate
       const firstName = (form.firstName || "").trim();
+      const middleName = (form.middleName || "").trim();
       const lastName = (form.lastName || "").trim();
       const contact = (form.contact || "").trim();
+      const address = (form.address || "").trim();
       const date = form.dateOfBirth;
 
-      if (!firstName || !lastName || !contact) {
-        throw new Error("First name, last name, and contact are required.");
+      if (!firstName || !lastName || !middleName) {
+        throw new Error("First name, last name, and middle name are required.");
       }
 
       const payload = {
-        first_name: form.firstName,
-        last_name: form.lastName,
-        middle_name: form.middleName,
-        contact_number: form.contact,
+        first_name: firstName,
+        last_name: lastName,
+        middle_name: middleName,
+        contact_number: contact,
         gender: form.gender || null,
         birth_date: date.$d || null,
-        address: form.address,
+        address: address,
       };
 
       const { data, error } = await supabase
@@ -85,6 +88,46 @@ export const deletePatient = createAsyncThunk(
     }
   },
 );
+export const editPatient = createAsyncThunk(
+  "patients/editPatient",
+  async ({ id, updatedData }, { rejectWithValue }) => {
+    try {
+      // ✅ trim + validate
+      const firstName = (updatedData.firstName || "").trim();
+      const middleName = (updatedData.middleName || "").trim();
+      const lastName = (updatedData.lastName || "").trim();
+      const contact = (updatedData.contact || "").trim();
+      const address = (updatedData.address || "").trim();
+      const gender = updatedData.gender || null;
+      const date = updatedData.dateOfBirth;
+
+      if (!firstName || !lastName || !middleName) {
+        throw new Error("First name, last name, and middle name are required.");
+      }
+      const updatedPayload = {
+        first_name: firstName,
+        middle_name: middleName,
+        last_name: lastName,
+        contact_number: contact,
+        address: address,
+        gender: gender,
+        birth_date: date.$d || null,
+      };
+      const { data, error } = await supabase
+        .from("patients")
+        .update(updatedPayload)
+        .eq("id", id)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      return data;
+    } catch (e) {
+      return rejectWithValue(e.message);
+    }
+  },
+);
 
 const patientsSlice = createSlice({
   name: "patients",
@@ -93,6 +136,7 @@ const patientsSlice = createSlice({
     total: 0,
     loading: false,
     adding: false,
+    updating: false,
     error: null,
   },
   reducers: {},
@@ -146,6 +190,22 @@ const patientsSlice = createSlice({
       .addCase(deletePatient.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Failed to delete patient";
+      })
+      //edit
+      .addCase(editPatient.pending, (state) => {
+        state.updating = true;
+      })
+      .addCase(editPatient.fulfilled, (state, action) => {
+        state.updating = false;
+
+        const index = state.rows.findIndex((p) => p.id === action.payload.id);
+
+        if (index !== -1) {
+          state.rows[index] = action.payload;
+        }
+      })
+      .addCase(editPatient.rejected, (state) => {
+        state.updating = false;
       });
   },
 });
