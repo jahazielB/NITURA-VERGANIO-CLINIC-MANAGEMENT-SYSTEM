@@ -36,35 +36,40 @@ export default function VisitHistoryTable({ rows }) {
             </TableHead>
 
             <TableBody>
-              {rows.map((r) => (
-                <TableRow key={r.id} hover>
-                  <TableCell>{r.date}</TableCell>
-                  <TableCell>{r.doctor}</TableCell>
-                  <TableCell>{r.reason}</TableCell>
-                  <TableCell align="right">
-                    <Box className="flex justify-end gap-1">
-                      <Button
-                        size="small"
-                        variant="contained"
-                        startIcon={<VisibilityIcon />}
-                        onClick={() => setOpen(true)}
-                      >
-                        View
-                      </Button>
-                      <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<EditIcon />}
-                        onClick={() => setOpen(true)}
-                      >
-                        Edit
-                      </Button>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {rows?.map((r) => {
+                const doctor = r.doctor;
+                return (
+                  <TableRow key={r.id} hover>
+                    <TableCell>
+                      {new Date(r.created_at).toLocaleDateString("en-US")}
+                    </TableCell>
+                    <TableCell>{doctor?.full_name}</TableCell>
+                    <TableCell>{r.chief_complaint}</TableCell>
+                    <TableCell align="right">
+                      <Box className="flex justify-end gap-1">
+                        <Button
+                          size="small"
+                          variant="contained"
+                          startIcon={<VisibilityIcon />}
+                          onClick={() => setOpen(true)}
+                        >
+                          View
+                        </Button>
+                        <Button
+                          size="small"
+                          variant="outlined"
+                          startIcon={<EditIcon />}
+                          onClick={() => setOpen(true)}
+                        >
+                          Edit
+                        </Button>
+                      </Box>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
 
-              {rows.length === 0 && (
+              {rows?.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
                     No visits found

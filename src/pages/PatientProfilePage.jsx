@@ -1,15 +1,19 @@
 import { Box, Typography } from "@mui/material";
 import { useMemo, useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useParams, data } from "react-router-dom";
 
 import PatientHeaderCard from "../components/PatientHeaderCard";
 import PatientTabs from "../components/PatientTabs";
 
+import { supabase } from "../lib/supabaseClient";
+
 export default function PatientProfilePage({}) {
   const [searchParams] = useSearchParams();
+  const param = useParams();
   const [tab, setTab] = useState(1); // Visits default
 
   const [selectedVisitId, setSelectedVisitId] = useState("");
+  const [fetchedPatient, setFetchedPatient] = useState(null);
   const tabParam = searchParams.get("tab");
 
   useEffect(() => {
@@ -22,8 +26,49 @@ export default function PatientProfilePage({}) {
     if (tabParam === "lab") {
       setTab(3);
     }
-    console.log(tabParam);
   }, [tabParam]);
+
+  useEffect(() => {
+    const fetchPatientInfo = async () => {
+      const { data, error } = await supabase
+        .from("patients")
+        .select(
+          `
+  *,
+  visits (
+    *,
+    doctor:user_profiles (
+      id,
+      full_name
+    ),
+    vitals(*),
+    soap_notes(*),
+    lab_requests(
+      *,
+      lab_result_items(*)
+    ),
+    prescription_orders(
+      *,
+      prescription_items(*)
+    ),
+    billings(
+      *,
+      billing_items(*),
+      payments(*)
+    )
+  )
+`,
+        )
+        .eq("id", param.id)
+        .single();
+      if (data) {
+        setFetchedPatient(data);
+        console.log(data.visits);
+      }
+    };
+
+    fetchPatientInfo();
+  }, []);
 
   const vitalsByVisit = [
     {
@@ -71,37 +116,6 @@ export default function PatientProfilePage({}) {
     [],
   );
 
-  const visits = useMemo(
-    () => [
-      {
-        id: 1,
-        date: "04/20/2024",
-        doctor: "Dr. Smith",
-        reason: "Follow-up Checkup",
-      },
-      { id: 2, date: "03/10/2024", doctor: "Dr. Alex", reason: "Flu Symptoms" },
-      {
-        id: 3,
-        date: "01/15/2024",
-        doctor: "Dr. Bea",
-        reason: "Annual Physical",
-      },
-      {
-        id: 3,
-        date: "01/15/2024",
-        doctor: "Dr. Bea",
-        reason: "Annual Physical",
-      },
-      {
-        id: 3,
-        date: "01/15/2024",
-        doctor: "Dr. Bea",
-        reason: "Annual Physical",
-      },
-    ],
-    [],
-  );
-
   const prescriptions = useMemo(
     () => [
       "Amoxicillin 500mg, 3x daily",
@@ -123,13 +137,13 @@ export default function PatientProfilePage({}) {
 
   return (
     <Box className="space-y-4 p-4">
-      <PatientHeaderCard patient={patient} />
+      <PatientHeaderCard patient={fetchedPatient || null} />
 
       <PatientTabs
         patient={patient}
         tab={tab}
         setTab={setTab}
-        visits={visits}
+        visits={fetchedPatient?.visits}
         prescriptions={prescriptions}
         latestSoap={latestSoap}
         vitalsByVisit={vitalsByVisit}
