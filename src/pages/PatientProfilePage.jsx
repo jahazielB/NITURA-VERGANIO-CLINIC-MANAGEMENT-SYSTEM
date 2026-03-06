@@ -116,15 +116,6 @@ export default function PatientProfilePage({}) {
     [],
   );
 
-  const prescriptions = useMemo(
-    () => [
-      "Amoxicillin 500mg, 3x daily",
-      "Ibuprofen 200mg, as needed",
-      "Lisinopril 10mg, daily",
-    ],
-    [],
-  );
-
   const latestSoap = useMemo(
     () => ({
       subjective: "Patient reports persistent cough and fatigue.",
@@ -144,7 +135,7 @@ export default function PatientProfilePage({}) {
         tab={tab}
         setTab={setTab}
         visits={fetchedPatient?.visits}
-        prescriptions={prescriptions}
+        prescriptions={fetchedPatient?.visits}
         latestSoap={latestSoap}
         vitalsByVisit={vitalsByVisit}
         selectedVisitId={selectedVisitId}
