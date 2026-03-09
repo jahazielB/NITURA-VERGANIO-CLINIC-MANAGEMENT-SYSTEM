@@ -10,114 +10,152 @@ import {
   Divider,
   Card,
   CardContent,
+  Stack,
 } from "@mui/material";
 
-export default function VisitDetailsModal({ open, onClose }) {
-  // later: these come from DB using visit.id
-  const vitals = {
-    temp: "37.8°C",
-    bp: "120/80",
-    pulse: "86",
-    weight: "72kg",
-    spo2: "97%",
-  };
+export default function VisitDetailsModal({ open, onClose, records }) {
+  const vitalsRecords = records?.flatMap((v) => v.vitals) || [];
+  const soapNotes = records?.flatMap((s) => s.soap_notes) || [];
+  const prescriptionsOrder = records?.flatMap((p) => p.prescription_orders);
+  const prescriptions =
+    prescriptionsOrder?.flatMap((p) => p.prescription_items) || [];
 
-  const soap = {
-    subjective: "Patient reports cough and fatigue.",
-    objective: "Mild fever, congested lungs.",
-    assessment: "Viral infection.",
-    plan: "Rest, fluids, meds, follow-up.",
-  };
-
-  const prescriptions = [
-    "Amoxicillin 500mg - 3x daily",
-    "Ibuprofen 200mg - as needed",
-  ];
-
-  const labs = [
-    { test: "CBC", status: "Pending" },
-    { test: "Urinalysis", status: "Released" },
-  ];
+  const labRequests = records?.flatMap((l) => l.lab_requests);
+  const labService = labRequests?.flatMap((l) => l.lab_services);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>
         <Box className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-          <Typography className="font-bold">Visit Details</Typography>
+          <Typography className="font-bold text-lg">Visit Details</Typography>
           <Chip label={"Completed"} color="success" size="small" />
         </Box>
-        <Typography
-          variant="body2"
-          color="text.secondary"
-          className="mt-1"
-        ></Typography>
       </DialogTitle>
 
-      <DialogContent dividers>
+      <DialogContent dividers className="space-y-6">
         {/* Vitals */}
-        <Card className="rounded-2xl shadow mb-4">
-          <CardContent>
-            <Typography className="font-semibold mb-2">Vitals</Typography>
-            <Box className="flex flex-wrap gap-2">
-              <Chip label={`Temp: ${vitals.temp}`} />
-              <Chip label={`BP: ${vitals.bp}`} />
-              <Chip label={`Pulse: ${vitals.pulse}`} />
-              <Chip label={`Weight: ${vitals.weight}`} />
-              <Chip label={`SpO₂: ${vitals.spo2}`} />
-            </Box>
-            <Typography variant="body2" color="text.secondary" className="mt-2">
-              Recorded: {}
-            </Typography>
-          </CardContent>
+        <Card className="rounded-2xl shadow-sm hover:shadow-md transition p-4">
+          <Typography className="font-semibold mb-3 text-md">Vitals</Typography>
+          <Stack spacing={3} maxHeight={200} overflow="auto">
+            {vitalsRecords.length > 0 ? (
+              vitalsRecords.map((v, idx) => (
+                <Box
+                  key={idx}
+                  className="p-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition"
+                >
+                  <Stack direction="row" spacing={1} flexWrap="wrap" mb={1}>
+                    <Chip label={`Temp: ${v.temperature_c}°C`} size="small" />
+                    <Chip
+                      label={`BP: ${v.blood_pressure_sys}/${v.blood_pressure_dia}`}
+                      size="small"
+                    />
+                    <Chip label={`Pulse: ${v.heart_rate}`} size="small" />
+                    <Chip
+                      label={`Resp Rate: ${v.respiratory_rate}`}
+                      size="small"
+                    />
+                    <Chip label={`Weight: ${v.weight_kg}kg`} size="small" />
+                    <Chip label={`SpO₂: ${v.spo2}`} size="small" />
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    Recorded at: {v.taken_at}
+                  </Typography>
+                </Box>
+              ))
+            ) : (
+              <Typography className="text-gray-400 text-sm italic">
+                No vitals recorded
+              </Typography>
+            )}
+          </Stack>
         </Card>
 
         {/* SOAP */}
-        <Card className="rounded-2xl shadow mb-4">
-          <CardContent>
-            <Typography className="font-semibold mb-2">SOAP Note</Typography>
-            <Box className="space-y-2">
-              <Typography variant="body2">
-                <span className="font-semibold">S:</span> {soap.subjective}
-              </Typography>
-              <Typography variant="body2">
-                <span className="font-semibold">O:</span> {soap.objective}
-              </Typography>
-              <Typography variant="body2">
-                <span className="font-semibold">A:</span> {soap.assessment}
-              </Typography>
-              <Typography variant="body2">
-                <span className="font-semibold">P:</span> {soap.plan}
-              </Typography>
-            </Box>
-          </CardContent>
+        <Card className="rounded-2xl shadow-sm hover:shadow-md transition p-4">
+          <Typography className="font-semibold mb-3 text-md">
+            SOAP Notes
+          </Typography>
+          {soapNotes.length > 0 ? (
+            <Stack spacing={3} maxHeight={250} overflow="auto">
+              {soapNotes.map((s) => (
+                <Card
+                  key={s.id}
+                  className="p-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-gray-100 transition"
+                >
+                  <Stack spacing={1}>
+                    <Typography variant="body2">
+                      <span className="font-semibold">S:</span> {s.subjective}
+                    </Typography>
+                    <Typography variant="body2">
+                      <span className="font-semibold">O:</span> {s.objective}
+                    </Typography>
+                    <Typography variant="body2">
+                      <span className="font-semibold">A:</span> {s.assessment}
+                    </Typography>
+                    <Typography variant="body2">
+                      <span className="font-semibold">P:</span> {s.plan}
+                    </Typography>
+                  </Stack>
+                </Card>
+              ))}
+            </Stack>
+          ) : (
+            <Typography className="text-gray-400 text-sm italic">
+              No SOAP recorded
+            </Typography>
+          )}
         </Card>
 
         {/* Prescriptions + Labs */}
         <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="rounded-2xl shadow">
-            <CardContent>
-              <Typography className="font-semibold mb-2">
-                Prescriptions
-              </Typography>
-              <Box className="space-y-1">
-                {prescriptions.map((p, idx) => (
-                  <Typography key={idx} variant="body2">
-                    • {p}
-                  </Typography>
-                ))}
-              </Box>
-            </CardContent>
+          {/* Prescriptions */}
+          <Card className="rounded-2xl shadow-sm hover:shadow-md transition p-4">
+            <Typography className="font-semibold mb-3 text-md">
+              Prescriptions
+            </Typography>
+            <Stack spacing={2} maxHeight={220} overflow="auto">
+              {prescriptions.length > 0 ? (
+                prescriptions.map((p) => (
+                  <Box
+                    key={p.id}
+                    className="p-2 rounded-lg border border-gray-200 bg-gray-50 hover:bg-gray-100 transition"
+                  >
+                    <Stack direction="row" spacing={1} flexWrap="wrap">
+                      <Chip label={p.medication} size="small" color="primary" />
+                      <Chip label={p.dosage} size="small" color="secondary" />
+                      <Chip label={p.frequency} size="small" color="warning" />
+                      {p.instructions && (
+                        <Chip label={p.instructions} size="small" />
+                      )}
+                      {p.duration && <Chip label={p.duration} size="small" />}
+                    </Stack>
+                  </Box>
+                ))
+              ) : (
+                <Typography className="text-gray-400 text-sm italic">
+                  No prescriptions
+                </Typography>
+              )}
+            </Stack>
           </Card>
 
-          <Card className="rounded-2xl shadow">
-            <CardContent>
-              <Typography className="font-semibold mb-2">
+          {/* Labs */}
+          {labRequests?.length > 0 ? (
+            <Card className="rounded-2xl shadow-sm hover:shadow-md transition p-4">
+              <Typography className="font-semibold mb-3 text-md">
                 Lab Requests
               </Typography>
-              <Box className="space-y-2">
-                {labs.map((l, idx) => (
-                  <Box key={idx} className="flex items-center justify-between">
-                    <Typography variant="body2">{l.test}</Typography>
+              <Stack spacing={2}>
+                {labRequests?.map((l) => (
+                  <Box
+                    key={l.id}
+                    className="flex items-center justify-between p-2 rounded-lg border border-gray-200 hover:bg-gray-50 transition"
+                  >
+                    {labService.map((s) => (
+                      <Typography key={s.id} variant="body2">
+                        {s.name}
+                      </Typography>
+                    ))}
                     <Chip
                       label={l.status}
                       size="small"
@@ -125,9 +163,13 @@ export default function VisitDetailsModal({ open, onClose }) {
                     />
                   </Box>
                 ))}
-              </Box>
-            </CardContent>
-          </Card>
+              </Stack>
+            </Card>
+          ) : (
+            <Typography className="text-gray-400 text-sm italic">
+              No Lab results
+            </Typography>
+          )}
         </Box>
 
         <Divider className="my-4" />
@@ -141,7 +183,12 @@ export default function VisitDetailsModal({ open, onClose }) {
         <Button onClick={onClose} variant="outlined">
           Close
         </Button>
-        <Button onClick={() => alert("Edit Visit next")} variant="contained">
+        <Button
+          onClick={() =>
+            console.log(labRequests?.flatMap((l) => l.lab_services))
+          }
+          variant="contained"
+        >
           Edit Visit
         </Button>
       </DialogActions>

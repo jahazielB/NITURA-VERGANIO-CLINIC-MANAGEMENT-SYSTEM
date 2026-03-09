@@ -45,7 +45,8 @@ export default function PatientProfilePage({}) {
     soap_notes(*),
     lab_requests(
       *,
-      lab_result_items(*)
+      lab_result_items(*),lab_services(*)
+          
     ),
     prescription_orders(
       *,
@@ -60,6 +61,7 @@ export default function PatientProfilePage({}) {
 `,
         )
         .eq("id", param.id)
+        .order("created_at", { foreignTable: "visits", ascending: false })
         .single();
       if (data) {
         setFetchedPatient(data);
@@ -136,7 +138,7 @@ export default function PatientProfilePage({}) {
         setTab={setTab}
         visits={fetchedPatient?.visits}
         prescriptions={fetchedPatient?.visits}
-        latestSoap={latestSoap}
+        latestSoap={fetchedPatient?.visits}
         vitalsByVisit={vitalsByVisit}
         selectedVisitId={selectedVisitId}
         onSelectVisit={setSelectedVisitId}

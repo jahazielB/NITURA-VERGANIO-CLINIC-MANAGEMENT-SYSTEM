@@ -1,36 +1,109 @@
-import { Box, Button, Card, CardContent, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Typography,
+  Divider,
+} from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
+import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
+import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
+import { useEffect } from "react";
+import { getLatestRecord } from "./helpers/getLatestRecord";
 
 export default function LatestSoapNoteCard({ soap, onViewNote }) {
+  const latestSoap = [getLatestRecord(soap, "soap_notes")];
+
+  // useEffect(() => {
+  //   if (soap) console.log(latestSoap);
+  // });
+
+  const SoapSection = ({ icon, label, value }) => (
+    <Box className="flex gap-2 items-start">
+      <Box className="text-blue-600 mt-[2px]">{icon}</Box>
+
+      <Box className="flex-1">
+        <Typography
+          variant="caption"
+          className="uppercase font-semibold text-slate-500 leading-none"
+        >
+          {label}
+        </Typography>
+
+        <Typography variant="body2" className="text-slate-700 leading-snug">
+          {value || "—"}
+        </Typography>
+      </Box>
+    </Box>
+  );
+
   return (
-    <Card className="rounded-2xl shadow-2xl h-full">
-      <CardContent>
-        <Typography className="font-semibold mb-3">Latest SOAP Note</Typography>
+    <Card className="rounded-xl shadow-lg h-full border border-slate-200">
+      <CardContent className="p-4">
+        {/* Header */}
+        <Typography
+          variant="subtitle1"
+          className="font-semibold text-slate-800 mb-2"
+        >
+          Latest SOAP Note
+        </Typography>
 
-        <Box className="rounded-xl bg-slate-100 p-3 space-y-2">
-          <Typography variant="body2">
-            <span className="font-semibold">Subjective:</span>{" "}
-            <span className="text-slate-700">{soap.subjective}</span>
-          </Typography>
-          <Typography variant="body2">
-            <span className="font-semibold">Objective:</span>{" "}
-            <span className="text-slate-700">{soap.objective}</span>
-          </Typography>
-          <Typography variant="body2">
-            <span className="font-semibold">Assessment:</span>{" "}
-            <span className="text-slate-700">{soap.assessment}</span>
-          </Typography>
-          <Typography variant="body2">
-            <span className="font-semibold">Plan:</span>{" "}
-            <span className="text-slate-700">{soap.plan}</span>
-          </Typography>
-        </Box>
+        {latestSoap?.length > 0 && latestSoap[0] ? (
+          latestSoap.map((s, index) => (
+            <Box
+              key={index}
+              className="bg-slate-50 rounded-lg border border-slate-200 p-3 space-y-2"
+            >
+              <SoapSection
+                icon={<PersonOutlineIcon fontSize="small" />}
+                label="Subjective"
+                value={s.subjective}
+              />
 
-        <Box className="mt-3 flex justify-end">
+              <Divider />
+
+              <SoapSection
+                icon={<ScienceOutlinedIcon fontSize="small" />}
+                label="Objective"
+                value={s.objective}
+              />
+
+              <Divider />
+
+              <SoapSection
+                icon={<PsychologyOutlinedIcon fontSize="small" />}
+                label="Assessment"
+                value={s.assessment}
+              />
+
+              <Divider />
+
+              <SoapSection
+                icon={<AssignmentOutlinedIcon fontSize="small" />}
+                label="Plan"
+                value={s.plan}
+              />
+            </Box>
+          ))
+        ) : (
+          <Box className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-3 text-center">
+            <Typography variant="body2" className="text-slate-500">
+              No SOAP note recorded
+            </Typography>
+          </Box>
+        )}
+
+        {/* Button */}
+        <Box className="flex justify-end mt-3">
           <Button
+            size="small"
             variant="contained"
             startIcon={<VisibilityIcon />}
             onClick={onViewNote}
+            className="rounded-lg"
           >
             View Note
           </Button>
