@@ -21,6 +21,7 @@ export default function VisitHistoryTable({ rows }) {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState(0);
   const [selectedVisit, setSelectedVisit] = useState(null);
+  const [mode, setMode] = useState(null);
 
   const rowsPerPage = 4;
 
@@ -71,6 +72,7 @@ export default function VisitHistoryTable({ rows }) {
                           onClick={() => {
                             handleViewButton(r);
                             setOpen(true);
+                            setMode("view");
                           }}
                         >
                           View
@@ -80,7 +82,9 @@ export default function VisitHistoryTable({ rows }) {
                           variant="outlined"
                           startIcon={<EditIcon />}
                           onClick={() => {
+                            handleViewButton(r);
                             setOpen(true);
+                            setMode("edit");
                           }}
                         >
                           Edit
@@ -119,7 +123,9 @@ export default function VisitHistoryTable({ rows }) {
           onClose={() => {
             setSelectedVisit(null);
             setOpen(false);
+            setMode(null);
           }}
+          mode={mode}
           records={selectedVisit}
         />
       </CardContent>
