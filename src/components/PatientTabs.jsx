@@ -25,8 +25,7 @@ export default function PatientTabs({
   tab,
   setTab,
   visits,
-  prescriptions,
-  latestSoap,
+
   vitalsByVisit,
   selectedVisitId,
   onSelectVisit,
@@ -61,10 +60,10 @@ export default function PatientTabs({
 
         <TabPanel value={tab} index={1}>
           <Box className="space-y-4">
-            <VisitHistoryTable rows={visits} />
+            <VisitHistoryTable />
             <Box className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              <RecentPrescriptionsCard items={prescriptions} />
-              <LatestSoapNoteCard soap={latestSoap} />
+              <RecentPrescriptionsCard onViewAll={() => setTab(2)} />
+              <LatestSoapNoteCard onViewNote={() => setTab(4)} />
             </Box>
           </Box>
         </TabPanel>

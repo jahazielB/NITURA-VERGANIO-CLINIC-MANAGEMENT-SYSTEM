@@ -1,6 +1,8 @@
 import { Card, Typography, Stack, Chip, Box, TextField } from "@mui/material";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 
+import { useState } from "react";
+
 export default function VitalsSection({ vitals, setVitals, mode }) {
   const isEdit = mode === "edit";
 

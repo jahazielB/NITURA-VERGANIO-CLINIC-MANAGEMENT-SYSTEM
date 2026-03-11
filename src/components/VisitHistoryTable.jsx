@@ -1,3 +1,4 @@
+import { supabase } from "../lib/supabaseClient";
 import {
   Box,
   Button,
@@ -14,22 +15,47 @@ import {
 } from "@mui/material";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
-import { useState } from "react";
-import VisitDetailsModal from "./modals/VisitDetailsModal";
+import DeleteIcon from "@mui/icons-material/Delete";
+import Tooltip from "@mui/material/Tooltip";
+import IconButton from "@mui/material/IconButton";
 
-export default function VisitHistoryTable({ rows }) {
+import { useState } from "react";
+import { useParams } from "react-router-dom";
+
+import VisitDetailsModal from "./modals/VisitDetailsModal";
+import CustomSnackbar from "./modals/CustomSnackBar";
+import ConfirmDeleteCancel from "./modals/ConfirmDelete";
+
+import { useSelector, useDispatch } from "react-redux";
+import { fetchPatientProfile } from "../store/patientProfileSlice";
+
+export default function VisitHistoryTable({}) {
   const [open, setOpen] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState({
+    open: false,
+    loading: false,
+  });
   const [page, setPage] = useState(0);
   const [selectedVisit, setSelectedVisit] = useState(null);
+  const [visitId, setVisitId] = useState(null);
   const [mode, setMode] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    severity: "",
+    message: "",
+  });
 
+  const params = useParams();
+  const { patientInfo } = useSelector((s) => s.patientProfile);
+  const visits = patientInfo?.visits;
+  const dispatch = useDispatch();
   const rowsPerPage = 4;
 
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
   };
 
-  const paginatedRows = rows?.slice(
+  const paginatedRows = visits?.slice(
     page * rowsPerPage,
     page * rowsPerPage + rowsPerPage,
   );
@@ -37,6 +63,33 @@ export default function VisitHistoryTable({ rows }) {
   const handleViewButton = (row) => {
     setSelectedVisit([row]);
   };
+
+  const handleDeleteVisit = async (id) => {
+    try {
+      setOpenDeleteDialog({ ...openDeleteDialog, loading: true });
+      const { error } = await supabase.from("visits").delete().eq("id", id);
+
+      if (error) throw error;
+      setSnackbar({
+        ...snackbar,
+        open: true,
+        severity: "success",
+        message: "Visit Deleted Successfully",
+      });
+      dispatch(fetchPatientProfile(params.id));
+      setOpenDeleteDialog({ ...openDeleteDialog, loading: false, open: false });
+    } catch (err) {
+      console.error("Delete visit failed:", err.message);
+      setSnackbar({
+        ...snackbar,
+        open: true,
+        severity: "error",
+        message: "Delete Visit Failed",
+      });
+      setOpenDeleteDialog({ ...openDeleteDialog, loading: false, open: false });
+    }
+  };
+
   return (
     <Card className="rounded-2xl shadow-2xl">
       <CardContent>
@@ -89,13 +142,28 @@ export default function VisitHistoryTable({ rows }) {
                         >
                           Edit
                         </Button>
+                        <Tooltip title="Delete">
+                          <IconButton
+                            aria-label="delete"
+                            color="error"
+                            onClick={() => {
+                              setOpenDeleteDialog({
+                                ...openDeleteDialog,
+                                open: true,
+                              });
+                              setVisitId(r.id);
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
                       </Box>
                     </TableCell>
                   </TableRow>
                 );
               })}
 
-              {rows?.length === 0 && (
+              {visits?.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={4} align="center">
                     No visits found
@@ -107,10 +175,10 @@ export default function VisitHistoryTable({ rows }) {
         </TableContainer>
 
         {/* Pagination */}
-        {rows?.length > rowsPerPage && (
+        {visits?.length > rowsPerPage && (
           <TablePagination
             component="div"
-            count={rows.length}
+            count={visits?.length}
             page={page}
             onPageChange={handleChangePage}
             rowsPerPage={rowsPerPage}
@@ -127,8 +195,24 @@ export default function VisitHistoryTable({ rows }) {
           }}
           mode={mode}
           records={selectedVisit}
+          setSnack={setSnackbar}
         />
       </CardContent>
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
+      <ConfirmDeleteCancel
+        open={openDeleteDialog.open}
+        cancel={() => {
+          setOpenDeleteDialog({ ...openDeleteDialog, open: false });
+          setVisitId(null);
+        }}
+        loading={openDeleteDialog.loading}
+        handleDelete={() => handleDeleteVisit(visitId)}
+      />
     </Card>
   );
 }

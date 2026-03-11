@@ -1,14 +1,17 @@
 import { Box, Button, Card, Typography, Divider } from "@mui/material";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useRef } from "react";
 import { getLatestRecord } from "./helpers/getLatestRecord";
+import { useSelector } from "react-redux";
 
 export default function RecentPrescriptionsCard({
-  items,
   onViewAll,
   maxHeight = 160,
 }) {
-  const latestPrescription = getLatestRecord(items, "prescription_orders");
+  const { patientInfo } = useSelector((s) => s.patientProfile);
+  const visit = patientInfo?.visits;
+  const latestPrescription = getLatestRecord(visit, "prescription_orders");
 
   const prescriptionItems = latestPrescription?.prescription_items || [];
   const scrollRef = useRef();
@@ -72,15 +75,17 @@ export default function RecentPrescriptionsCard({
         {/* Footer */}
         <Divider />
 
-        <Button
-          onClick={onViewAll}
-          fullWidth
-          size="small"
-          className="text-blue-600 font-bold text-[11px] py-0 hover:bg-blue-50"
-          endIcon={<ChevronRightIcon sx={{ fontSize: 14 }} />}
-        >
-          View All
-        </Button>
+        <div className="self-start">
+          <Button
+            onClick={() => onViewAll()}
+            variant="contained"
+            size="small"
+            className="text-blue-600 font-bold text-[11px] py-0 hover:bg-blue-50"
+            endIcon={<VisibilityIcon sx={{ fontSize: 14 }} />}
+          >
+            View All Prescriptions
+          </Button>
+        </div>
       </Box>
     </Card>
   );

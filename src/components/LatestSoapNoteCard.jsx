@@ -13,13 +13,12 @@ import PsychologyOutlinedIcon from "@mui/icons-material/PsychologyOutlined";
 import AssignmentOutlinedIcon from "@mui/icons-material/AssignmentOutlined";
 import { useEffect } from "react";
 import { getLatestRecord } from "./helpers/getLatestRecord";
+import { useSelector } from "react-redux";
 
-export default function LatestSoapNoteCard({ soap, onViewNote }) {
-  const latestSoap = [getLatestRecord(soap, "soap_notes")];
-
-  // useEffect(() => {
-  //   if (soap) console.log(latestSoap);
-  // });
+export default function LatestSoapNoteCard({ onViewNote }) {
+  const { patientInfo } = useSelector((s) => s.patientProfile);
+  const visit = patientInfo?.visits;
+  const latestSoap = [getLatestRecord(visit, "soap_notes")];
 
   const SoapSection = ({ icon, label, value }) => (
     <Box className="flex gap-2 items-start">
@@ -102,10 +101,10 @@ export default function LatestSoapNoteCard({ soap, onViewNote }) {
             size="small"
             variant="contained"
             startIcon={<VisibilityIcon />}
-            onClick={onViewNote}
+            onClick={() => onViewNote()}
             className="rounded-lg"
           >
-            View Note
+            View All SOAP
           </Button>
         </Box>
       </CardContent>

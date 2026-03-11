@@ -6,16 +6,19 @@ import PatientHeaderCard from "../components/PatientHeaderCard";
 import PatientTabs from "../components/PatientTabs";
 
 import { supabase } from "../lib/supabaseClient";
+import { fetchPatientProfile } from "../store/patientProfileSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function PatientProfilePage({}) {
   const [searchParams] = useSearchParams();
-  const param = useParams();
+  const { id } = useParams();
   const [tab, setTab] = useState(1); // Visits default
 
   const [selectedVisitId, setSelectedVisitId] = useState("");
   const [fetchedPatient, setFetchedPatient] = useState(null);
   const tabParam = searchParams.get("tab");
-
+  const dispatch = useDispatch();
+  const { patientInfo } = useSelector((s) => s.patientProfile);
   useEffect(() => {
     if (tabParam === "soap") {
       setTab(4);
@@ -29,49 +32,13 @@ export default function PatientProfilePage({}) {
   }, [tabParam]);
 
   useEffect(() => {
-    const fetchPatientInfo = async () => {
-      const { data, error } = await supabase
-        .from("patients")
-        .select(
-          `
-  *,
-  visits (
-    *,
-    doctor:user_profiles (
-      id,
-      full_name
-    ),
-    vitals(*),
-    soap_notes(*),
-    lab_requests(
-      *,
-      lab_result_items(*),lab_services(*)
-          
-    ),
-    prescription_orders(
-      *,
-      prescription_items(*)
-    ),
-    billings(
-      *,
-      billing_items(*),
-      payments(*)
-    )
-  )
-`,
-        )
-        .eq("id", param.id)
-        .order("created_at", { foreignTable: "visits", ascending: false })
-        .single();
-      if (data) {
-        setFetchedPatient(data);
-        console.log(data.visits);
-      }
-    };
-
-    fetchPatientInfo();
-  }, []);
-
+    if (id) {
+      dispatch(fetchPatientProfile(id));
+    }
+  }, [id, dispatch]);
+  useEffect(() => {
+    console.log(patientInfo?.visits);
+  }, [patientInfo]);
   const vitalsByVisit = [
     {
       visitId: "V3",
@@ -130,15 +97,12 @@ export default function PatientProfilePage({}) {
 
   return (
     <Box className="space-y-4 p-4">
-      <PatientHeaderCard patient={fetchedPatient || null} />
+      <PatientHeaderCard />
 
       <PatientTabs
         patient={patient}
         tab={tab}
         setTab={setTab}
-        visits={fetchedPatient?.visits}
-        prescriptions={fetchedPatient?.visits}
-        latestSoap={fetchedPatient?.visits}
         vitalsByVisit={vitalsByVisit}
         selectedVisitId={selectedVisitId}
         onSelectVisit={setSelectedVisitId}

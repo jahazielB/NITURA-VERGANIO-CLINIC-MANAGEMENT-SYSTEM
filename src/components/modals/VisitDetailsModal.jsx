@@ -8,6 +8,7 @@ import {
   Button,
   Typography,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import VitalsSection from "./visitDetailsModals/VitalsSection";
 import SoapSection from "./visitDetailsModals/SoapSection";
@@ -15,15 +16,28 @@ import PrescriptionsSection from "./visitDetailsModals/PrescriptionsSection";
 import LabsSection from "./visitDetailsModals/LabsSection";
 
 import { useState, useEffect } from "react";
-import { compose } from "@reduxjs/toolkit";
-
 import { supabase } from "../../lib/supabaseClient";
 
-export default function VisitDetailsModal({ open, onClose, records, mode }) {
+import { useDispatch } from "react-redux";
+import { fetchPatientProfile } from "../../store/patientProfileSlice";
+
+import { useParams } from "react-router-dom";
+
+export default function VisitDetailsModal({
+  open,
+  onClose,
+  records,
+  mode,
+  setSnack,
+}) {
   const [editVitals, setEditVitals] = useState([]);
   const [editSoap, setEditSoap] = useState([]);
   const [editPrescriptions, setEditPrescriptions] = useState([]);
   const [editLabs, setEditLabs] = useState([]);
+  const [saving, setSaving] = useState(false);
+
+  const dispatch = useDispatch();
+  const { id } = useParams();
 
   const vitalsRecords = records?.flatMap((v) => v.vitals) || [];
   const soapNotes = records?.flatMap((s) => s.soap_notes) || [];
@@ -42,58 +56,64 @@ export default function VisitDetailsModal({ open, onClose, records, mode }) {
     setEditLabs(labRequests.map((l) => ({ ...l })));
   }, [open]);
 
-  useEffect(() => {
-    console.log("prescriptions:", editSoap, mode);
-  }, [vitalsRecords]);
+  // useEffect(() => {
+  //   console.log("data", editSoap, editPrescriptions, editVitals);
+  // }, [vitalsRecords]);
+
   const saveVisitEdits = async ({
     soapNote,
     vitalsArray,
     prescriptionItems,
   }) => {
     try {
-      // 🔹 Run all updates concurrently
       const [updatedSoap, updatedVitals, updatedPrescriptionItems] =
         await Promise.all([
-          // 1️⃣ SOAP Note update
-          supabase
-            .from("soap_notes")
-            .update(soapNote)
-            .eq("id", soapNote.id)
-            .then(({ data, error }) => {
-              if (error) throw error;
-              return data[0];
-            }),
-
-          // 2️⃣ Vitals update (multiple objects)
+          // SOAP notes
           Promise.all(
-            vitalsArray.map((vital) =>
-              supabase
+            soapNote.map(async (soap) => {
+              const { data, error } = await supabase
+                .from("soap_notes")
+                .update(soap)
+                .eq("id", soap.id)
+                .select()
+                .single();
+
+              if (error) throw error;
+              return data;
+            }),
+          ),
+
+          // Vitals
+          Promise.all(
+            vitalsArray.map(async (vital) => {
+              const { data, error } = await supabase
                 .from("vitals")
                 .update(vital)
                 .eq("id", vital.id)
-                .then(({ data, error }) => {
-                  if (error) throw error;
-                  return data[0];
-                }),
-            ),
+                .select()
+                .single();
+
+              if (error) throw error;
+              return data;
+            }),
           ),
 
-          // 3️⃣ Prescription Items update (multiple objects)
+          // Prescription Items
           Promise.all(
-            prescriptionItems.map((item) =>
-              supabase
+            prescriptionItems.map(async (item) => {
+              const { data, error } = await supabase
                 .from("prescription_items")
                 .update(item)
                 .eq("id", item.id)
-                .then(({ data, error }) => {
-                  if (error) throw error;
-                  return data[0];
-                }),
-            ),
+                .select()
+                .single();
+
+              if (error) throw error;
+              return data;
+            }),
           ),
         ]);
 
-      // 🔹 Return everything
       return {
         soap: updatedSoap,
         vitals: updatedVitals,
@@ -122,7 +142,7 @@ export default function VisitDetailsModal({ open, onClose, records, mode }) {
         />
 
         <SoapSection
-          soapNotes={soapNotes}
+          soapNotes={mode === "edit" ? editSoap : soapNotes}
           mode={mode}
           setSoapNotes={setEditSoap}
         />
@@ -130,7 +150,9 @@ export default function VisitDetailsModal({ open, onClose, records, mode }) {
         <Box className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Box className={mode === "edit" ? "col-span-2" : ""}>
             <PrescriptionsSection
-              prescriptions={prescriptions}
+              prescriptions={
+                mode === "edit" ? editPrescriptions : prescriptions
+              }
               mode={mode}
               setPrescriptions={setEditPrescriptions}
             />
@@ -155,24 +177,38 @@ export default function VisitDetailsModal({ open, onClose, records, mode }) {
 
         {mode === "edit" && (
           <Button
+            disabled={saving}
+            startIcon={
+              saving ? <CircularProgress size={20} color="inherit" /> : null
+            }
             variant="contained"
             onClick={async () => {
               try {
+                setSaving(true);
                 const result = await saveVisitEdits({
                   soapNote: editSoap,
                   vitalsArray: editVitals, // multiple vitals objects
                   prescriptionItems: editPrescriptions,
                 });
+                setSnack({
+                  open: true,
+                  message: "Updated Successfully!",
+                  severity: "success",
+                });
+                dispatch(fetchPatientProfile(id));
+                setTimeout(() => onClose(), 1200);
 
-                console.log("Saved successfully:", result);
-
-                alert("Visit updated successfully!");
+                setSaving(false);
               } catch {
-                alert("Failed to save visit edits. Please try again.");
+                setSnack({
+                  open: true,
+                  message: "Failed to save visit edits. Please try again.",
+                  severity: "error",
+                });
               }
             }}
           >
-            Save
+            {saving ? "Saving..." : "Save"}
           </Button>
         )}
       </DialogActions>
