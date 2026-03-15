@@ -47,13 +47,6 @@ export default function PatientFormDialog({ open, onClose, patient, onSaved }) {
     setForm({ ...form, [e.target.name]: e.target.value });
   const handleDateChange = (value) => setForm({ ...form, dateOfBirth: value });
 
-  const validation = () => {
-    if (!form.firstName.trim()) return alert("Please enter first name");
-    if (!form.lastName.trim()) return alert("Please enter last name");
-    if (!form.gender.trim()) return alert("Please select gender");
-    if (!form.dateOfBirth) return alert("Please select date of birth");
-  };
-
   const handleSubmit = async () => {
     try {
       if (patient) {

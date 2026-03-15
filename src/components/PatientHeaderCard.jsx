@@ -10,8 +10,31 @@ import AddIcon from "@mui/icons-material/Add";
 import AddVisitDialog from "./modals/AddvisitDialog";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
+import CustomSnackbar from "./modals/CustomSnackBar";
+import { defaultVisitDateTime } from "./helpers/dateHelper";
 export default function PatientHeaderCard({ onAddVisit, onClose }) {
   const [openAddVisit, setOpenAddVisit] = useState(false);
+  const [form, setForm] = useState({
+    visitDateTime: defaultVisitDateTime,
+    doctorId: "",
+    visitType: "",
+    reason: "",
+    notes: "",
+    tempC: "",
+    pulse: "",
+    bp: "",
+    spo2: "",
+    weightKg: "",
+    heightCm: "",
+    respiratoryRate: "",
+    allergyNoted: false,
+    allergyDetails: "",
+  });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "",
+  });
   const { role } = useSelector((s) => s.auth);
   const { patientInfo } = useSelector((s) => s.patientProfile);
   function getAge(dateString) {
@@ -109,9 +132,20 @@ export default function PatientHeaderCard({ onAddVisit, onClose }) {
         </Box>
         <AddVisitDialog
           open={openAddVisit}
-          onClose={() => setOpenAddVisit(false)}
+          onClose={() => {
+            setOpenAddVisit(false);
+          }}
+          setSnack={setSnackbar}
+          form={form}
+          setForm={setForm}
         />
       </CardContent>
+      <CustomSnackbar
+        open={snackbar.open}
+        message={snackbar.message}
+        severity={snackbar.severity}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+      />
     </Card>
   );
 }

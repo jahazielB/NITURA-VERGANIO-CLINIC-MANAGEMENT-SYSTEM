@@ -41,6 +41,8 @@ export default function VitalsSection({ vitals, setVitals, mode }) {
                       <TextField
                         size="small"
                         label="Temp (°C)"
+                        type="number"
+                        inputProps={{ step: "0.01" }}
                         value={v.temperature_c || ""}
                         onChange={(e) =>
                           handleChange(i, "temperature_c", e.target.value)

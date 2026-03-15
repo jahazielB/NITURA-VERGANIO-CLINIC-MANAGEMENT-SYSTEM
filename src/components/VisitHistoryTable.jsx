@@ -102,6 +102,7 @@ export default function VisitHistoryTable({}) {
                 <TableCell>Date</TableCell>
                 <TableCell>Doctor</TableCell>
                 <TableCell>Reason</TableCell>
+                <TableCell>Allergy Noted</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -116,6 +117,9 @@ export default function VisitHistoryTable({}) {
                     </TableCell>
                     <TableCell>{doctor?.full_name}</TableCell>
                     <TableCell>{r.chief_complaint}</TableCell>
+                    <TableCell>
+                      {r.allergies === null ? "None" : r.allergies}
+                    </TableCell>
                     <TableCell align="right">
                       <Box className="flex justify-end gap-1">
                         <Button

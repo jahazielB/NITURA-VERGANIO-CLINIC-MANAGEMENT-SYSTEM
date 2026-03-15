@@ -37,7 +37,7 @@ export default function PatientProfilePage({}) {
     }
   }, [id, dispatch]);
   useEffect(() => {
-    console.log(patientInfo?.visits);
+    console.log(patientInfo);
   }, [patientInfo]);
   const vitalsByVisit = [
     {

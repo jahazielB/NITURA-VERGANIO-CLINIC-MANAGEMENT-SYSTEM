@@ -56,10 +56,6 @@ export default function VisitDetailsModal({
     setEditLabs(labRequests.map((l) => ({ ...l })));
   }, [open]);
 
-  // useEffect(() => {
-  //   console.log("data", editSoap, editPrescriptions, editVitals);
-  // }, [vitalsRecords]);
-
   const saveVisitEdits = async ({
     soapNote,
     vitalsArray,
@@ -177,7 +173,12 @@ export default function VisitDetailsModal({
 
         {mode === "edit" && (
           <Button
-            disabled={saving}
+            disabled={
+              saving ||
+              (editSoap.length === 0 &&
+                editPrescriptions.length === 0 &&
+                editVitals.length === 0)
+            }
             startIcon={
               saving ? <CircularProgress size={20} color="inherit" /> : null
             }

@@ -1,490 +1,497 @@
-// AddVisitDialog.jsx (React JSX + MUI + Tailwind-friendly)
-// Assumes: MUI installed
-// npm i @mui/material @mui/icons-material @emotion/react @emotion/styled
-
 import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../../lib/supabaseClient";
 import {
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  Grid,
   TextField,
   Button,
   Typography,
-  Divider,
   Switch,
-  FormControlLabel,
   Box,
   InputAdornment,
   Chip,
   MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
+  Divider,
+  IconButton,
+  CircularProgress,
 } from "@mui/material";
+import { Close } from "@mui/icons-material";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchPatientProfile } from "../../store/patientProfileSlice";
+import { defaultVisitDateTime } from "../helpers/dateHelper";
 
 /* ---------------- helpers ---------------- */
-
-function pad2(n) {
-  return String(n).padStart(2, "0");
-}
-
-// for <TextField type="datetime-local" />
-function toLocalDatetimeValue(date) {
-  const d = date instanceof Date ? date : new Date(date);
-  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}T${pad2(
-    d.getHours(),
-  )}:${pad2(d.getMinutes())}`;
-}
-
-function numOrNull(v) {
-  if (v === "" || v === null || typeof v === "undefined") return null;
-  const n = Number(v);
-  return Number.isFinite(n) ? n : null;
-}
-
-function calcBmi(weightKg, heightCm) {
-  const w = numOrNull(weightKg);
-  const h = numOrNull(heightCm);
-  if (!w || !h) return null;
-  const meters = h / 100;
-  if (meters <= 0) return null;
-  const bmi = w / (meters * meters);
-  return Number.isFinite(bmi) ? bmi : null;
-}
-
-function bmiCategory(bmi) {
-  if (bmi == null) return null;
-  if (bmi < 18.5) return "Underweight";
-  if (bmi < 25) return "Normal";
-  if (bmi < 30) return "Overweight";
-  return "Obese";
-}
-
-/* ---------------- defaults ---------------- */
-
-const VISIT_TYPES = ["Consultation", "Follow-up", "Walk-in", "Teleconsult"];
-
-const defaultForm = {
-  // visit info
-  visitDateTime: "", // datetime-local string
-  doctor: "",
-  visitType: "Consultation",
-  reason: "",
-  notes: "",
-
-  // vitals (optional inputs)
-  tempC: "",
-  bpS: "",
-  bpD: "",
-  pulse: "",
-  weightKg: "",
-  heightCm: "",
-  spo2: "",
-
-  // allergy flag
-  allergyNoted: false,
-  allergyDetails: "",
+const numOrNull = (v) =>
+  v === "" || v === null ? null : Number.isFinite(Number(v)) ? Number(v) : null;
+const calcBmi = (w, h) => (w && h ? w / (h / 100) ** 2 : null);
+const bmiCategory = (bmi) => {
+  if (bmi == null) return { label: "—", color: "default" };
+  if (bmi < 18.5) return { label: "Underweight", color: "info" };
+  if (bmi < 25) return { label: "Normal", color: "success" };
+  if (bmi < 30) return { label: "Overweight", color: "warning" };
+  return { label: "Obese", color: "error" };
 };
+const pad = (n) => n.toString().padStart(2, "0");
+const now = new Date();
+const offset = -now.getTimezoneOffset();
+const sign = offset >= 0 ? "+" : "-";
+const hh = pad(Math.floor(Math.abs(offset) / 60));
+const mm = pad(Math.abs(offset) % 60);
 
-/**
- * Props:
- * open: boolean
- * onClose: () => void
- * onSave: (payload) => void
- *
- * Optional:
- * doctors: string[]   // e.g. ["Dr. Alex", "Dr. Bea"]
- * initialValues: object // for edit mode later (optional)
- */
+const VISIT_TYPES = ["Walk-in", "Appointment"];
+
 export default function AddVisitDialog({
   open,
   onClose,
-  onSave,
-  doctors = ["Dr. Alex", "Dr. Bea"],
-  initialValues = null,
+  setSnack,
+  form,
+  setForm,
 }) {
-  const [form, setForm] = useState(defaultForm);
+  const [doctors, setDoctors] = useState([]);
+  const [saving, setSaving] = useState(false);
 
-  // Initialize on open
-  // useEffect(() => {
-  //   if (!open) return;
-
-  //   if (initialValues) {
-  //     // if editing later, ensure visitDateTime is in datetime-local format
-  //     const vdt = initialValues.visitDateTime
-  //       ? initialValues.visitDateTime
-  //       : initialValues.visitDate || initialValues.date || "";
-
-  //     setForm({
-  //       ...defaultForm,
-  //       ...initialValues,
-  //       visitDateTime: vdt
-  //         ? vdt.includes("T") && vdt.length >= 16
-  //           ? vdt.slice(0, 16)
-  //           : toLocalDatetimeValue(new Date(vdt))
-  //         : toLocalDatetimeValue(new Date()),
-  //     });
-  //     return;
-  //   }
-
-  //   // new visit default: now
-  //   setForm((prev) => ({
-  //     ...defaultForm,
-  //     visitDateTime: toLocalDatetimeValue(new Date()),
-  //     doctor: doctors?.[0] || "",
-  //   }));
-  // }, [open, initialValues, doctors]);
+  const { patientInfo } = useSelector((patient) => patient.patientProfile);
+  const { userName, role, user } = useSelector((u) => u.auth);
+  const dispatch = useDispatch();
 
   const bmi = useMemo(
-    () => calcBmi(form.weightKg, form.heightCm),
+    () => calcBmi(numOrNull(form.weightKg), numOrNull(form.heightCm)),
     [form.weightKg, form.heightCm],
   );
-
-  const bmiText = useMemo(() => {
-    if (bmi == null) return "—";
-    return bmi.toFixed(1);
-  }, [bmi]);
-
-  const bmiTag = useMemo(() => bmiCategory(bmi), [bmi]);
+  const bmiInfo = bmiCategory(bmi);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
+  const latestVisitId = patientInfo?.visits.map((v) => v.id);
+  const [systolic, diastolic] = form.bp.split("/");
+  const onSave = async () => {
+    try {
+      setSaving(true);
+      const visitPayload = [
+        {
+          created_at: form.visitDateTime || defaultVisitDateTime,
+          patient_id: patientInfo?.id,
+          visit_type: form.visitType || "",
+          chief_complaint: form.reason || "",
+          doctor_id: form.doctorId,
+          allergies: form.allergyDetails || "",
+        },
+      ];
 
-  const handleToggleAllergy = (_, checked) => {
-    setForm((p) => ({
-      ...p,
-      allergyNoted: checked,
-      allergyDetails: checked ? p.allergyDetails : "",
-    }));
-  };
-
-  const validate = () => {
-    // Visit info required
-    if (!form.visitDateTime) return "Visit date & time is required.";
-    if (!form.doctor) return "Doctor is required.";
-    if (!form.visitType) return "Visit type is required.";
-    if (!form.reason.trim()) return "Reason / chief complaint is required.";
-
-    // Vitals: optional (no required checks)
-    // Allergy: details optional even if noted (but recommended)
-    return null;
-  };
-
-  const buildPayload = () => {
-    // Store both raw strings (for UI) and parsed numbers (for DB later)
-    const payload = {
-      id: initialValues?.id ?? Date.now(), // temporary client id
-      visitDateTime: form.visitDateTime, // datetime-local string
-      doctor: form.doctor,
-      visitType: form.visitType,
-      reason: form.reason.trim(),
-      notes: form.notes?.trim() || "",
-
-      allergyNoted: Boolean(form.allergyNoted),
-      allergyDetails: form.allergyNoted ? form.allergyDetails.trim() : "",
-
-      // Vitals (optional)
-      vitals: {
-        tempC: numOrNull(form.tempC),
-        bpS: numOrNull(form.bpS),
-        bpD: numOrNull(form.bpD),
-        pulse: numOrNull(form.pulse),
-        weightKg: numOrNull(form.weightKg),
-        heightCm: numOrNull(form.heightCm),
-        spo2: numOrNull(form.spo2),
-        bmi: bmi == null ? null : Number(bmi.toFixed(2)),
-      },
-    };
-
-    return payload;
-  };
-
-  const handleSubmit = () => {
-    const err = validate();
-    if (err) {
-      alert(err);
-      return;
+      if (!form.reason.trim()) throw new Error("chief complaint is required");
+      const { data, error } = await supabase
+        .from("visits")
+        .insert(visitPayload)
+        .select();
+      if (error) throw error;
+      dispatch(fetchPatientProfile(patientInfo?.id));
+      const vitalsPayload = [
+        {
+          visit_id: latestVisitId?.[0],
+          temperature_c: form.tempC ? Number(form.tempC) : null,
+          blood_pressure_sys: systolic ? Number(systolic) : null,
+          blood_pressure_dia: diastolic ? Number(diastolic) : null,
+          heart_rate: form.pulse ? Number(form.pulse) : null,
+          spo2: form.spo2 ? Number(form.spo2) : null,
+          weight_kg: form.weightKg ? Number(form.weightKg) : null,
+          height_cm: form.heightCm ? Number(form.heightCm) : null,
+          bmi: bmi ? bmi.toFixed(1) : null,
+          taken_by: user?.id || null,
+          taken_at: form.visitDateTime || defaultVisitDateTime,
+        },
+      ];
+      const { data: vitals, error: errorvitals } = await supabase
+        .from("vitals")
+        .insert(vitalsPayload)
+        .select();
+      if (errorvitals) throw error;
+      setForm({
+        visitDateTime: defaultVisitDateTime,
+        doctorId: "",
+        visitType: "",
+        reason: "",
+        notes: "",
+        tempC: "",
+        pulse: "",
+        bp: "",
+        spo2: "",
+        weightKg: "",
+        heightCm: "",
+        respiratoryRate: "",
+        allergyNoted: false,
+        allergyDetails: "",
+      });
+      setSnack({
+        open: true,
+        message: "visit saved successfully!",
+        severity: "success",
+      });
+      setSaving(false);
+      setTimeout(() => onClose(), 1200);
+      dispatch(fetchPatientProfile(patientInfo?.id));
+    } catch (e) {
+      setSnack({
+        open: true,
+        message: `Error saving visit: ${e.message}`,
+        severity: "error",
+      });
+      setForm({
+        visitDateTime: new Date().toISOString().slice(0, 16),
+        doctorId: "",
+        visitType: "",
+        reason: "",
+        notes: "",
+        tempC: "",
+        pulse: "",
+        bp: "",
+        spo2: "",
+        weightKg: "",
+        heightCm: "",
+        respiratoryRate: "",
+        allergyNoted: false,
+        allergyDetails: "",
+      });
+      setSaving(false);
     }
-
-    onSave?.(buildPayload());
-    onClose?.();
   };
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("role", "Doctor");
+      if (error) console.log(error);
+
+      setDoctors(data);
+    };
+    fetchDoctors();
+  }, []);
+  // inside AddVisitDialog
+  useEffect(() => {
+    if (open) {
+      setForm((prev) => ({
+        ...prev,
+        visitDateTime: new Date().toLocaleString("sv-SE").slice(0, 16),
+      }));
+    }
+  }, [open]);
+  useEffect(() => {
+    console.log(patientInfo);
+  }, [patientInfo]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>
-        <Typography className="font-bold">Add Visit</Typography>
-        <Typography variant="body2" color="text.secondary" className="mt-1">
-          Create a visit record. Vitals are optional and can be filled later.
+      <DialogTitle
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          py: 1.5,
+        }}
+      >
+        <Typography
+          variant="h6"
+          component="span"
+          sx={{ fontWeight: 800, fontSize: "1.1rem" }}
+        >
+          Patient Visit Record
         </Typography>
+        <IconButton onClick={onClose} size="small">
+          <Close />
+        </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers>
-        {/* Two-column layout on desktop, single column on mobile */}
-        <Grid container spacing={2}>
-          {/* LEFT: Visit info */}
-          <Grid item xs={12} md={6}>
-            <Typography className="font-semibold">Visit Information</Typography>
-            <Divider className="my-2" />
+      <DialogContent dividers sx={{ p: 2, bgcolor: "#fcfcfc" }}>
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: { xs: "column", md: "row" },
+            gap: 3,
+          }}
+        >
+          {/* COLUMN 1: LOGISTICS */}
+          <Box
+            sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}
+          >
+            <Typography
+              variant="caption"
+              sx={{
+                fontWeight: 700,
+                color: "text.secondary",
+                letterSpacing: 1,
+              }}
+            >
+              LOGISTICS
+            </Typography>
 
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <TextField
-                  label="Visit Date & Time"
-                  type="datetime-local"
-                  name="visitDateTime"
-                  value={form.visitDateTime}
+            <TextField
+              type="datetime-local"
+              label="Visit Date"
+              name="visitDateTime"
+              value={form.visitDateTime}
+              onChange={handleChange}
+              fullWidth
+              size="small"
+              InputLabelProps={{ shrink: true }}
+            />
+
+            <Box sx={{ display: "flex", gap: 1.5 }}>
+              <FormControl fullWidth size="small">
+                <InputLabel>Doctor</InputLabel>
+                <Select
+                  name="doctorId"
+                  value={form.doctorId}
                   onChange={handleChange}
-                  fullWidth
-                  required
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
                   label="Doctor"
-                  name="doctor"
-                  value={form.doctor}
-                  onChange={handleChange}
-                  fullWidth
-                  required
                 >
-                  {doctors.map((d) => (
-                    <MenuItem key={d} value={d}>
-                      {d}
+                  {doctors?.map((d) => (
+                    <MenuItem key={d.id} value={d.id}>
+                      Dr. {d.full_name}
                     </MenuItem>
                   ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  select
-                  label="Visit Type"
+                </Select>
+              </FormControl>
+              <FormControl fullWidth size="small">
+                <InputLabel>Visit Type</InputLabel>
+                <Select
                   name="visitType"
                   value={form.visitType}
                   onChange={handleChange}
-                  fullWidth
-                  required
+                  label="Type"
                 >
                   {VISIT_TYPES.map((t) => (
                     <MenuItem key={t} value={t}>
                       {t}
                     </MenuItem>
                   ))}
-                </TextField>
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  label="Chief Complaint / Reason"
-                  name="reason"
-                  value={form.reason}
-                  onChange={handleChange}
-                  fullWidth
-                  required
-                  placeholder="e.g., cough, fever, follow-up checkup"
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  label="Notes (optional)"
-                  name="notes"
-                  value={form.notes}
-                  onChange={handleChange}
-                  fullWidth
-                  multiline
-                  minRows={3}
-                  placeholder="Additional notes for this visit..."
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Box className="rounded-xl bg-slate-50 p-3">
-                  <Box className="flex items-center justify-between">
-                    <Typography className="font-semibold">
-                      Allergy Noted
-                    </Typography>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={form.allergyNoted}
-                          onChange={handleToggleAllergy}
-                        />
-                      }
-                      label={form.allergyNoted ? "Yes" : "No"}
-                    />
-                  </Box>
-
-                  {form.allergyNoted && (
-                    <TextField
-                      label="Allergy Details"
-                      name="allergyDetails"
-                      value={form.allergyDetails}
-                      onChange={handleChange}
-                      fullWidth
-                      placeholder="e.g., Penicillin, Seafood..."
-                      className="mt-2"
-                    />
-                  )}
-                </Box>
-              </Grid>
-            </Grid>
-          </Grid>
-
-          {/* RIGHT: Vitals */}
-          <Grid item xs={12} md={6}>
-            <Box className="flex items-center justify-between">
-              <Typography className="font-semibold">
-                Vitals (Optional)
-              </Typography>
-              <Box className="flex items-center gap-2">
-                <Typography variant="body2" color="text.secondary">
-                  BMI:
-                </Typography>
-                <Chip label={bmiText} size="small" />
-                {bmiTag && (
-                  <Chip
-                    label={bmiTag}
-                    size="small"
-                    color={bmiTag === "Normal" ? "success" : "warning"}
-                  />
-                )}
-              </Box>
+                </Select>
+              </FormControl>
             </Box>
-            <Divider className="my-2" />
 
-            <Grid container spacing={2}>
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Temperature"
-                  name="tempC"
-                  value={form.tempC}
-                  onChange={handleChange}
-                  fullWidth
-                  placeholder="e.g., 37.8"
-                  inputProps={{ inputMode: "decimal" }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">°C</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
+            <TextField
+              label="Chief Complaint"
+              name="reason"
+              value={form.reason}
+              onChange={handleChange}
+              size="small"
+              fullWidth
+            />
 
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Pulse"
-                  name="pulse"
-                  value={form.pulse}
-                  onChange={handleChange}
-                  fullWidth
-                  placeholder="e.g., 86"
-                  inputProps={{ inputMode: "numeric" }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">bpm</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={6}>
-                <TextField
-                  label="BP Systolic"
-                  name="bpS"
-                  value={form.bpS}
-                  onChange={handleChange}
-                  fullWidth
-                  placeholder="e.g., 120"
-                  inputProps={{ inputMode: "numeric" }}
-                />
-              </Grid>
-
-              <Grid item xs={6}>
-                <TextField
-                  label="BP Diastolic"
-                  name="bpD"
-                  value={form.bpD}
-                  onChange={handleChange}
-                  fullWidth
-                  placeholder="e.g., 80"
-                  inputProps={{ inputMode: "numeric" }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Weight"
-                  name="weightKg"
-                  value={form.weightKg}
-                  onChange={handleChange}
-                  fullWidth
-                  placeholder="e.g., 72"
-                  inputProps={{ inputMode: "decimal" }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">kg</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12} sm={6}>
-                <TextField
-                  label="Height"
-                  name="heightCm"
-                  value={form.heightCm}
-                  onChange={handleChange}
-                  fullWidth
-                  placeholder="e.g., 170"
-                  inputProps={{ inputMode: "numeric" }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">cm</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <TextField
-                  label="SpO₂"
-                  name="spo2"
-                  value={form.spo2}
-                  onChange={handleChange}
-                  fullWidth
-                  placeholder="e.g., 97"
-                  inputProps={{ inputMode: "numeric" }}
-                  InputProps={{
-                    endAdornment: (
-                      <InputAdornment position="end">%</InputAdornment>
-                    ),
-                  }}
-                />
-              </Grid>
-
-              <Grid item xs={12}>
-                <Typography variant="body2" color="text.secondary">
-                  Note: Vitals are saved with the visit. You can leave them
-                  blank and fill later.
+            <Box
+              sx={{
+                p: 1,
+                border: "1px solid #ddd",
+                borderRadius: 1.5,
+                bgcolor: "#fff",
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                  Allergies?
                 </Typography>
-              </Grid>
-            </Grid>
-          </Grid>
-        </Grid>
+                <Switch
+                  size="small"
+                  checked={form.allergyNoted}
+                  onChange={(e) =>
+                    setForm({ ...form, allergyNoted: e.target.checked })
+                  }
+                />
+              </Box>
+              {form.allergyNoted && (
+                <TextField
+                  label="Details"
+                  name="allergyDetails"
+                  value={form.allergyDetails}
+                  onChange={handleChange}
+                  fullWidth
+                  size="small"
+                  variant="standard"
+                  sx={{ mt: 0.5 }}
+                />
+              )}
+            </Box>
+          </Box>
+
+          {/* COLUMN 2: VITALS */}
+          <Box
+            sx={{ flex: 1, display: "flex", flexDirection: "column", gap: 2 }}
+          >
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
+              <Typography
+                variant="caption"
+                sx={{
+                  fontWeight: 700,
+                  color: "text.secondary",
+                  letterSpacing: 1,
+                }}
+              >
+                VITALS (can be filled later at overview tab, you may leave it
+                blank)
+              </Typography>
+              <Chip
+                label={`BMI: ${bmi ? bmi.toFixed(1) : "—"}`}
+                size="small"
+                color={bmiInfo.color}
+                sx={{ height: 20, fontWeight: 700, fontSize: "0.65rem" }}
+              />
+            </Box>
+
+            <Box
+              sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1.5 }}
+            >
+              <TextField
+                type="number"
+                label="Temp"
+                name="tempC"
+                value={form.tempC}
+                onChange={handleChange}
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">°C</InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                type="number"
+                label="Pulse"
+                name="pulse"
+                value={form.pulse}
+                onChange={handleChange}
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">bpm</InputAdornment>
+                  ),
+                }}
+              />
+
+              {/* BP kept as text to allow "120/80" */}
+              <TextField
+                type="text"
+                label="BP"
+                name="bp"
+                placeholder="120/80"
+                value={form.bp}
+                onChange={(e) => {
+                  const value = e.target.value;
+
+                  if (/^\d{0,3}\/?\d{0,3}$/.test(value)) {
+                    setForm({ ...form, bp: value });
+                  }
+                }}
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">mmHg</InputAdornment>
+                  ),
+                }}
+              />
+
+              <TextField
+                type="number"
+                label="SpO2"
+                name="spo2"
+                value={form.spo2}
+                onChange={handleChange}
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">%</InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                type="number"
+                label="Weight"
+                name="weightKg"
+                value={form.weightKg}
+                onChange={handleChange}
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">kg</InputAdornment>
+                  ),
+                }}
+              />
+              <TextField
+                type="number"
+                label="Height"
+                name="heightCm"
+                value={form.heightCm}
+                onChange={handleChange}
+                size="small"
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">cm</InputAdornment>
+                  ),
+                }}
+              />
+            </Box>
+
+            <TextField
+              type="number"
+              label="Respiratory Rate"
+              name="respiratoryRate"
+              value={form.respiratoryRate}
+              onChange={handleChange}
+              size="small"
+              fullWidth
+              placeholder="breaths/min"
+            />
+          </Box>
+        </Box>
       </DialogContent>
 
-      <DialogActions className="px-6 py-4">
-        <Button onClick={onClose} variant="outlined">
+      <DialogActions sx={{ p: 2, bgcolor: "#f8f9fa" }}>
+        <Button
+          onClick={onClose}
+          sx={{
+            color: "text.secondary",
+            textTransform: "none",
+            fontWeight: 600,
+          }}
+        >
           Cancel
         </Button>
-        <Button onClick={handleSubmit} variant="contained">
-          Save Visit
+        <Button
+          variant="contained"
+          disableElevation
+          startIcon={
+            saving ? <CircularProgress size={20} color="inherit" /> : null
+          }
+          onClick={() => {
+            // console.log(userName, role, user.id);
+            console.log("visit_id: ", latestVisitId?.[0]);
+            onSave(form);
+          }}
+          sx={{
+            textTransform: "none",
+            fontWeight: 700,
+            borderRadius: 2,
+            px: 4,
+          }}
+        >
+          {saving ? "saving..." : "Save Record"}
         </Button>
       </DialogActions>
     </Dialog>
