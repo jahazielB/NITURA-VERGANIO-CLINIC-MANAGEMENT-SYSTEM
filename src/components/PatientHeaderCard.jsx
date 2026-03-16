@@ -15,7 +15,7 @@ import { defaultVisitDateTime } from "./helpers/dateHelper";
 export default function PatientHeaderCard({ onAddVisit, onClose }) {
   const [openAddVisit, setOpenAddVisit] = useState(false);
   const [form, setForm] = useState({
-    visitDateTime: defaultVisitDateTime,
+    visitDateTime: "",
     doctorId: "",
     visitType: "",
     reason: "",

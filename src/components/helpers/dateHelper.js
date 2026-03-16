@@ -1,3 +1,14 @@
-export const defaultVisitDateTime = new Date()
-  .toLocaleString("sv-SE")
-  .slice(0, 16);
+export const defaultVisitDateTime = (date = new Date()) => {
+  const pad = (n) => n.toString().padStart(2, "0");
+  return (
+    date.getFullYear() +
+    "-" +
+    pad(date.getMonth() + 1) +
+    "-" +
+    pad(date.getDate()) +
+    "T" +
+    pad(date.getHours()) +
+    ":" +
+    pad(date.getMinutes())
+  );
+};

@@ -69,32 +69,40 @@ export default function AddVisitDialog({
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
-  const latestVisitId = patientInfo?.visits.map((v) => v.id);
+
   const [systolic, diastolic] = form.bp.split("/");
   const onSave = async () => {
     try {
       setSaving(true);
       const visitPayload = [
         {
-          created_at: form.visitDateTime || defaultVisitDateTime,
+          created_at: new Date(form.visitDateTime).toISOString(),
           patient_id: patientInfo?.id,
           visit_type: form.visitType || "",
-          chief_complaint: form.reason || "",
+          chief_complaint: form.reason || null,
           doctor_id: form.doctorId,
-          allergies: form.allergyDetails || "",
+          allergies: form.allergyDetails || null,
         },
       ];
 
-      if (!form.reason.trim()) throw new Error("chief complaint is required");
+      if (
+        !form.reason.trim() ||
+        !form.doctorId.trim() ||
+        !form.visitType.trim()
+      )
+        throw new Error(
+          `${!form.reason.trim() ? "chief complaint" : !form.doctorId.trim() ? "Doctor" : "Visit Type"} is required`,
+        );
       const { data, error } = await supabase
         .from("visits")
         .insert(visitPayload)
         .select();
       if (error) throw error;
+      const newVisitId = data?.[0].id;
       dispatch(fetchPatientProfile(patientInfo?.id));
       const vitalsPayload = [
         {
-          visit_id: latestVisitId?.[0],
+          visit_id: newVisitId,
           temperature_c: form.tempC ? Number(form.tempC) : null,
           blood_pressure_sys: systolic ? Number(systolic) : null,
           blood_pressure_dia: diastolic ? Number(diastolic) : null,
@@ -102,6 +110,9 @@ export default function AddVisitDialog({
           spo2: form.spo2 ? Number(form.spo2) : null,
           weight_kg: form.weightKg ? Number(form.weightKg) : null,
           height_cm: form.heightCm ? Number(form.heightCm) : null,
+          respiratory_rate: form.respiratoryRate
+            ? Number(form.respiratoryRate)
+            : null,
           bmi: bmi ? bmi.toFixed(1) : null,
           taken_by: user?.id || null,
           taken_at: form.visitDateTime || defaultVisitDateTime,
@@ -113,7 +124,7 @@ export default function AddVisitDialog({
         .select();
       if (errorvitals) throw error;
       setForm({
-        visitDateTime: defaultVisitDateTime,
+        visitDateTime: defaultVisitDateTime(),
         doctorId: "",
         visitType: "",
         reason: "",
@@ -143,7 +154,7 @@ export default function AddVisitDialog({
         severity: "error",
       });
       setForm({
-        visitDateTime: new Date().toISOString().slice(0, 16),
+        visitDateTime: defaultVisitDateTime,
         doctorId: "",
         visitType: "",
         reason: "",
@@ -178,13 +189,13 @@ export default function AddVisitDialog({
     if (open) {
       setForm((prev) => ({
         ...prev,
-        visitDateTime: new Date().toLocaleString("sv-SE").slice(0, 16),
+        visitDateTime: defaultVisitDateTime(),
       }));
     }
   }, [open]);
-  useEffect(() => {
-    console.log(patientInfo);
-  }, [patientInfo]);
+  // useEffect(() => {
+  //   console.log(patientInfo);
+  // }, [patientInfo]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -243,7 +254,7 @@ export default function AddVisitDialog({
             />
 
             <Box sx={{ display: "flex", gap: 1.5 }}>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small" required>
                 <InputLabel>Doctor</InputLabel>
                 <Select
                   name="doctorId"
@@ -258,7 +269,7 @@ export default function AddVisitDialog({
                   ))}
                 </Select>
               </FormControl>
-              <FormControl fullWidth size="small">
+              <FormControl fullWidth size="small" required>
                 <InputLabel>Visit Type</InputLabel>
                 <Select
                   name="visitType"
@@ -282,6 +293,7 @@ export default function AddVisitDialog({
               onChange={handleChange}
               size="small"
               fullWidth
+              required
             />
 
             <Box
@@ -300,7 +312,7 @@ export default function AddVisitDialog({
                 }}
               >
                 <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                  Allergies?
+                  Allergies?(optional)
                 </Typography>
                 <Switch
                   size="small"
@@ -475,13 +487,14 @@ export default function AddVisitDialog({
         </Button>
         <Button
           variant="contained"
+          disabled={saving}
           disableElevation
           startIcon={
             saving ? <CircularProgress size={20} color="inherit" /> : null
           }
           onClick={() => {
             // console.log(userName, role, user.id);
-            console.log("visit_id: ", latestVisitId?.[0]);
+            console.log(new Date(form.visitDateTime).toISOString());
             onSave(form);
           }}
           sx={{

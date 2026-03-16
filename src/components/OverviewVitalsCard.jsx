@@ -8,24 +8,17 @@ import {
   MenuItem,
   TextField,
 } from "@mui/material";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
+import { useSelector } from "react-redux";
 
 function fmt(dt) {
   try {
-    return new Date(dt).toLocaleString();
+    return new Date(dt).toLocaleString("en-US").slice(0, 16);
   } catch {
     return dt;
   }
 }
 
-/**
- * vitalsByVisit: array of objects like:
- * {
- *   visitId: "V001",
- *   visitDate: "2026-01-22T10:30",
- *   temp: 37.8, bpS: 120, bpD: 80, pulse: 86, weight: 72, spo2: 97
- * }
- */
 export default function OverviewVitalsCard({
   vitalsByVisit = [],
   selectedVisitId,
@@ -43,7 +36,13 @@ export default function OverviewVitalsCard({
     if (!selectedVisitId) return latest;
     return sorted.find((v) => v.visitId === selectedVisitId) || latest;
   }, [sorted, selectedVisitId, latest]);
+  const { patientInfo } = useSelector((s) => s.patientProfile);
+  const visits = patientInfo?.visits;
 
+  useEffect(() => {
+    console.log(visits?.map((v) => v));
+    console.log();
+  }, [patientInfo]);
   return (
     <Card className="rounded-2xl shadow">
       <CardContent>
@@ -58,18 +57,19 @@ export default function OverviewVitalsCard({
           </Box>
 
           {/* Optional selector: only show if multiple visits */}
-          {sorted.length > 1 && (
+          {visits?.length > 1 && (
             <TextField
+              type="datetime-local"
               select
               size="small"
               label="Select Visit Date"
-              value={selected?.visitId || ""}
+              value={visits?.[0].id}
               onChange={(e) => onSelectVisit?.(e.target.value)}
               sx={{ minWidth: 220 }}
             >
-              {sorted.map((v) => (
-                <MenuItem key={v.visitId} value={v.visitId}>
-                  {fmt(v.visitDate)}
+              {visits.map((v) => (
+                <MenuItem key={v.id} value={v.id}>
+                  {new Date(v.created_at).toLocaleString("en-US")}
                 </MenuItem>
               ))}
             </TextField>
