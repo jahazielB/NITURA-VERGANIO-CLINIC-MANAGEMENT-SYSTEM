@@ -16,7 +16,11 @@ export const fetchPatientProfile = createAsyncThunk(
               id,
               full_name
             ),
-            vitals(*),
+            vitals(*,
+        taken_by_user:user_profiles (
+          id,
+          full_name
+        )),
             soap_notes(*),
             lab_requests(
               *,

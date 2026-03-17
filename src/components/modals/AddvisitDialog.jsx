@@ -24,11 +24,8 @@ import { Close } from "@mui/icons-material";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchPatientProfile } from "../../store/patientProfileSlice";
 import { defaultVisitDateTime } from "../helpers/dateHelper";
+import { numOrNull, calcBmi } from "../helpers/bmiHelper";
 
-/* ---------------- helpers ---------------- */
-const numOrNull = (v) =>
-  v === "" || v === null ? null : Number.isFinite(Number(v)) ? Number(v) : null;
-const calcBmi = (w, h) => (w && h ? w / (h / 100) ** 2 : null);
 const bmiCategory = (bmi) => {
   if (bmi == null) return { label: "—", color: "default" };
   if (bmi < 18.5) return { label: "Underweight", color: "info" };
@@ -36,12 +33,12 @@ const bmiCategory = (bmi) => {
   if (bmi < 30) return { label: "Overweight", color: "warning" };
   return { label: "Obese", color: "error" };
 };
-const pad = (n) => n.toString().padStart(2, "0");
-const now = new Date();
-const offset = -now.getTimezoneOffset();
-const sign = offset >= 0 ? "+" : "-";
-const hh = pad(Math.floor(Math.abs(offset) / 60));
-const mm = pad(Math.abs(offset) % 60);
+// const pad = (n) => n.toString().padStart(2, "0");
+// const now = new Date();
+// const offset = -now.getTimezoneOffset();
+// const sign = offset >= 0 ? "+" : "-";
+// const hh = pad(Math.floor(Math.abs(offset) / 60));
+// const mm = pad(Math.abs(offset) % 60);
 
 const VISIT_TYPES = ["Walk-in", "Appointment"];
 
@@ -100,29 +97,43 @@ export default function AddVisitDialog({
       if (error) throw error;
       const newVisitId = data?.[0].id;
       dispatch(fetchPatientProfile(patientInfo?.id));
-      const vitalsPayload = [
-        {
-          visit_id: newVisitId,
-          temperature_c: form.tempC ? Number(form.tempC) : null,
-          blood_pressure_sys: systolic ? Number(systolic) : null,
-          blood_pressure_dia: diastolic ? Number(diastolic) : null,
-          heart_rate: form.pulse ? Number(form.pulse) : null,
-          spo2: form.spo2 ? Number(form.spo2) : null,
-          weight_kg: form.weightKg ? Number(form.weightKg) : null,
-          height_cm: form.heightCm ? Number(form.heightCm) : null,
-          respiratory_rate: form.respiratoryRate
-            ? Number(form.respiratoryRate)
-            : null,
-          bmi: bmi ? bmi.toFixed(1) : null,
-          taken_by: user?.id || null,
-          taken_at: form.visitDateTime || defaultVisitDateTime,
-        },
-      ];
-      const { data: vitals, error: errorvitals } = await supabase
-        .from("vitals")
-        .insert(vitalsPayload)
-        .select();
-      if (errorvitals) throw error;
+      const anyVitalsFilled =
+        form.tempC ||
+        systolic ||
+        diastolic ||
+        form.pulse ||
+        form.spo2 ||
+        form.weightKg ||
+        form.heightCm ||
+        form.respiratoryRate;
+
+      if (anyVitalsFilled) {
+        const vitalsPayload = [
+          {
+            visit_id: newVisitId,
+            temperature_c: form.tempC ? Number(form.tempC) : null,
+            blood_pressure_sys: systolic ? Number(systolic) : null,
+            blood_pressure_dia: diastolic ? Number(diastolic) : null,
+            heart_rate: form.pulse ? Number(form.pulse) : null,
+            spo2: form.spo2 ? Number(form.spo2) : null,
+            weight_kg: form.weightKg ? Number(form.weightKg) : null,
+            height_cm: form.heightCm ? Number(form.heightCm) : null,
+            respiratory_rate: form.respiratoryRate
+              ? Number(form.respiratoryRate)
+              : null,
+            bmi: bmi ? bmi.toFixed(1) : null,
+            taken_by: user?.id || null,
+            taken_at: new Date(form.visitDateTime).toISOString(),
+          },
+        ];
+
+        const { data: vitals, error: errorVitals } = await supabase
+          .from("vitals")
+          .insert(vitalsPayload)
+          .select();
+        if (errorVitals) throw errorVitals;
+      }
+
       setForm({
         visitDateTime: defaultVisitDateTime(),
         doctorId: "",
@@ -494,7 +505,7 @@ export default function AddVisitDialog({
           }
           onClick={() => {
             // console.log(userName, role, user.id);
-            console.log(new Date(form.visitDateTime).toISOString());
+            // console.log(new Date(form.visitDateTime).toISOString());
             onSave(form);
           }}
           sx={{
