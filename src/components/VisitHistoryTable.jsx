@@ -113,7 +113,11 @@ export default function VisitHistoryTable({}) {
                 return (
                   <TableRow key={r.id} hover>
                     <TableCell>
-                      {new Date(r.created_at).toLocaleDateString("en-US")}
+                      {new Date(r.created_at).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
                     </TableCell>
                     <TableCell>{doctor?.full_name}</TableCell>
                     <TableCell>{r.chief_complaint}</TableCell>

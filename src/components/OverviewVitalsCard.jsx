@@ -10,6 +10,7 @@ import {
   TextField,
   Button,
 } from "@mui/material";
+
 import ThermostatIcon from "@mui/icons-material/Thermostat";
 import FavoriteIcon from "@mui/icons-material/Favorite";
 import OpacityIcon from "@mui/icons-material/Opacity";
@@ -19,8 +20,10 @@ import SpeedIcon from "@mui/icons-material/Speed";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import IconButton from "@mui/material/IconButton";
+
 import AddVitalsDialog from "./modals/AddVitalsDialog";
 import CustomSnackbar from "./modals/CustomSnackBar";
+import ConfirmDeleteCancel from "./modals/ConfirmDelete";
 
 import { useEffect, useMemo, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
@@ -28,6 +31,7 @@ import { fetchPatientProfile } from "../store/patientProfileSlice";
 
 import { calcBmi, numOrNull } from "./helpers/bmiHelper";
 import { defaultVisitDateTime } from "./helpers/dateHelper";
+import { useParams } from "react-router-dom";
 
 function fmt(dt) {
   try {
@@ -43,7 +47,12 @@ function fmt(dt) {
 
 export default function OverviewVitalsCard({}) {
   const [selectedVisitId, setSelectedVisitId] = useState(null);
+  const [selectedVitalsId, setSelectedVitalsId] = useState(null);
   const [openVitalsDialog, setOpenVitalsDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState({
+    open: false,
+    loading: false,
+  });
   const [form, setForm] = useState({
     visitDateTime: defaultVisitDateTime(),
     tempC: "",
@@ -59,15 +68,19 @@ export default function OverviewVitalsCard({}) {
     message: "",
     severity: "",
   });
+  const [currentPage, setCurrentPage] = useState(1);
+  const vitalsPerPage = 3; // default 3 per page
+
   const dispatch = useDispatch();
   const { patientInfo } = useSelector((s) => s.patientProfile);
   const { userName, role, user } = useSelector((u) => u.auth);
+  const params = useParams();
   const visits = patientInfo?.visits;
 
   const selected = useMemo(() => {
     const sorted = visits?.find((v) => v.id === selectedVisitId);
     return sorted;
-  }, [selectedVisitId]);
+  }, [selectedVisitId, visits]);
   const bmi = useMemo(
     () => calcBmi(numOrNull(form.weightKg), numOrNull(form.heightCm)),
     [form.weightKg, form.heightCm],
@@ -77,6 +90,20 @@ export default function OverviewVitalsCard({}) {
     const latestVisitId = visits?.map((v) => v);
     setSelectedVisitId(latestVisitId?.[0]?.id);
   }, [patientInfo]);
+
+  const vitalsSorted = vitals
+    ? [...vitals].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at),
+      )
+    : [];
+
+  const paginatedVitals = useMemo(() => {
+    const start = (currentPage - 1) * vitalsPerPage;
+    const end = start + vitalsPerPage;
+    return vitalsSorted.slice(start, end);
+  }, [vitalsSorted, currentPage]);
+  const totalPages = Math.ceil(vitalsSorted.length / vitalsPerPage);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
@@ -122,8 +149,8 @@ export default function OverviewVitalsCard({}) {
         message: "Vitals saved successfully",
         severity: "success",
       });
-      console.log("Patient ID:", patientInfo?.id);
-      dispatch(fetchPatientProfile(patientInfo?.id));
+
+      dispatch(fetchPatientProfile(params.id));
       setOpenVitalsDialog(false);
 
       setForm({
@@ -145,6 +172,41 @@ export default function OverviewVitalsCard({}) {
       console.error("error message:", e);
     }
   };
+  const handleDeleteVital = async (vitalId) => {
+    try {
+      setOpenDeleteDialog({ ...openDeleteDialog, loading: true });
+      const { error } = await supabase
+        .from("vitals")
+        .delete()
+        .eq("id", vitalId);
+      if (error) throw error;
+      const newTotal = vitalsSorted.length - 1;
+      const newTotalPages = Math.ceil(newTotal / vitalsPerPage);
+
+      if (currentPage > newTotalPages) {
+        setCurrentPage(newTotalPages || 1);
+      }
+      setSnackbar({
+        open: true,
+        message: "Vital deleted successfully!",
+        severity: "success",
+      });
+      console.log("pateint id: ", params.id);
+      const result = dispatch(fetchPatientProfile(params.id));
+
+      console.log(result);
+      setOpenDeleteDialog({ ...openDeleteDialog, open: false, loading: false });
+    } catch (e) {
+      console.error("error: ", e);
+      setSnackbar({
+        open: true,
+        message: `Error Deleting Vital: ${e}`,
+        severity: "error",
+      });
+      setOpenDeleteDialog({ ...openDeleteDialog, open: false, loading: false });
+    }
+  };
+
   return (
     <Card className="rounded-2xl shadow">
       <CardContent>
@@ -181,7 +243,6 @@ export default function OverviewVitalsCard({}) {
               startIcon={<AddIcon />}
               size="small"
               onClick={() => {
-                // open your modal here
                 setOpenVitalsDialog(true);
               }}
             >
@@ -194,7 +255,7 @@ export default function OverviewVitalsCard({}) {
         {/* Chips */}
         <Box className="flex flex-col gap-3 p-2">
           {vitals?.length > 0 ? (
-            vitals.map((v, i) => (
+            paginatedVitals.map((v, i) => (
               <Box
                 key={i}
                 className="flex flex-col gap-2 border rounded-lg p-3 shadow-sm"
@@ -212,14 +273,17 @@ export default function OverviewVitalsCard({}) {
                   <IconButton
                     size="small"
                     color="error"
-                    // onClick={() => handleDeleteVital(i)}
+                    onClick={() => {
+                      setOpenDeleteDialog({ ...openDeleteDialog, open: true });
+                      setSelectedVitalsId(v.id);
+                    }}
                   >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
                 </Box>
 
                 {/* Chips */}
-                <Box className="flex flex-wrap gap-2">
+                <Box className="flex flex-wrap gap-15">
                   <Chip
                     icon={<ThermostatIcon />}
                     label={`Temp: ${v.temperature_c ?? "—"}°C`}
@@ -269,6 +333,29 @@ export default function OverviewVitalsCard({}) {
             </Typography>
           )}
         </Box>
+        {totalPages > 0 && (
+          <Box className="flex justify-center items-center gap-2 mt-4">
+            <Button
+              size="small"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev) => prev - 1)}
+            >
+              ←
+            </Button>
+
+            <Typography variant="body2">
+              Page {currentPage} of {totalPages}
+            </Typography>
+
+            <Button
+              size="small"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((prev) => prev + 1)}
+            >
+              →
+            </Button>
+          </Box>
+        )}
       </CardContent>
       <AddVitalsDialog
         open={openVitalsDialog}
@@ -283,6 +370,15 @@ export default function OverviewVitalsCard({}) {
         message={snackbar.message}
         severity={snackbar.severity}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+      />
+      <ConfirmDeleteCancel
+        open={openDeleteDialog.open}
+        cancel={() => {
+          setSelectedVitalsId(null);
+          setOpenDeleteDialog({ ...openDeleteDialog, open: false });
+        }}
+        loading={openDeleteDialog.loading}
+        handleDelete={() => handleDeleteVital(selectedVitalsId)}
       />
     </Card>
   );

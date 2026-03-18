@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -24,6 +24,8 @@ import PrintIcon from "@mui/icons-material/Print";
 
 import PrescriptionFormDialog from "./forms/PrescriptionFormDialog";
 import PrescriptionViewModal from "./modals/PrescriptionViewModal";
+
+import { useSelector } from "react-redux";
 
 function latestVisitIdFrom(visits) {
   if (!visits?.length) return "";
@@ -79,6 +81,17 @@ export default function PrescriptionsTab({
     },
   ]);
 
+  const { patientInfo } = useSelector((s) => s.patientProfile);
+  const { userName, role, user } = useSelector((u) => u.auth);
+  const patientVisits = patientInfo?.visits;
+  const prescriptionOrders = patientVisits?.flatMap(
+    (p) => p.prescription_orders,
+  );
+
+  useEffect(() => {
+    console.log("orders: ", prescriptionOrders);
+  }, []);
+
   const latestVisitId = useMemo(() => latestVisitIdFrom(visits), [visits]);
 
   const activeCount = useMemo(
@@ -121,6 +134,7 @@ export default function PrescriptionsTab({
   return (
     <Box className="space-y-4">
       {/* Header */}
+
       <Box className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <Typography variant="h6" className="font-bold">
           {activeCount} Active Prescriptions{" "}
@@ -154,19 +168,13 @@ export default function PrescriptionsTab({
 
       {/* Filter tabs */}
       <Card className="rounded-2xl shadow">
-        <Tabs value={filter} onChange={(_, v) => setFilter(v)}>
-          <Tab label="All" />
-          <Tab label="Active" />
-          <Tab label="Past" />
-          <Button
-            size="small"
-            variant="outlined"
-            startIcon={<PrintIcon />}
-            onClick={() => alert("Print prescription feature coming soon")}
-          >
-            Print
-          </Button>
-        </Tabs>
+        <Box className="flex items-center justify-between px-2">
+          <Tabs value={filter} onChange={(_, v) => setFilter(v)}>
+            <Tab label="All" />
+            <Tab label="Active" />
+            <Tab label="Past" />
+          </Tabs>
+        </Box>
         <Divider />
 
         <CardContent>
@@ -174,81 +182,118 @@ export default function PrescriptionsTab({
             <Table size="small" sx={{ minWidth: 900 }}>
               <TableHead>
                 <TableRow className="bg-slate-100">
-                  <TableCell>Medication</TableCell>
-                  <TableCell>Dosage</TableCell>
-                  <TableCell>Frequency</TableCell>
-                  <TableCell>Duration</TableCell>
-                  <TableCell>Start Date</TableCell>
+                  <TableCell>Visit</TableCell>
+                  <TableCell>Prescribed</TableCell>
+                  <TableCell>Prescribed by</TableCell>
+                  <TableCell>Medications</TableCell>
                   <TableCell>Status</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
-                {filtered.map((p) => (
-                  <TableRow key={p.id} hover>
-                    <TableCell className="font-semibold">
-                      {p.medication}
-                      <Typography variant="body2" color="text.secondary">
-                        Visit: {visitLabel(p.visitId)}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{p.dosage}</TableCell>
-                    <TableCell>{p.frequency}</TableCell>
-                    <TableCell>{p.duration}</TableCell>
-                    <TableCell>{p.startDate}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={p.status}
-                        size="small"
-                        color={p.status === "Active" ? "success" : "default"}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Box className="flex justify-end gap-1 flex-wrap">
-                        <Button
-                          size="small"
-                          variant="contained"
-                          startIcon={<VisibilityIcon />}
-                          onClick={() => {
-                            setViewItem(p);
-                            setOpenView(true);
-                          }}
-                        >
-                          View
-                        </Button>
+                {prescriptionOrders?.map((p) => {
+                  const medsCount = p?.prescription_items.length || 1; // future-proof
+                  const firstMed =
+                    p.prescription_items?.[0]?.medication || "No Medication";
+                  const prescribedBy = p.doctor;
+                  return (
+                    <TableRow key={p.id} hover>
+                      {/* Visit */}
+                      <TableCell>
+                        <Typography className="font-semibold">
+                          {visitLabel(p.visitId)}
+                        </Typography>
+                      </TableCell>
 
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<EditIcon />}
-                          onClick={() => {
-                            setEditItem(p);
-                            setOpenForm(true);
-                          }}
-                        >
-                          Edit
-                        </Button>
+                      <TableCell>
+                        {new Date(p?.created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                        })}
+                      </TableCell>
+                      <TableCell>{`Dr. ${prescribedBy?.full_name} `}</TableCell>
 
-                        {p.status === "Active" && (
+                      {/* Medications summary */}
+                      <TableCell>
+                        <Typography className="font-semibold">
+                          {firstMed}
+                        </Typography>
+
+                        {medsCount > 1 && (
+                          <Typography variant="body2" color="text.secondary">
+                            +{medsCount - 1} more
+                          </Typography>
+                        )}
+                      </TableCell>
+
+                      {/* Status */}
+                      <TableCell>
+                        <Chip
+                          label={p?.is_active === true ? "Active" : "Inactive"}
+                          size="small"
+                          color={p?.is_active === true ? "success" : "default"}
+                        />
+                      </TableCell>
+
+                      {/* Actions */}
+                      <TableCell align="right">
+                        <Box className="flex justify-end gap-1 flex-wrap">
                           <Button
                             size="small"
-                            color="error"
-                            variant="outlined"
-                            startIcon={<BlockIcon />}
-                            onClick={() => handleStop(p.id)}
+                            variant="contained"
+                            startIcon={<VisibilityIcon />}
+                            onClick={() => {
+                              setViewItem(p);
+                              setOpenView(true);
+                            }}
                           >
-                            Stop
+                            View
                           </Button>
-                        )}
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                ))}
+
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<EditIcon />}
+                            onClick={() => {
+                              setEditItem(p);
+                              setOpenForm(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<PrintIcon />}
+                            onClick={() =>
+                              alert("Print prescription feature coming soon")
+                            }
+                          >
+                            Print
+                          </Button>
+
+                          {p?.is_active === true && (
+                            <Button
+                              size="small"
+                              color="error"
+                              variant="outlined"
+                              startIcon={<BlockIcon />}
+                              onClick={() => handleStop(p.id)}
+                            >
+                              Stop
+                            </Button>
+                          )}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
 
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} align="center">
+                    <TableCell colSpan={5} align="center">
                       No prescriptions found.
                     </TableCell>
                   </TableRow>
