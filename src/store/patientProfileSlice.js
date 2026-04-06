@@ -30,7 +30,7 @@ export const fetchPatientProfile = createAsyncThunk(
             prescription_orders(
               *, doctor:user_profiles (
               id,
-              full_name
+              full_name,lic
             ),
               prescription_items(*)
             ),

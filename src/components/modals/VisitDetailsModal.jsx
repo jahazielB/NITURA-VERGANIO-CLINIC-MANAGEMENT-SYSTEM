@@ -50,10 +50,33 @@ export default function VisitDetailsModal({
     if (!open) return;
 
     // **Deep copy objects to avoid mutating original records**
-    setEditVitals(vitalsRecords.map((v) => ({ ...v })));
+    setEditVitals(
+      vitalsRecords.map((v) => ({
+        blood_pressure_dia: v.blood_pressure_dia,
+        blood_pressure_sys: v.blood_pressure_sys,
+        bmi: v.bmi,
+        created_at: v.created_at,
+        heart_rate: v.heart_rate,
+        height_cm: v.height_cm,
+        id: v.id,
+        notes: v.notes,
+        respiratory_rate: v.respiratory_rate,
+        spo2: v.spo2,
+        taken_at: v.taken_at,
+        taken_by: v.taken_by,
+        temperature_c: v.temperature_c,
+        updated_at: v.updated_at,
+        visit_id: v.visit_id,
+        weight_kg: v.weight_kg,
+      })),
+    );
     setEditSoap(soapNotes.map((s) => ({ ...s })));
     setEditPrescriptions(prescriptions.map((p) => ({ ...p })));
     setEditLabs(labRequests.map((l) => ({ ...l })));
+  }, [open]);
+
+  useEffect(() => {
+    console.log(editVitals ? editVitals : "");
   }, [open]);
 
   const saveVisitEdits = async ({
@@ -206,6 +229,7 @@ export default function VisitDetailsModal({
                   message: "Failed to save visit edits. Please try again.",
                   severity: "error",
                 });
+                setSaving(false);
               }
             }}
           >

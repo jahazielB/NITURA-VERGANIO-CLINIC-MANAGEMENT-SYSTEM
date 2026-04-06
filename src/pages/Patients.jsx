@@ -28,6 +28,7 @@ import { deletePatient, fetchPatients } from "../store/patientSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 import useDebounce from "../hooks/useDebounce";
+import { upperCaseFirstLetter } from "../components/helpers/nameHelper";
 
 const money = (n) =>
   new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(
@@ -188,16 +189,6 @@ export default function Patients() {
                   ". " +
                   patient.last_name;
                 const address = patient.address;
-                const upperCaseFirstLetter = (word) => {
-                  if (!word) return "";
-                  return word
-                    .trim()
-                    .split(" ")
-                    .map((letters) => {
-                      return letters.charAt(0).toUpperCase() + letters.slice(1);
-                    })
-                    .join(" ");
-                };
 
                 return (
                   <TableRow key={patient.id} hover>

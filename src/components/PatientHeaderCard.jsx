@@ -11,7 +11,9 @@ import AddVisitDialog from "./modals/AddvisitDialog";
 import { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import CustomSnackbar from "./modals/CustomSnackBar";
-import { defaultVisitDateTime } from "./helpers/dateHelper";
+import { fullName } from "./helpers/nameHelper";
+
+import { getAge } from "./helpers/dateHelper";
 export default function PatientHeaderCard({ onAddVisit, onClose }) {
   const [openAddVisit, setOpenAddVisit] = useState(false);
   const [form, setForm] = useState({
@@ -37,28 +39,7 @@ export default function PatientHeaderCard({ onAddVisit, onClose }) {
   });
   const { role } = useSelector((s) => s.auth);
   const { patientInfo } = useSelector((s) => s.patientProfile);
-  function getAge(dateString) {
-    var today = new Date();
-    var birthDate = new Date(dateString);
-    var age = today.getFullYear() - birthDate.getFullYear();
-    var m = today.getMonth() - birthDate.getMonth();
 
-    // Adjust age if the birthday hasn't happened this year yet
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-
-    return age;
-  }
-  function fullName(name) {
-    if (!name) return "fetching....";
-    return name
-      .split(" ")
-      .map((letters) => {
-        return letters.charAt(0).toUpperCase() + letters.slice(1);
-      })
-      .join(" ");
-  }
   // const fullName = patient?.first_name + patient?.last_name;
   return (
     <Card className="rounded-2xl shadow-2xl ">

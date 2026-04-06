@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../lib/supabaseClient";
-import LatestSoapNoteCard from "../components/LatestSoapNoteCard";
 
 export const fetchPatients = createAsyncThunk(
   "patients/fetchPatients",

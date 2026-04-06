@@ -96,19 +96,6 @@ export default function VitalsSection({ vitals, setVitals, mode }) {
                           handleChange(i, "spo2", e.target.value)
                         }
                       />
-                      <TextField
-                        size="small"
-                        label="Taken At"
-                        type="datetime-local"
-                        value={
-                          v.taken_at
-                            ? new Date(v.taken_at).toISOString().slice(0, 16)
-                            : ""
-                        }
-                        onChange={(e) =>
-                          handleChange(i, "taken_at", e.target.value)
-                        }
-                      />
                     </Box>
                   </>
                 ) : (

@@ -1,0 +1,1739 @@
+[
+  {
+    "label": "Abacavir + Dolutegravir + Lamivudine",
+    "value": "abacavir_dolutegravir_lamivudine_600mg_50mg_300mg",
+    "generic": "Abacavir + Dolutegravir + Lamivudine",
+    "brand": "Triumeq",
+    "category": "Antiviral",
+    "common_dose": "600mg/50mg/300mg",
+    "keywords": ["hiv", "antiretroviral", "triumeq"]
+  },
+  {
+    "label": "Aceclofenac",
+    "value": "aceclofenac_100mg",
+    "generic": "Aceclofenac",
+    "brand": "Preservex",
+    "category": "NSAID",
+    "common_dose": "100mg",
+    "keywords": ["pain", "inflammation", "arthritis"]
+  },
+  {
+    "label": "Acetylcysteine",
+    "value": "acetylcysteine_200mg",
+    "generic": "Acetylcysteine",
+    "brand": "Fluimucil",
+    "category": "Mucolytic",
+    "common_dose": "200mg",
+    "keywords": ["cough", "phlegm", "mucolytic"]
+  },
+  {
+    "label": "Acetylcysteine 600mg",
+    "value": "acetylcysteine_600mg",
+    "generic": "Acetylcysteine",
+    "brand": "Exflem",
+    "category": "Mucolytic",
+    "common_dose": "600mg",
+    "keywords": ["effervescent", "phlegm", "cough"]
+  },
+  {
+    "label": "Aliskiren",
+    "value": "aliskiren_150mg",
+    "generic": "Aliskiren",
+    "brand": "Rasilez",
+    "category": "Antihypertensive",
+    "common_dose": "150mg",
+    "keywords": ["blood pressure", "hypertension", "renin inhibitor"]
+  },
+  {
+    "label": "Aliskiren 300mg",
+    "value": "aliskiren_300mg",
+    "generic": "Aliskiren",
+    "brand": "Rasilez",
+    "category": "Antihypertensive",
+    "common_dose": "300mg",
+    "keywords": ["blood pressure", "hypertension", "rasilez"]
+  },
+  {
+    "label": "Amlodipine 5mg",
+    "value": "amlodipine_5mg",
+    "generic": "Amlodipine",
+    "brand": "Norvasc",
+    "category": "Calcium Channel Blocker",
+    "common_dose": "5mg",
+    "keywords": ["hypertension", "bp", "amlodipine"]
+  },
+  {
+    "label": "Amlodipine 10mg",
+    "value": "amlodipine_10mg",
+    "generic": "Amlodipine",
+    "brand": "Amvasc",
+    "category": "Calcium Channel Blocker",
+    "common_dose": "10mg",
+    "keywords": ["high blood pressure", "hypertension", "amlodipine"]
+  },
+  {
+    "label": "Amoxicillin 250mg",
+    "value": "amoxicillin_250mg",
+    "generic": "Amoxicillin",
+    "brand": "Himox",
+    "category": "Antibiotic",
+    "common_dose": "250mg",
+    "keywords": ["infection", "penicillin", "antibacterial"]
+  },
+  {
+    "label": "Amoxicillin 500mg",
+    "value": "amoxicillin_500mg",
+    "generic": "Amoxicillin",
+    "brand": "Amoxil",
+    "category": "Antibiotic",
+    "common_dose": "500mg",
+    "keywords": ["infection", "bacteria", "capsule"]
+  },
+  {
+    "label": "Amoxicillin Syrup 125mg/5ml",
+    "value": "amoxicillin_125mg_syrup",
+    "generic": "Amoxicillin",
+    "brand": "Pediamox",
+    "category": "Antibiotic",
+    "common_dose": "125mg/5ml",
+    "keywords": ["kids", "pediatric", "suspension"]
+  },
+  {
+    "label": "Amoxicillin Syrup 250mg/5ml",
+    "value": "amoxicillin_250mg_syrup",
+    "generic": "Amoxicillin",
+    "brand": "Wyamox",
+    "category": "Antibiotic",
+    "common_dose": "250mg/5ml",
+    "keywords": ["syrup", "pediatric", "infection"]
+  },
+  {
+    "label": "Amoxicillin + Clavulanic Acid",
+    "value": "co_amoxiclav_625mg",
+    "generic": "Amoxicillin + Potassium Clavulanate",
+    "brand": "Augmentin",
+    "category": "Antibiotic",
+    "common_dose": "625mg",
+    "keywords": ["co-amoxiclav", "infection", "augmentin"]
+  },
+  {
+    "label": "Amoxicillin + Clavulanic Acid Syrup",
+    "value": "co_amoxiclav_312mg_syrup",
+    "generic": "Amoxicillin + Potassium Clavulanate",
+    "brand": "Natravox",
+    "category": "Antibiotic",
+    "common_dose": "312.5mg/5ml",
+    "keywords": ["suspension", "child", "infection"]
+  },
+  {
+    "label": "Ambroxol 30mg",
+    "value": "ambroxol_30mg",
+    "generic": "Ambroxol",
+    "brand": "Mucosolvan",
+    "category": "Mucolytic",
+    "common_dose": "30mg",
+    "keywords": ["cough", "phlegm", "mucus"]
+  },
+  {
+    "label": "Ambroxol Syrup 15mg/5ml",
+    "value": "ambroxol_15mg_syrup",
+    "generic": "Ambroxol",
+    "brand": "Expel",
+    "category": "Mucolytic",
+    "common_dose": "15mg/5ml",
+    "keywords": ["syrup", "kids", "cough"]
+  },
+  {
+    "label": "Ambroxol Syrup 30mg/5ml",
+    "value": "ambroxol_30mg_syrup",
+    "generic": "Ambroxol",
+    "brand": "Mucovis",
+    "category": "Mucolytic",
+    "common_dose": "30mg/5ml",
+    "keywords": ["forte", "syrup", "phlegm"]
+  },
+  {
+    "label": "Arcoxia 60mg",
+    "value": "etoricoxib_60mg",
+    "generic": "Etoricoxib",
+    "brand": "Arcoxia",
+    "category": "NSAID",
+    "common_dose": "60mg",
+    "keywords": ["pain", "arthritis", "inflammation"]
+  },
+  {
+    "label": "Arcoxia 90mg",
+    "value": "etoricoxib_90mg",
+    "generic": "Etoricoxib",
+    "brand": "Arcoxia",
+    "category": "NSAID",
+    "common_dose": "90mg",
+    "keywords": ["pain relief", "ortho", "etoricoxib"]
+  },
+  {
+    "label": "Arcoxia 120mg",
+    "value": "etoricoxib_120mg",
+    "generic": "Etoricoxib",
+    "brand": "Arcoxia",
+    "category": "NSAID",
+    "common_dose": "120mg",
+    "keywords": ["acute pain", "gout", "inflammation"]
+  },
+  {
+    "label": "Ascorbic Acid 500mg",
+    "value": "ascorbic_acid_500mg",
+    "generic": "Ascorbic Acid",
+    "brand": "Potencee",
+    "category": "Vitamin",
+    "common_dose": "500mg",
+    "keywords": ["vitamin c", "immunity", "ascorbic"]
+  },
+  {
+    "label": "Ascorbic Acid + Zinc Syrup",
+    "value": "ascorbic_acid_zinc_syrup",
+    "generic": "Ascorbic Acid + Zinc",
+    "brand": "Ceelin Plus",
+    "category": "Vitamin",
+    "common_dose": "100mg/10mg per 5ml",
+    "keywords": ["kids", "immunity", "zinc"]
+  },
+  {
+    "label": "Aspirin 80mg",
+    "value": "aspirin_80mg",
+    "generic": "Aspirin",
+    "brand": "Aspilets",
+    "category": "Antiplatelet",
+    "common_dose": "80mg",
+    "keywords": ["heart", "blood thinner", "cardio"]
+  },
+  {
+    "label": "Aspirin 100mg",
+    "value": "aspirin_100mg",
+    "generic": "Aspirin",
+    "brand": "Bayer Aspirin",
+    "category": "NSAID/Antiplatelet",
+    "common_dose": "100mg",
+    "keywords": ["pain", "fever", "heart"]
+  },
+  {
+    "label": "Atenolol 50mg",
+    "value": "atenolol_50mg",
+    "generic": "Atenolol",
+    "brand": "Tenormin",
+    "category": "Beta Blocker",
+    "common_dose": "50mg",
+    "keywords": ["hypertension", "heart rate", "bp"]
+  },
+  {
+    "label": "Atorvastatin 20mg",
+    "value": "atorvastatin_20mg",
+    "generic": "Atorvastatin",
+    "brand": "Lipitor",
+    "category": "Statin",
+    "common_dose": "20mg",
+    "keywords": ["cholesterol", "heart", "statin"]
+  },
+  {
+    "label": "Atorvastatin 40mg",
+    "value": "atorvastatin_40mg",
+    "generic": "Atorvastatin",
+    "brand": "Lipitor",
+    "category": "Statin",
+    "common_dose": "40mg",
+    "keywords": ["high cholesterol", "lipids", "statin"]
+  },
+  {
+    "label": "Atorvastatin 80mg",
+    "value": "atorvastatin_80mg",
+    "generic": "Atorvastatin",
+    "brand": "Iterax",
+    "category": "Statin",
+    "common_dose": "80mg",
+    "keywords": ["cholesterol", "intensive", "statin"]
+  },
+  {
+    "label": "Azithromycin 500mg",
+    "value": "azithromycin_500mg",
+    "generic": "Azithromycin",
+    "brand": "Zithromax",
+    "category": "Antibiotic",
+    "common_dose": "500mg",
+    "keywords": ["infection", "macrolide", "z-pak"]
+  },
+  {
+    "label": "Azithromycin Syrup 200mg/5ml",
+    "value": "azithromycin_200mg_syrup",
+    "generic": "Azithromycin",
+    "brand": "Zithromax",
+    "category": "Antibiotic",
+    "common_dose": "200mg/5ml",
+    "keywords": ["pediatric", "suspension", "infection"]
+  },
+  {
+    "label": "Bacillus Clausii",
+    "value": "bacillus_clausii_2b",
+    "generic": "Bacillus Clausii",
+    "brand": "Erceflora",
+    "category": "Probiotic",
+    "common_dose": "2 Billion CFU/5ml",
+    "keywords": ["diarrhea", "stomach", "probiotic"]
+  },
+  {
+    "label": "Benzydamine HCl Lozenge",
+    "value": "benzydamine_3mg",
+    "generic": "Benzydamine HCl",
+    "brand": "Difflam",
+    "category": "NSAID",
+    "common_dose": "3mg",
+    "keywords": ["sore throat", "anti-inflammatory", "lozenge"]
+  },
+  {
+    "label": "Betahistine 16mg",
+    "value": "betahistine_16mg",
+    "generic": "Betahistine Dihydrochloride",
+    "brand": "Serc",
+    "category": "Antivertigo",
+    "common_dose": "16mg",
+    "keywords": ["dizziness", "vertigo", "tinnitus"]
+  },
+  {
+    "label": "Betahistine 24mg",
+    "value": "betahistine_24mg",
+    "generic": "Betahistine Dihydrochloride",
+    "brand": "Serc",
+    "category": "Antivertigo",
+    "common_dose": "24mg",
+    "keywords": ["vertigo", "menieres", "dizziness"]
+  },
+  {
+    "label": "Bisacodyl 5mg",
+    "value": "bisacodyl_5mg",
+    "generic": "Bisacodyl",
+    "brand": "Dulcolax",
+    "category": "Laxative",
+    "common_dose": "5mg",
+    "keywords": ["constipation", "laxative", "stool"]
+  },
+  {
+    "label": "Bisoprolol 2.5mg",
+    "value": "bisoprolol_2.5mg",
+    "generic": "Bisoprolol Fumarate",
+    "brand": "Concor",
+    "category": "Beta Blocker",
+    "common_dose": "2.5mg",
+    "keywords": ["hypertension", "heart failure", "bp"]
+  },
+  {
+    "label": "Bisoprolol 5mg",
+    "value": "bisoprolol_5mg",
+    "generic": "Bisoprolol Fumarate",
+    "brand": "Concor",
+    "category": "Beta Blocker",
+    "common_dose": "5mg",
+    "keywords": ["high blood pressure", "beta blocker", "heart"]
+  },
+  {
+    "label": "Brompheniramine + Phenylephrine",
+    "value": "nasatapp_tablet",
+    "generic": "Brompheniramine + Phenylephrine",
+    "brand": "Nasatapp",
+    "category": "Antihistamine/Decongestant",
+    "common_dose": "4mg/10mg",
+    "keywords": ["colds", "nasal congestion", "runny nose"]
+  },
+  {
+    "label": "Buclizine + Vitamins Syrup",
+    "value": "appebon_syrup",
+    "generic": "Buclizine + B-Vitamins + Iron",
+    "brand": "Appebon with Iron",
+    "category": "Appetite Stimulant",
+    "common_dose": "60ml",
+    "keywords": ["appetite", "vitamins", "iron"]
+  },
+  {
+    "label": "Budesonide Respule",
+    "value": "budesonide_respule_1000mcg",
+    "generic": "Budesonide",
+    "brand": "Budecort",
+    "category": "Corticosteroid",
+    "common_dose": "1000mcg/2ml",
+    "keywords": ["asthma", "nebulizer", "steroid"]
+  },
+  {
+    "label": "Butamirate Citrate 50mg",
+    "value": "butamirate_50mg",
+    "generic": "Butamirate Citrate",
+    "brand": "Sinecod",
+    "category": "Antitussive",
+    "common_dose": "50mg",
+    "keywords": ["dry cough", "cough suppressant", "sinecod"]
+  },
+  {
+    "label": "Butamirate Syrup 7.5mg/5ml",
+    "value": "butamirate_syrup",
+    "generic": "Butamirate Citrate",
+    "brand": "Sinecod",
+    "category": "Antitussive",
+    "common_dose": "7.5mg/5ml",
+    "keywords": ["kids", "dry cough", "syrup"]
+  },
+  {
+    "label": "Carbocisteine 500mg",
+    "value": "carbocisteine_500mg",
+    "generic": "Carbocisteine",
+    "brand": "Solmux",
+    "category": "Mucolytic",
+    "common_dose": "500mg",
+    "keywords": ["cough", "phlegm", "solmux"]
+  },
+  {
+    "label": "Carbocisteine Syrup 250mg/5ml",
+    "value": "carbocisteine_250mg_syrup",
+    "generic": "Carbocisteine",
+    "brand": "Loviscol",
+    "category": "Mucolytic",
+    "common_dose": "250mg/5ml",
+    "keywords": ["syrup", "child", "phlegm"]
+  },
+  {
+    "label": "Carbocisteine + Zinc",
+    "value": "solmux_advance",
+    "generic": "Carbocisteine + Zinc",
+    "brand": "Solmux Advance",
+    "category": "Mucolytic",
+    "common_dose": "500mg/5mg",
+    "keywords": ["cough", "immunity", "zinc"]
+  },
+  {
+    "label": "Cefalexin 500mg",
+    "value": "cefalexin_500mg",
+    "generic": "Cefalexin",
+    "brand": "Ceporex",
+    "category": "Antibiotic",
+    "common_dose": "500mg",
+    "keywords": ["infection", "skin infection", "cephalosporin"]
+  },
+  {
+    "label": "Cefixime 200mg",
+    "value": "cefixime_200mg",
+    "generic": "Cefixime",
+    "brand": "Tergecef",
+    "category": "Antibiotic",
+    "common_dose": "200mg",
+    "keywords": ["infection", "uti", "cefixime"]
+  },
+  {
+    "label": "Cefuroxime 500mg",
+    "value": "cefuroxime_500mg",
+    "generic": "Cefuroxime Axetil",
+    "brand": "Zinnat",
+    "category": "Antibiotic",
+    "common_dose": "500mg",
+    "keywords": ["infection", "respiratory", "cefuroxime"]
+  },
+  {
+    "label": "Celecoxib 200mg",
+    "value": "celecoxib_200mg",
+    "generic": "Celecoxib",
+    "brand": "Celebrex",
+    "category": "NSAID",
+    "common_dose": "200mg",
+    "keywords": ["pain", "arthritis", "inflammation"]
+  },
+  {
+    "label": "Celecoxib 400mg",
+    "value": "celecoxib_400mg",
+    "generic": "Celecoxib",
+    "brand": "Celebrex",
+    "category": "NSAID",
+    "common_dose": "400mg",
+    "keywords": ["acute pain", "osteoarthritis", "celebrex"]
+  },
+  {
+    "label": "Cetirizine 10mg",
+    "value": "cetirizine_10mg",
+    "generic": "Cetirizine HCl",
+    "brand": "Virlix",
+    "category": "Antihistamine",
+    "common_dose": "10mg",
+    "keywords": ["allergy", "rhinitis", "itch"]
+  },
+  {
+    "label": "Cetirizine Syrup 5mg/5ml",
+    "value": "cetirizine_5mg_syrup",
+    "generic": "Cetirizine HCl",
+    "brand": "Alnix",
+    "category": "Antihistamine",
+    "common_dose": "5mg/5ml",
+    "keywords": ["pediatric", "allergy", "syrup"]
+  },
+  {
+    "label": "Cetirizine + Phenylephrine",
+    "value": "alnix_plus_tablet",
+    "generic": "Cetirizine + Phenylephrine",
+    "brand": "Alnix Plus",
+    "category": "Antihistamine/Decongestant",
+    "common_dose": "5mg/10mg",
+    "keywords": ["colds", "allergy", "congestion"]
+  },
+  {
+    "label": "Chlorphenamine + Paracetamol + Phenylephrine",
+    "value": "bioflu_tablet",
+    "generic": "Chlorphenamine + Paracetamol + Phenylephrine",
+    "brand": "Bioflu",
+    "category": "Antipyretic/Analgesic/Antihistamine",
+    "common_dose": "2mg/500mg/10mg",
+    "keywords": ["flu", "fever", "colds", "headache"]
+  },
+  {
+    "label": "Cinnarizine 25mg",
+    "value": "cinnarizine_25mg",
+    "generic": "Cinnarizine",
+    "brand": "Stugeron",
+    "category": "Antivertigo",
+    "common_dose": "25mg",
+    "keywords": ["motion sickness", "vertigo", "dizziness"]
+  },
+  {
+    "label": "Cinnarizine 75mg",
+    "value": "cinnarizine_75mg",
+    "generic": "Cinnarizine",
+    "brand": "Stugeron Forte",
+    "category": "Antivertigo",
+    "common_dose": "75mg",
+    "keywords": ["vertigo", "inner ear", "dizziness"]
+  },
+  {
+    "label": "Ciprofloxacin 500mg",
+    "value": "ciprofloxacin_500mg",
+    "generic": "Ciprofloxacin",
+    "brand": "Ciprobay",
+    "category": "Antibiotic",
+    "common_dose": "500mg",
+    "keywords": ["uti", "infection", "quinolone"]
+  },
+  {
+    "label": "Citicoline 500mg",
+    "value": "citicoline_500mg",
+    "generic": "Citicoline",
+    "brand": "Zynapse",
+    "category": "Nootropic",
+    "common_dose": "500mg",
+    "keywords": ["stroke", "brain", "memory"]
+  },
+  {
+    "label": "Citicoline 1000mg",
+    "value": "citicoline_1000mg",
+    "generic": "Citicoline",
+    "brand": "Cholinerv",
+    "category": "Nootropic",
+    "common_dose": "1000mg",
+    "keywords": ["neuro", "brain injury", "citicoline"]
+  },
+  {
+    "label": "Clarithromycin 500mg",
+    "value": "clarithromycin_500mg",
+    "generic": "Clarithromycin",
+    "brand": "Klaricid",
+    "category": "Antibiotic",
+    "common_dose": "500mg",
+    "keywords": ["infection", "macrolide", "clarithromycin"]
+  },
+  {
+    "label": "Clindamycin 300mg",
+    "value": "clindamycin_300mg",
+    "generic": "Clindamycin",
+    "brand": "Dalacin C",
+    "category": "Antibiotic",
+    "common_dose": "300mg",
+    "keywords": ["infection", "acne", "dental infection"]
+  },
+  {
+    "label": "Clonazepam 2mg",
+    "value": "clonazepam_2mg",
+    "generic": "Clonazepam",
+    "brand": "Rivotril",
+    "category": "Anticonvulsant/Anxiolytic",
+    "common_dose": "2mg",
+    "keywords": ["anxiety", "seizure", "sleep"]
+  },
+  {
+    "label": "Clopidogrel 75mg",
+    "value": "clopidogrel_75mg",
+    "generic": "Clopidogrel",
+    "brand": "Plavix",
+    "category": "Antiplatelet",
+    "common_dose": "75mg",
+    "keywords": ["heart attack", "stroke prevention", "blood thinner"]
+  },
+  {
+    "label": "Co-Amoxiclav 1g",
+    "value": "co_amoxiclav_1000mg",
+    "generic": "Amoxicillin + Potassium Clavulanate",
+    "brand": "Augmentin 1g",
+    "category": "Antibiotic",
+    "common_dose": "1000mg",
+    "keywords": ["infection", "strong antibiotic", "augmentin"]
+  },
+  {
+    "label": "Dapaxetine 30mg",
+    "value": "dapoxetine_30mg",
+    "generic": "Dapoxetine HCl",
+    "brand": "Priligy",
+    "category": "SSRI",
+    "common_dose": "30mg",
+    "keywords": ["premature ejaculation", "mens health", "priligy"]
+  },
+  {
+    "label": "Desloratadine 5mg",
+    "value": "desloratadine_5mg",
+    "generic": "Desloratadine",
+    "brand": "Aerius",
+    "category": "Antihistamine",
+    "common_dose": "5mg",
+    "keywords": ["allergy", "non-drowsy", "rhinitis"]
+  },
+  {
+    "label": "Diclofenac Sodium 50mg",
+    "value": "diclofenac_50mg",
+    "generic": "Diclofenac Sodium",
+    "brand": "Voltaren",
+    "category": "NSAID",
+    "common_dose": "50mg",
+    "keywords": ["pain", "inflammation", "joints"]
+  },
+  {
+    "label": "Diclofenac Potassium 50mg",
+    "value": "diclofenac_potassium_50mg",
+    "generic": "Diclofenac Potassium",
+    "brand": "Cataflam",
+    "category": "NSAID",
+    "common_dose": "50mg",
+    "keywords": ["fast pain relief", "migraine", "dysmenorrhea"]
+  },
+  {
+    "label": "Dicycloverine 10mg",
+    "value": "dicycloverine_10mg",
+    "generic": "Dicycloverine HCl",
+    "brand": "Bentyl",
+    "category": "Antispasmodic",
+    "common_dose": "10mg",
+    "keywords": ["stomach ache", "cramps", "ibs"]
+  },
+  {
+    "label": "Diosmin + Hesperidin",
+    "value": "diosmin_hesperidin_500mg",
+    "generic": "Diosmin + Hesperidin",
+    "brand": "Daflon",
+    "category": "Vasoprotective",
+    "common_dose": "500mg",
+    "keywords": ["hemorrhoids", "varicose veins", "daflon"]
+  },
+  {
+    "label": "Domperidone 10mg",
+    "value": "domperidone_10mg",
+    "generic": "Domperidone",
+    "brand": "Motilium",
+    "category": "Antiemetic",
+    "common_dose": "10mg",
+    "keywords": ["nausea", "vomiting", "motility"]
+  },
+  {
+    "label": "Domperidone Suspension 1mg/ml",
+    "value": "domperidone_1mg_ml",
+    "generic": "Domperidone",
+    "brand": "Motilium",
+    "category": "Antiemetic",
+    "common_dose": "1mg/ml",
+    "keywords": ["syrup", "nausea", "pediatric"]
+  },
+  {
+    "label": "Doxofylline 400mg",
+    "value": "doxofylline_400mg",
+    "generic": "Doxofylline",
+    "brand": "Ansimar",
+    "category": "Antiasthmatic",
+    "common_dose": "400mg",
+    "keywords": ["asthma", "copd", "bronchodilator"]
+  },
+  {
+    "label": "Doxofylline Syrup 100mg/5ml",
+    "value": "doxofylline_syrup",
+    "generic": "Doxofylline",
+    "brand": "Ansimar",
+    "category": "Antiasthmatic",
+    "common_dose": "100mg/5ml",
+    "keywords": ["syrup", "asthma", "bronchitis"]
+  },
+  {
+    "label": "Enasidenib 100mg",
+    "value": "enasidenib_100mg",
+    "generic": "Enasidenib",
+    "brand": "Idhifa",
+    "category": "Antineoplastic",
+    "common_dose": "100mg",
+    "keywords": ["cancer", "leukemia", "idhifa"]
+  },
+  {
+    "label": "Erdosteine 300mg",
+    "value": "erdosteine_300mg",
+    "generic": "Erdosteine",
+    "brand": "Ectrin",
+    "category": "Mucolytic",
+    "common_dose": "300mg",
+    "keywords": ["cough", "phlegm", "mucolytic"]
+  },
+  {
+    "label": "Escitalopram 10mg",
+    "value": "escitalopram_10mg",
+    "generic": "Escitalopram",
+    "brand": "Lexapro",
+    "category": "Antidepressant",
+    "common_dose": "10mg",
+    "keywords": ["anxiety", "depression", "ssri"]
+  },
+  {
+    "label": "Esomeprazole 20mg",
+    "value": "esomeprazole_20mg",
+    "generic": "Esomeprazole",
+    "brand": "Nexium",
+    "category": "Proton Pump Inhibitor",
+    "common_dose": "20mg",
+    "keywords": ["acid reflux", "gerd", "stomach"]
+  },
+  {
+    "label": "Esomeprazole 40mg",
+    "value": "esomeprazole_40mg",
+    "generic": "Esomeprazole",
+    "brand": "Nexium",
+    "category": "Proton Pump Inhibitor",
+    "common_dose": "40mg",
+    "keywords": ["gerd", "acid reflux", "stomach pain"]
+  },
+  {
+    "label": "Famotidine 20mg",
+    "value": "famotidine_20mg",
+    "generic": "Famotidine",
+    "brand": "H2-Block",
+    "category": "H2 Antagonist",
+    "common_dose": "20mg",
+    "keywords": ["acid", "heartburn", "stomach"]
+  },
+  {
+    "label": "Febuxostat 40mg",
+    "value": "febuxostat_40mg",
+    "generic": "Febuxostat",
+    "brand": "Atenurix",
+    "category": "Antigout",
+    "common_dose": "40mg",
+    "keywords": ["gout", "uric acid", "febuxostat"]
+  },
+  {
+    "label": "Febuxostat 80mg",
+    "value": "febuxostat_80mg",
+    "generic": "Febuxostat",
+    "brand": "Urinorm",
+    "category": "Antigout",
+    "common_dose": "80mg",
+    "keywords": ["gout", "high uric acid", "febuxostat"]
+  },
+  {
+    "label": "Felodipine 5mg",
+    "value": "felodipine_5mg",
+    "generic": "Felodipine",
+    "brand": "Plendil",
+    "category": "Antihypertensive",
+    "common_dose": "5mg",
+    "keywords": ["hypertension", "bp", "calcium channel blocker"]
+  },
+  {
+    "label": "Fenofibrate 145mg",
+    "value": "fenofibrate_145mg",
+    "generic": "Fenofibrate",
+    "brand": "Lipanthyl NT",
+    "category": "Fibrate",
+    "common_dose": "145mg",
+    "keywords": ["triglycerides", "cholesterol", "lipids"]
+  },
+  {
+    "label": "Fenofibrate 160mg",
+    "value": "fenofibrate_160mg",
+    "generic": "Fenofibrate",
+    "brand": "Lipanthyl Supra",
+    "category": "Fibrate",
+    "common_dose": "160mg",
+    "keywords": ["high triglycerides", "cholesterol", "lipids"]
+  },
+  {
+    "label": "Ferrous Sulfate 325mg",
+    "value": "ferrous_sulfate_325mg",
+    "generic": "Ferrous Sulfate",
+    "brand": "Feosol",
+    "category": "Iron Supplement",
+    "common_dose": "325mg",
+    "keywords": ["iron", "anemia", "blood"]
+  },
+  {
+    "label": "Ferrous Sulfate Syrup",
+    "value": "ferrous_sulfate_syrup",
+    "generic": "Ferrous Sulfate",
+    "brand": "Iberet",
+    "category": "Iron Supplement",
+    "common_dose": "150mg/5ml",
+    "keywords": ["syrup", "pediatric", "iron deficiency"]
+  },
+  {
+    "label": "Fluconazole 150mg",
+    "value": "fluconazole_150mg",
+    "generic": "Fluconazole",
+    "brand": "Diflucan",
+    "category": "Antifungal",
+    "common_dose": "150mg",
+    "keywords": ["yeast infection", "fungal", "diflucan"]
+  },
+  {
+    "label": "Fluticasone Propionate Nasal Spray",
+    "value": "fluticasone_50mcg_spray",
+    "generic": "Fluticasone Propionate",
+    "brand": "Flixonase",
+    "category": "Corticosteroid",
+    "common_dose": "50mcg/spray",
+    "keywords": ["allergy", "nasal spray", "rhinitis"]
+  },
+  {
+    "label": "Furosemide 20mg",
+    "value": "furosemide_20mg",
+    "generic": "Furosemide",
+    "brand": "Lasix",
+    "category": "Diuretic",
+    "common_dose": "20mg",
+    "keywords": ["edema", "water pill", "hypertension"]
+  },
+  {
+    "label": "Furosemide 40mg",
+    "value": "furosemide_40mg",
+    "generic": "Furosemide",
+    "brand": "Lasix",
+    "category": "Diuretic",
+    "common_dose": "40mg",
+    "keywords": ["swelling", "diuretic", "bp"]
+  },
+  {
+    "label": "Gabapentin 300mg",
+    "value": "gabapentin_300mg",
+    "generic": "Gabapentin",
+    "brand": "Neurontin",
+    "category": "Anticonvulsant",
+    "common_dose": "300mg",
+    "keywords": ["nerve pain", "neuropathy", "seizure"]
+  },
+  {
+    "label": "Gabapentin 600mg",
+    "value": "gabapentin_600mg",
+    "generic": "Gabapentin",
+    "brand": "Neurontin",
+    "category": "Anticonvulsant",
+    "common_dose": "600mg",
+    "keywords": ["nerve pain", "postherpetic neuralgia", "neurontin"]
+  },
+  {
+    "label": "Gliclazide 30mg",
+    "value": "gliclazide_30mg",
+    "generic": "Gliclazide",
+    "brand": "Diamicron MR",
+    "category": "Antidiabetic",
+    "common_dose": "30mg",
+    "keywords": ["diabetes", "blood sugar", "sulfonylurea"]
+  },
+  {
+    "label": "Gliclazide 60mg",
+    "value": "gliclazide_60mg",
+    "generic": "Gliclazide",
+    "brand": "Diamicron MR",
+    "category": "Antidiabetic",
+    "common_dose": "60mg",
+    "keywords": ["diabetes type 2", "blood sugar", "diamicron"]
+  },
+  {
+    "label": "Glimepiride 2mg",
+    "value": "glimepiride_2mg",
+    "generic": "Glimepiride",
+    "brand": "Amaryl",
+    "category": "Antidiabetic",
+    "common_dose": "2mg",
+    "keywords": ["diabetes", "sugar", "glimepiride"]
+  },
+  {
+    "label": "Guaifenesin 100mg/5ml Syrup",
+    "value": "guaifenesin_100mg_syrup",
+    "generic": "Guaifenesin",
+    "brand": "Robitussin",
+    "category": "Expectorant",
+    "common_dose": "100mg/5ml",
+    "keywords": ["cough", "phlegm", "expectorant"]
+  },
+  {
+    "label": "Hydrochlorothiazide 25mg",
+    "value": "hctz_25mg",
+    "generic": "Hydrochlorothiazide",
+    "brand": "Hizid",
+    "category": "Diuretic",
+    "common_dose": "25mg",
+    "keywords": ["hypertension", "diuretic", "water pill"]
+  },
+  {
+    "label": "Hyoscine N-Butylbromide 10mg",
+    "value": "hyoscine_10mg",
+    "generic": "Hyoscine N-Butylbromide",
+    "brand": "Buscopan",
+    "category": "Antispasmodic",
+    "common_dose": "10mg",
+    "keywords": ["stomach pain", "cramps", "buscopan"]
+  },
+  {
+    "label": "Hyoscine + Paracetamol",
+    "value": "buscopan_plus",
+    "generic": "Hyoscine N-Butylbromide + Paracetamol",
+    "brand": "Buscopan Plus",
+    "category": "Antispasmodic/Analgesic",
+    "common_dose": "10mg/500mg",
+    "keywords": ["dysmenorrhea", "severe stomach pain", "cramps"]
+  },
+  {
+    "label": "Ibuprofen 200mg",
+    "value": "ibuprofen_200mg",
+    "generic": "Ibuprofen",
+    "brand": "Advil",
+    "category": "NSAID",
+    "common_dose": "200mg",
+    "keywords": ["pain", "fever", "headache"]
+  },
+  {
+    "label": "Ibuprofen 400mg",
+    "value": "ibuprofen_400mg",
+    "generic": "Ibuprofen",
+    "brand": "Medicol Advance",
+    "category": "NSAID",
+    "common_dose": "400mg",
+    "keywords": ["migraine", "strong pain relief", "inflammation"]
+  },
+  {
+    "label": "Ibuprofen Syrup 100mg/5ml",
+    "value": "ibuprofen_100mg_syrup",
+    "generic": "Ibuprofen",
+    "brand": "Dolan FP",
+    "category": "Analgesic/Antipyretic",
+    "common_dose": "100mg/5ml",
+    "keywords": ["kids fever", "pain syrup", "pediatric"]
+  },
+  {
+    "label": "Ibuprofen Syrup 200mg/5ml",
+    "value": "ibuprofen_200mg_syrup",
+    "generic": "Ibuprofen",
+    "brand": "Dolan FP Forte",
+    "category": "Analgesic/Antipyretic",
+    "common_dose": "200mg/5ml",
+    "keywords": ["high fever", "syrup", "children"]
+  },
+  {
+    "label": "Irbesartan 150mg",
+    "value": "irbesartan_150mg",
+    "generic": "Irbesartan",
+    "brand": "Avapro",
+    "category": "ARB",
+    "common_dose": "150mg",
+    "keywords": ["hypertension", "bp", "kidney protection"]
+  },
+  {
+    "label": "Irbesartan 300mg",
+    "value": "irbesartan_300mg",
+    "generic": "Irbesartan",
+    "brand": "Avapro",
+    "category": "ARB",
+    "common_dose": "300mg",
+    "keywords": ["hypertension", "diabetes", "irbesartan"]
+  },
+  {
+    "label": "Isosorbide Mononitrate 30mg",
+    "value": "isosorbide_mononitrate_30mg",
+    "generic": "Isosorbide Mononitrate",
+    "brand": "Imdur",
+    "category": "Vasodilator",
+    "common_dose": "30mg",
+    "keywords": ["chest pain", "angina", "heart"]
+  },
+  {
+    "label": "Isosorbide Mononitrate 60mg",
+    "value": "isosorbide_mononitrate_60mg",
+    "generic": "Isosorbide Mononitrate",
+    "brand": "Imdur",
+    "category": "Vasodilator",
+    "common_dose": "60mg",
+    "keywords": ["angina pectoris", "heart", "imdur"]
+  },
+  {
+    "label": "Itopride 50mg",
+    "value": "itopride_50mg",
+    "generic": "Itopride HCl",
+    "brand": "Ganaton",
+    "category": "Prokinetic",
+    "common_dose": "50mg",
+    "keywords": ["bloating", "indigestion", "dyspepsia"]
+  },
+  {
+    "label": "Ketoprofen 100mg",
+    "value": "ketoprofen_100mg",
+    "generic": "Ketoprofen",
+    "brand": "Orudis",
+    "category": "NSAID",
+    "common_dose": "100mg",
+    "keywords": ["pain", "arthritis", "ketoprofen"]
+  },
+  {
+    "label": "Ketorolac 10mg",
+    "value": "ketorolac_10mg",
+    "generic": "Ketorolac Tromethamine",
+    "brand": "Toradol",
+    "category": "NSAID",
+    "common_dose": "10mg",
+    "keywords": ["severe pain", "post-op", "analgesic"]
+  },
+  {
+    "label": "Lactulose Syrup",
+    "value": "lactulose_3.3g_5ml",
+    "generic": "Lactulose",
+    "brand": "Duphalac",
+    "category": "Laxative",
+    "common_dose": "3.3g/5ml",
+    "keywords": ["constipation", "laxative", "stool softener"]
+  },
+  {
+    "label": "Lansoprazole 30mg",
+    "value": "lansoprazole_30mg",
+    "generic": "Lansoprazole",
+    "brand": "Prevacid",
+    "category": "Proton Pump Inhibitor",
+    "common_dose": "30mg",
+    "keywords": ["ulcer", "gerd", "acid"]
+  },
+  {
+    "label": "Levofloxacin 500mg",
+    "value": "levofloxacin_500mg",
+    "generic": "Levofloxacin",
+    "brand": "Tavanic",
+    "category": "Antibiotic",
+    "common_dose": "500mg",
+    "keywords": ["respiratory infection", "pneumonia", "antibiotic"]
+  },
+  {
+    "label": "Levofloxacin 750mg",
+    "value": "levofloxacin_750mg",
+    "generic": "Levofloxacin",
+    "brand": "Tavanic",
+    "category": "Antibiotic",
+    "common_dose": "750mg",
+    "keywords": ["severe infection", "antibiotic", "levo"]
+  },
+  {
+    "label": "Loperamide 2mg",
+    "value": "loperamide_2mg",
+    "generic": "Loperamide",
+    "brand": "Imodium",
+    "category": "Antidiarrheal",
+    "common_dose": "2mg",
+    "keywords": ["diarrhea", "stomach", "imodium"]
+  },
+  {
+    "label": "Loratadine 10mg",
+    "value": "loratadine_10mg",
+    "generic": "Loratadine",
+    "brand": "Claritin",
+    "category": "Antihistamine",
+    "common_dose": "10mg",
+    "keywords": ["allergy", "non-drowsy", "rhinitis"]
+  },
+  {
+    "label": "Loratadine Syrup 5mg/5ml",
+    "value": "loratadine_5mg_syrup",
+    "generic": "Loratadine",
+    "brand": "Allerta",
+    "category": "Antihistamine",
+    "common_dose": "5mg/5ml",
+    "keywords": ["pediatric", "allergy", "syrup"]
+  },
+  {
+    "label": "Losartan 50mg",
+    "value": "losartan_50mg",
+    "generic": "Losartan Potassium",
+    "brand": "Cozaar",
+    "category": "ARB",
+    "common_dose": "50mg",
+    "keywords": ["hypertension", "bp", "losartan"]
+  },
+  {
+    "label": "Losartan 100mg",
+    "value": "losartan_100mg",
+    "generic": "Losartan Potassium",
+    "brand": "Lifezar",
+    "category": "ARB",
+    "common_dose": "100mg",
+    "keywords": ["high blood pressure", "hypertension", "losartan"]
+  },
+  {
+    "label": "Losartan + Hydrochlorothiazide",
+    "value": "losartan_hctz_50mg_12.5mg",
+    "generic": "Losartan + HCTZ",
+    "brand": "Hyzaar",
+    "category": "Antihypertensive",
+    "common_dose": "50mg/12.5mg",
+    "keywords": ["bp combination", "diuretic", "hyzaar"]
+  },
+  {
+    "label": "Mebendazole 100mg/5ml Syrup",
+    "value": "mebendazole_syrup",
+    "generic": "Mebendazole",
+    "brand": "Antiox",
+    "category": "Anthelmintic",
+    "common_dose": "100mg/5ml",
+    "keywords": ["worms", "deworming", "pediatric"]
+  },
+  {
+    "label": "Mefenamic Acid 250mg",
+    "value": "mefenamic_250mg",
+    "generic": "Mefenamic Acid",
+    "brand": "Ponstan",
+    "category": "NSAID",
+    "common_dose": "250mg",
+    "keywords": ["pain", "toothache", "dysmenorrhea"]
+  },
+  {
+    "label": "Mefenamic Acid 500mg",
+    "value": "mefenamic_500mg",
+    "generic": "Mefenamic Acid",
+    "brand": "Ponstan SF",
+    "category": "NSAID",
+    "common_dose": "500mg",
+    "keywords": ["pain relief", "arthritis", "mefenamic"]
+  },
+  {
+    "label": "Metformin 500mg",
+    "value": "metformin_500mg",
+    "generic": "Metformin HCl",
+    "brand": "Glucophage",
+    "category": "Antidiabetic",
+    "common_dose": "500mg",
+    "keywords": ["diabetes", "sugar", "pcos"]
+  },
+  {
+    "label": "Metformin 850mg",
+    "value": "metformin_850mg",
+    "generic": "Metformin HCl",
+    "brand": "Glucophage",
+    "category": "Antidiabetic",
+    "common_dose": "850mg",
+    "keywords": ["diabetes type 2", "blood sugar", "metformin"]
+  },
+  {
+    "label": "Metformin 1000mg",
+    "value": "metformin_1000mg",
+    "generic": "Metformin HCl",
+    "brand": "Glucophage XR",
+    "category": "Antidiabetic",
+    "common_dose": "1000mg",
+    "keywords": ["diabetes", "extended release", "sugar"]
+  },
+  {
+    "label": "Methyldopa 250mg",
+    "value": "methyldopa_250mg",
+    "generic": "Methyldopa",
+    "brand": "Aldomet",
+    "category": "Antihypertensive",
+    "common_dose": "250mg",
+    "keywords": ["pregnancy hypertension", "bp", "aldomet"]
+  },
+  {
+    "label": "Metoclopramide 10mg",
+    "value": "metoclopramide_10mg",
+    "generic": "Metoclopramide HCl",
+    "brand": "Plasil",
+    "category": "Antiemetic",
+    "common_dose": "10mg",
+    "keywords": ["nausea", "vomiting", "stomach motility"]
+  },
+  {
+    "label": "Metoprolol 50mg",
+    "value": "metoprolol_50mg",
+    "generic": "Metoprolol Tartrate",
+    "brand": "Neobloc",
+    "category": "Beta Blocker",
+    "common_dose": "50mg",
+    "keywords": ["hypertension", "heart", "beta blocker"]
+  },
+  {
+    "label": "Metoprolol 100mg",
+    "value": "metoprolol_100mg",
+    "generic": "Metoprolol Tartrate",
+    "brand": "Neobloc",
+    "category": "Beta Blocker",
+    "common_dose": "100mg",
+    "keywords": ["high blood pressure", "heart", "metoprolol"]
+  },
+  {
+    "label": "Metronidazole 500mg",
+    "value": "metronidazole_500mg",
+    "generic": "Metronidazole",
+    "brand": "Flagyl",
+    "category": "Amebicide/Antibiotic",
+    "common_dose": "500mg",
+    "keywords": ["amoeba", "infection", "bacteria"]
+  },
+  {
+    "label": "Montelukast 10mg",
+    "value": "montelukast_10mg",
+    "generic": "Montelukast Sodium",
+    "brand": "Singulair",
+    "category": "Antiasthmatic",
+    "common_dose": "10mg",
+    "keywords": ["asthma", "allergy", "rhinitis"]
+  },
+  {
+    "label": "Montelukast 4mg Chewable",
+    "value": "montelukast_4mg_chewable",
+    "generic": "Montelukast Sodium",
+    "brand": "Singulair Paediatric",
+    "category": "Antiasthmatic",
+    "common_dose": "4mg",
+    "keywords": ["kids", "asthma", "allergy"]
+  },
+  {
+    "label": "Montelukast 5mg Chewable",
+    "value": "montelukast_5mg_chewable",
+    "generic": "Montelukast Sodium",
+    "brand": "Singulair",
+    "category": "Antiasthmatic",
+    "common_dose": "5mg",
+    "keywords": ["children", "asthma", "chewable"]
+  },
+  {
+    "label": "Multivitamins + Iron",
+    "value": "sangobion_capsule",
+    "generic": "Multivitamins + Iron",
+    "brand": "Sangobion",
+    "category": "Supplement",
+    "common_dose": "1 capsule",
+    "keywords": ["anemia", "blood", "vitamins"]
+  },
+  {
+    "label": "Naproxen Sodium 275mg",
+    "value": "naproxen_275mg",
+    "generic": "Naproxen Sodium",
+    "brand": "Flanax",
+    "category": "NSAID",
+    "common_dose": "275mg",
+    "keywords": ["pain", "inflammation", "muscle pain"]
+  },
+  {
+    "label": "Naproxen Sodium 550mg",
+    "value": "naproxen_550mg",
+    "generic": "Naproxen Sodium",
+    "brand": "Flanax Forte",
+    "category": "NSAID",
+    "common_dose": "550mg",
+    "keywords": ["strong pain relief", "arthritis", "naproxen"]
+  },
+  {
+    "label": "Nifedipine 5mg",
+    "value": "nifedipine_5mg",
+    "generic": "Nifedipine",
+    "brand": "Calcibloc",
+    "category": "Calcium Channel Blocker",
+    "common_dose": "5mg",
+    "keywords": ["hypertension", "bp", "angina"]
+  },
+  {
+    "label": "Nifedipine 30mg GITS",
+    "value": "nifedipine_30mg",
+    "generic": "Nifedipine",
+    "brand": "Adalat GITS",
+    "category": "Calcium Channel Blocker",
+    "common_dose": "30mg",
+    "keywords": ["hypertension", "heart", "nifedipine"]
+  },
+  {
+    "label": "Omeprazole 20mg",
+    "value": "omeprazole_20mg",
+    "generic": "Omeprazole",
+    "brand": "Losec",
+    "category": "Proton Pump Inhibitor",
+    "common_dose": "20mg",
+    "keywords": ["acid", "ulcer", "stomach"]
+  },
+  {
+    "label": "Omeprazole 40mg",
+    "value": "omeprazole_40mg",
+    "generic": "Omeprazole",
+    "brand": "Omepron",
+    "category": "Proton Pump Inhibitor",
+    "common_dose": "40mg",
+    "keywords": ["hyperacidity", "gerd", "ulcer"]
+  },
+  {
+    "label": "Orlistat 120mg",
+    "value": "orlistat_120mg",
+    "generic": "Orlistat",
+    "brand": "Xenical",
+    "category": "Anti-obesity",
+    "common_dose": "120mg",
+    "keywords": ["weight loss", "fat blocker", "obesity"]
+  },
+  {
+    "label": "Pantoprazole 40mg",
+    "value": "pantoprazole_40mg",
+    "generic": "Pantoprazole",
+    "brand": "Controloc",
+    "category": "Proton Pump Inhibitor",
+    "common_dose": "40mg",
+    "keywords": ["acid", "gerd", "stomach"]
+  },
+  {
+    "label": "Paracetamol 500mg",
+    "value": "paracetamol_500mg",
+    "generic": "Paracetamol",
+    "brand": "Biogesic",
+    "category": "Analgesic/Antipyretic",
+    "common_dose": "500mg",
+    "keywords": ["fever", "headache", "pain"]
+  },
+  {
+    "label": "Paracetamol 650mg",
+    "value": "paracetamol_650mg",
+    "generic": "Paracetamol",
+    "brand": "Rexidol Forte",
+    "category": "Analgesic/Antipyretic",
+    "common_dose": "650mg",
+    "keywords": ["strong fever", "pain", "paracetamol"]
+  },
+  {
+    "label": "Paracetamol Syrup 120mg/5ml",
+    "value": "paracetamol_120mg_syrup",
+    "generic": "Paracetamol",
+    "brand": "Calpol",
+    "category": "Analgesic/Antipyretic",
+    "common_dose": "120mg/5ml",
+    "keywords": ["kids fever", "syrup", "pediatric"]
+  },
+  {
+    "label": "Paracetamol Syrup 250mg/5ml",
+    "value": "paracetamol_250mg_syrup",
+    "generic": "Paracetamol",
+    "brand": "Tempra Forte",
+    "category": "Analgesic/Antipyretic",
+    "common_dose": "250mg/5ml",
+    "keywords": ["high fever children", "syrup", "tempra"]
+  },
+  {
+    "label": "Paracetamol Drops 100mg/ml",
+    "value": "paracetamol_drops",
+    "generic": "Paracetamol",
+    "brand": "Biogesic Kids",
+    "category": "Analgesic/Antipyretic",
+    "common_dose": "100mg/ml",
+    "keywords": ["infant", "baby fever", "drops"]
+  },
+  {
+    "label": "Paracetamol + Ibuprofen",
+    "value": "alaxan_fr_capsule",
+    "generic": "Paracetamol + Ibuprofen",
+    "brand": "Alaxan FR",
+    "category": "Analgesic",
+    "common_dose": "325mg/200mg",
+    "keywords": ["muscle pain", "body ache", "alaxan"]
+  },
+  {
+    "label": "Phenylephrine + Paracetamol",
+    "value": "neozep_forte",
+    "generic": "Phenylephrine + Chlorphenamine + Paracetamol",
+    "brand": "Neozep Forte",
+    "category": "Cold Medicine",
+    "common_dose": "1 tablet",
+    "keywords": ["colds", "runny nose", "fever"]
+  },
+  {
+    "label": "Pioglitazone 15mg",
+    "value": "pioglitazone_15mg",
+    "generic": "Pioglitazone",
+    "brand": "Actos",
+    "category": "Antidiabetic",
+    "common_dose": "15mg",
+    "keywords": ["diabetes", "sugar", "insulin sensitivity"]
+  },
+  {
+    "label": "Pioglitazone 30mg",
+    "value": "pioglitazone_30mg",
+    "generic": "Pioglitazone",
+    "brand": "Actos",
+    "category": "Antidiabetic",
+    "common_dose": "30mg",
+    "keywords": ["diabetes type 2", "sugar", "pioglitazone"]
+  },
+  {
+    "label": "Potassium Chloride",
+    "value": "k_chloride_600mg",
+    "generic": "Potassium Chloride",
+    "brand": "Kalium Durule",
+    "category": "Electrolyte",
+    "common_dose": "600mg",
+    "keywords": ["potassium", "kalium", "electrolyte"]
+  },
+  {
+    "label": "Povidone Iodine Solution",
+    "value": "betadine_solution",
+    "generic": "Povidone Iodine",
+    "brand": "Betadine",
+    "category": "Antiseptic",
+    "common_dose": "10%",
+    "keywords": ["wound", "antiseptic", "betadine"]
+  },
+  {
+    "label": "Prednisone 5mg",
+    "value": "prednisone_5mg",
+    "generic": "Prednisone",
+    "brand": "Peltas",
+    "category": "Corticosteroid",
+    "common_dose": "5mg",
+    "keywords": ["steroid", "allergy", "inflammation"]
+  },
+  {
+    "label": "Prednisone 20mg",
+    "value": "prednisone_20mg",
+    "generic": "Prednisone",
+    "brand": "Pred",
+    "category": "Corticosteroid",
+    "common_dose": "20mg",
+    "keywords": ["steroid", "asthma", "inflammation"]
+  },
+  {
+    "label": "Pregabalin 75mg",
+    "value": "pregabalin_75mg",
+    "generic": "Pregabalin",
+    "brand": "Lyrica",
+    "category": "Anticonvulsant",
+    "common_dose": "75mg",
+    "keywords": ["nerve pain", "fibromyalgia", "neuropathy"]
+  },
+  {
+    "label": "Pregabalin 150mg",
+    "value": "pregabalin_150mg",
+    "generic": "Pregabalin",
+    "brand": "Lyrica",
+    "category": "Anticonvulsant",
+    "common_dose": "150mg",
+    "keywords": ["nerve pain", "anxiety", "lyrica"]
+  },
+  {
+    "label": "Quetiapine 25mg",
+    "value": "quetiapine_25mg",
+    "generic": "Quetiapine",
+    "brand": "Seroquel",
+    "category": "Antipsychotic",
+    "common_dose": "25mg",
+    "keywords": ["sleep", "bipolar", "mood"]
+  },
+  {
+    "label": "Quetiapine 100mg",
+    "value": "quetiapine_100mg",
+    "generic": "Quetiapine",
+    "brand": "Seroquel",
+    "category": "Antipsychotic",
+    "common_dose": "100mg",
+    "keywords": ["schizophrenia", "bipolar", "mood stabilizer"]
+  },
+  {
+    "label": "Ranitidine 150mg",
+    "value": "ranitidine_150mg",
+    "generic": "Ranitidine",
+    "brand": "Zantac",
+    "category": "H2 Antagonist",
+    "common_dose": "150mg",
+    "keywords": ["acid", "ulcer", "stomach"]
+  },
+  {
+    "label": "Rosuvastatin 5mg",
+    "value": "rosuvastatin_5mg",
+    "generic": "Rosuvastatin Calcium",
+    "brand": "Crestor",
+    "category": "Statin",
+    "common_dose": "5mg",
+    "keywords": ["cholesterol", "heart", "statin"]
+  },
+  {
+    "label": "Rosuvastatin 10mg",
+    "value": "rosuvastatin_10mg",
+    "generic": "Rosuvastatin Calcium",
+    "brand": "Crestor",
+    "category": "Statin",
+    "common_dose": "10mg",
+    "keywords": ["high cholesterol", "lipids", "statin"]
+  },
+  {
+    "label": "Rosuvastatin 20mg",
+    "value": "rosuvastatin_20mg",
+    "generic": "Rosuvastatin Calcium",
+    "brand": "Crestor",
+    "category": "Statin",
+    "common_dose": "20mg",
+    "keywords": ["cholesterol management", "crestor", "statin"]
+  },
+  {
+    "label": "Salbutamol 2mg",
+    "value": "salbutamol_2mg",
+    "generic": "Salbutamol",
+    "brand": "Ventolin",
+    "category": "Bronchodilator",
+    "common_dose": "2mg",
+    "keywords": ["asthma", "breathing", "bronchitis"]
+  },
+  {
+    "label": "Salbutamol Inhaler",
+    "value": "salbutamol_100mcg_inhaler",
+    "generic": "Salbutamol",
+    "brand": "Ventolin Evohaler",
+    "category": "Bronchodilator",
+    "common_dose": "100mcg/puff",
+    "keywords": ["asthma attack", "inhaler", "wheezing"]
+  },
+  {
+    "label": "Salbutamol Nebule",
+    "value": "salbutamol_2.5mg_nebule",
+    "generic": "Salbutamol",
+    "brand": "Ventolin Nebules",
+    "category": "Bronchodilator",
+    "common_dose": "2.5mg/2.5ml",
+    "keywords": ["nebulizer", "asthma", "breathing"]
+  },
+  {
+    "label": "Salbutamol Syrup 2mg/5ml",
+    "value": "salbutamol_syrup",
+    "generic": "Salbutamol",
+    "brand": "Asmalin",
+    "category": "Bronchodilator",
+    "common_dose": "2mg/5ml",
+    "keywords": ["asthma syrup", "kids", "wheezing"]
+  },
+  {
+    "label": "Sertraline 50mg",
+    "value": "sertraline_50mg",
+    "generic": "Sertraline HCl",
+    "brand": "Zoloft",
+    "category": "Antidepressant",
+    "common_dose": "50mg",
+    "keywords": ["depression", "anxiety", "ssri"]
+  },
+  {
+    "label": "Sildenafil 50mg",
+    "value": "sildenafil_50mg",
+    "generic": "Sildenafil Citrate",
+    "brand": "Viagra",
+    "category": "PDE5 Inhibitor",
+    "common_dose": "50mg",
+    "keywords": ["erectile dysfunction", "mens health", "viagra"]
+  },
+  {
+    "label": "Sildenafil 100mg",
+    "value": "sildenafil_100mg",
+    "generic": "Sildenafil Citrate",
+    "brand": "Viagra",
+    "category": "PDE5 Inhibitor",
+    "common_dose": "100mg",
+    "keywords": ["ed", "mens health", "sildenafil"]
+  },
+  {
+    "label": "Simvastatin 20mg",
+    "value": "simvastatin_20mg",
+    "generic": "Simvastatin",
+    "brand": "Zocor",
+    "category": "Statin",
+    "common_dose": "20mg",
+    "keywords": ["cholesterol", "heart", "statin"]
+  },
+  {
+    "label": "Simvastatin 40mg",
+    "value": "simvastatin_40mg",
+    "generic": "Simvastatin",
+    "brand": "Vidastat",
+    "category": "Statin",
+    "common_dose": "40mg",
+    "keywords": ["high cholesterol", "lipids", "simvastatin"]
+  },
+  {
+    "label": "Spironolactone 25mg",
+    "value": "spironolactone_25mg",
+    "generic": "Spironolactone",
+    "brand": "Aldactone",
+    "category": "Diuretic",
+    "common_dose": "25mg",
+    "keywords": ["edema", "heart failure", "pcos"]
+  },
+  {
+    "label": "Tamsulosin 400mcg",
+    "value": "tamsulosin_400mcg",
+    "generic": "Tamsulosin HCl",
+    "brand": "Harnal OCAS",
+    "category": "Alpha Blocker",
+    "common_dose": "400mcg",
+    "keywords": ["prostate", "bph", "urinary"]
+  },
+  {
+    "label": "Telmisartan 40mg",
+    "value": "telmisartan_40mg",
+    "generic": "Telmisartan",
+    "brand": "Micardis",
+    "category": "ARB",
+    "common_dose": "40mg",
+    "keywords": ["hypertension", "bp", "telmisartan"]
+  },
+  {
+    "label": "Telmisartan 80mg",
+    "value": "telmisartan_80mg",
+    "generic": "Telmisartan",
+    "brand": "Micardis",
+    "category": "ARB",
+    "common_dose": "80mg",
+    "keywords": ["high blood pressure", "hypertension", "telmisartan"]
+  },
+  {
+    "label": "Telmisartan + Amlodipine",
+    "value": "telmisartan_amlodipine_40mg_5mg",
+    "generic": "Telmisartan + Amlodipine",
+    "brand": "Twynsta",
+    "category": "Antihypertensive",
+    "common_dose": "40mg/5mg",
+    "keywords": ["bp combination", "hypertension", "twynsta"]
+  },
+  {
+    "label": "Terbutaline Syrup 1.5mg/5ml",
+    "value": "terbutaline_syrup",
+    "generic": "Terbutaline Sulfate",
+    "brand": "Bricanyl",
+    "category": "Bronchodilator",
+    "common_dose": "1.5mg/5ml",
+    "keywords": ["asthma", "cough", "pediatric"]
+  },
+  {
+    "label": "Tramadol 50mg",
+    "value": "tramadol_50mg",
+    "generic": "Tramadol HCl",
+    "brand": "Ultram",
+    "category": "Analgesic",
+    "common_dose": "50mg",
+    "keywords": ["severe pain", "opioid", "pain relief"]
+  },
+  {
+    "label": "Tramadol + Paracetamol",
+    "value": "tramadol_paracetamol_tablet",
+    "generic": "Tramadol + Paracetamol",
+    "brand": "Dolcet",
+    "category": "Analgesic",
+    "common_dose": "37.5mg/325mg",
+    "keywords": ["moderate pain", "post-surgery", "pain killer"]
+  },
+  {
+    "label": "Trimetazidine 35mg",
+    "value": "trimetazidine_35mg",
+    "generic": "Trimetazidine HCl",
+    "brand": "Vastarel MR",
+    "category": "Anti-anginal",
+    "common_dose": "35mg",
+    "keywords": ["heart", "angina", "chest pain"]
+  },
+  {
+    "label": "Valproic Acid Syrup 250mg/5ml",
+    "value": "valproic_acid_syrup",
+    "generic": "Valproic Acid",
+    "brand": "Depakene",
+    "category": "Anticonvulsant",
+    "common_dose": "250mg/5ml",
+    "keywords": ["seizure", "epilepsy", "syrup"]
+  },
+  {
+    "label": "Valsartan 80mg",
+    "value": "valsartan_80mg",
+    "generic": "Valsartan",
+    "brand": "Diovan",
+    "category": "ARB",
+    "common_dose": "80mg",
+    "keywords": ["hypertension", "heart failure", "valsartan"]
+  },
+  {
+    "label": "Valsartan 160mg",
+    "value": "valsartan_160mg",
+    "generic": "Valsartan",
+    "brand": "Diovan",
+    "category": "ARB",
+    "common_dose": "160mg",
+    "keywords": ["high blood pressure", "heart", "diovan"]
+  },
+  {
+    "label": "Verapamil 40mg",
+    "value": "verapamil_40mg",
+    "generic": "Verapamil HCl",
+    "brand": "Isoptin",
+    "category": "Calcium Channel Blocker",
+    "common_dose": "40mg",
+    "keywords": ["heart rhythm", "bp", "angina"]
+  },
+  {
+    "label": "Verapamil 80mg",
+    "value": "verapamil_80mg",
+    "generic": "Verapamil HCl",
+    "brand": "Isoptin",
+    "category": "Calcium Channel Blocker",
+    "common_dose": "80mg",
+    "keywords": ["hypertension", "arrhythmia", "verapamil"]
+  },
+  {
+    "label": "Vitamin B Complex",
+    "value": "vitamin_b_complex_tablet",
+    "generic": "B1 + B6 + B12",
+    "brand": "Neurobion",
+    "category": "Vitamin",
+    "common_dose": "1 tablet",
+    "keywords": ["nerve", "vitamins", "numbness"]
+  },
+  {
+    "label": "Vitamin B Complex Syrup",
+    "value": "vitamin_b_syrup",
+    "generic": "B-Vitamins",
+    "brand": "Nutroplex",
+    "category": "Vitamin",
+    "common_dose": "5ml",
+    "keywords": ["kids vitamins", "growth", "syrup"]
+  },
+  {
+    "label": "Warfarin 2.5mg",
+    "value": "warfarin_2.5mg",
+    "generic": "Warfarin Sodium",
+    "brand": "Coumadin",
+    "category": "Anticoagulant",
+    "common_dose": "2.5mg",
+    "keywords": ["blood thinner", "clot prevention", "warfarin"]
+  },
+  {
+    "label": "Warfarin 5mg",
+    "value": "warfarin_5mg",
+    "generic": "Warfarin Sodium",
+    "brand": "Coumadin",
+    "category": "Anticoagulant",
+    "common_dose": "5mg",
+    "keywords": ["blood thinner", "anticoagulant", "heart"]
+  },
+  {
+    "label": "Zinc Sulfate Syrup",
+    "value": "zinc_sulfate_syrup",
+    "generic": "Zinc Sulfate",
+    "brand": "Zinc-O-Zinc",
+    "category": "Mineral",
+    "common_dose": "27.5mg/5ml",
+    "keywords": ["diarrhea recovery", "immunity", "zinc"]
+  }
+]

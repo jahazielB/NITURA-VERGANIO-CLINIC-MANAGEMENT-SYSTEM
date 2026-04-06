@@ -1,3 +1,4 @@
+import { supabase } from "../lib/supabaseClient";
 import { useEffect, useMemo, useState } from "react";
 import {
   Box,
@@ -24,8 +25,12 @@ import PrintIcon from "@mui/icons-material/Print";
 
 import PrescriptionFormDialog from "./forms/PrescriptionFormDialog";
 import PrescriptionViewModal from "./modals/PrescriptionViewModal";
+import PrescriptionCreateModal from "./modals/PrescriptionCreateModal";
+import CustomSnackbar from "./modals/CustomSnackBar";
 
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchPatientProfile } from "../store/patientProfileSlice";
+import { useParams } from "react-router-dom";
 
 function latestVisitIdFrom(visits) {
   if (!visits?.length) return "";
@@ -41,9 +46,15 @@ export default function PrescriptionsTab({
   const [filter, setFilter] = useState(1); // 0 all, 1 active, 2 past
   const [openForm, setOpenForm] = useState(false);
   const [editItem, setEditItem] = useState(null);
-
+  const [editMode, setEditMode] = useState(false);
   const [openView, setOpenView] = useState(false);
   const [viewItem, setViewItem] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "",
+  });
 
   const [items, setItems] = useState([
     {
@@ -80,13 +91,15 @@ export default function PrescriptionsTab({
       instructions: "",
     },
   ]);
-
+  const dispatch = useDispatch();
   const { patientInfo } = useSelector((s) => s.patientProfile);
   const { userName, role, user } = useSelector((u) => u.auth);
   const patientVisits = patientInfo?.visits;
   const prescriptionOrders = patientVisits?.flatMap(
     (p) => p.prescription_orders,
   );
+
+  const params = useParams();
 
   useEffect(() => {
     console.log("orders: ", prescriptionOrders);
@@ -95,7 +108,7 @@ export default function PrescriptionsTab({
   const latestVisitId = useMemo(() => latestVisitIdFrom(visits), [visits]);
 
   const activeCount = useMemo(
-    () => items.filter((x) => x.status === "Active").length,
+    () => prescriptionOrders.filter((x) => x.is_active === true).length,
     [items],
   );
 
@@ -108,10 +121,12 @@ export default function PrescriptionsTab({
   }, [items]);
 
   const filtered = useMemo(() => {
-    if (filter === 1) return items.filter((x) => x.status === "Active");
-    if (filter === 2) return items.filter((x) => x.status !== "Active");
-    return items;
-  }, [items, filter]);
+    if (filter === 1)
+      return prescriptionOrders?.filter((x) => x.is_active === true);
+    if (filter === 2)
+      return prescriptionOrders?.filter((x) => x.is_active !== true);
+    return prescriptionOrders;
+  }, [prescriptionOrders, filter]);
 
   const visitLabel = (visitId) =>
     visits.find((v) => v.id === visitId)?.date || visitId;
@@ -124,11 +139,20 @@ export default function PrescriptionsTab({
     });
   };
 
-  const handleStop = (id) => {
-    if (!confirm("Stop this prescription?")) return;
-    setItems((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: "Stopped" } : p)),
-    );
+  const handleStop = async (id) => {
+    try {
+      if (!confirm("Stop this prescription?")) return;
+      const { data, error } = await supabase
+        .from("prescription_orders")
+        .update({ is_active: false })
+        .eq("id", id)
+        .select()
+        .single();
+      if (error) throw error;
+      dispatch(fetchPatientProfile(params.id));
+    } catch (e) {
+      console.error("error: ", e);
+    }
   };
 
   return (
@@ -139,7 +163,15 @@ export default function PrescriptionsTab({
         <Typography variant="h6" className="font-bold">
           {activeCount} Active Prescriptions{" "}
           <span className="font-normal text-slate-500">
-            • Last Prescribed: {lastPrescribed}
+            • Last Prescribed:{" "}
+            {new Date(prescriptionOrders?.[0].prescribed_at).toLocaleDateString(
+              "en-US",
+              {
+                year: "numeric",
+                month: "short",
+                day: "numeric",
+              },
+            )}
           </span>
         </Typography>
 
@@ -192,7 +224,7 @@ export default function PrescriptionsTab({
               </TableHead>
 
               <TableBody>
-                {prescriptionOrders?.map((p) => {
+                {filtered?.map((p) => {
                   const medsCount = p?.prescription_items.length || 1; // future-proof
                   const firstMed =
                     p.prescription_items?.[0]?.medication || "No Medication";
@@ -207,11 +239,14 @@ export default function PrescriptionsTab({
                       </TableCell>
 
                       <TableCell>
-                        {new Date(p?.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}
+                        {new Date(p?.prescribed_at).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                          },
+                        )}
                       </TableCell>
                       <TableCell>{`Dr. ${prescribedBy?.full_name} `}</TableCell>
 
@@ -258,7 +293,9 @@ export default function PrescriptionsTab({
                             startIcon={<EditIcon />}
                             onClick={() => {
                               setEditItem(p);
-                              setOpenForm(true);
+                              setOpenView(true);
+                              setEditMode(true);
+                              setViewItem(p);
                             }}
                           >
                             Edit
@@ -305,21 +342,40 @@ export default function PrescriptionsTab({
       </Card>
 
       {/* Add/Edit dialog */}
-      <PrescriptionFormDialog
+      {/* <PrescriptionFormDialog
         open={openForm}
         onClose={() => setOpenForm(false)}
         onSave={handleSave}
         initial={editItem}
         latestVisitId={latestVisitId}
         visits={visits}
+      /> */}
+      <PrescriptionCreateModal
+        open={openForm}
+        onClose={() => setOpenForm(false)}
       />
 
       {/* View modal */}
       <PrescriptionViewModal
         open={openView}
-        onClose={() => setOpenView(false)}
+        onClose={() => {
+          setViewItem(null);
+          setOpenView(false);
+          setEditItem(null);
+          setEditMode(false);
+        }}
         item={viewItem}
         visitLabel={viewItem ? visitLabel(viewItem.visitId) : ""}
+        editing={editMode}
+        setSave={setSaving}
+        setSnack={setSnackbar}
+        saving={saving}
+      />
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        severity={snackbar.severity}
       />
     </Box>
   );
