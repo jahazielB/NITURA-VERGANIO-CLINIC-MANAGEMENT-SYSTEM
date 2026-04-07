@@ -225,7 +225,6 @@ export default function OverviewVitalsCard({}) {
                 value={selectedVisitId || ""}
                 onChange={(e) => {
                   setSelectedVisitId(e.target.value);
-                  console.log(selected);
                 }}
                 sx={{ minWidth: 220 }}
               >
@@ -243,6 +242,12 @@ export default function OverviewVitalsCard({}) {
               startIcon={<AddIcon />}
               size="small"
               onClick={() => {
+                if (visits.length === 0)
+                  return setSnackbar({
+                    open: true,
+                    message: "Add a visit first",
+                    severity: "warning",
+                  });
                 setOpenVitalsDialog(true);
               }}
             >

@@ -16,17 +16,20 @@ import {
   TableHead,
   TableRow,
   Typography,
+  IconButton,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import BlockIcon from "@mui/icons-material/Block";
 import PrintIcon from "@mui/icons-material/Print";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 import PrescriptionFormDialog from "./forms/PrescriptionFormDialog";
 import PrescriptionViewModal from "./modals/PrescriptionViewModal";
 import PrescriptionCreateModal from "./modals/PrescriptionCreateModal";
 import CustomSnackbar from "./modals/CustomSnackBar";
+import ConfirmDeleteCancel from "./modals/ConfirmDelete";
 
 import { useSelector, useDispatch } from "react-redux";
 import { fetchPatientProfile } from "../store/patientProfileSlice";
@@ -45,7 +48,7 @@ export default function PrescriptionsTab({
 }) {
   const [filter, setFilter] = useState(1); // 0 all, 1 active, 2 past
   const [openForm, setOpenForm] = useState(false);
-  const [editItem, setEditItem] = useState(null);
+  const [deleteItem, setDeleteItem] = useState(null);
   const [editMode, setEditMode] = useState(false);
   const [openView, setOpenView] = useState(false);
   const [viewItem, setViewItem] = useState(null);
@@ -56,41 +59,11 @@ export default function PrescriptionsTab({
     severity: "",
   });
 
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      visitId: visits[0]?.id || "V3",
-      medication: "Amoxicillin 500mg",
-      dosage: "500mg capsule",
-      frequency: "3x daily",
-      duration: "7 days",
-      startDate: "2024-04-24",
-      status: "Active",
-      instructions: "Take after meals",
-    },
-    {
-      id: 2,
-      visitId: visits[1]?.id || "V2",
-      medication: "Ibuprofen 200mg",
-      dosage: "200mg tablet",
-      frequency: "As needed",
-      duration: "—",
-      startDate: "2024-01-15",
-      status: "Active",
-      instructions: "",
-    },
-    {
-      id: 3,
-      visitId: visits[2]?.id || "V1",
-      medication: "Metformin 1000mg",
-      dosage: "500mg tablet",
-      frequency: "2x daily",
-      duration: "Chronic",
-      startDate: "2023-08-05",
-      status: "Active",
-      instructions: "",
-    },
-  ]);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState({
+    open: false,
+    loading: false,
+  });
+
   const dispatch = useDispatch();
   const { patientInfo } = useSelector((s) => s.patientProfile);
   const { userName, role, user } = useSelector((u) => u.auth);
@@ -101,24 +74,16 @@ export default function PrescriptionsTab({
 
   const params = useParams();
 
-  useEffect(() => {
-    console.log("orders: ", prescriptionOrders);
-  }, []);
+  // useEffect(() => {
+  //   console.log("orders: ", prescriptionOrders);
+  // }, []);
 
   const latestVisitId = useMemo(() => latestVisitIdFrom(visits), [visits]);
 
   const activeCount = useMemo(
     () => prescriptionOrders.filter((x) => x.is_active === true).length,
-    [items],
+    [],
   );
-
-  const lastPrescribed = useMemo(() => {
-    if (!items.length) return "—";
-    const sorted = [...items].sort(
-      (a, b) => new Date(b.startDate) - new Date(a.startDate),
-    );
-    return sorted[0]?.startDate || "—";
-  }, [items]);
 
   const filtered = useMemo(() => {
     if (filter === 1)
@@ -130,14 +95,6 @@ export default function PrescriptionsTab({
 
   const visitLabel = (visitId) =>
     visits.find((v) => v.id === visitId)?.date || visitId;
-
-  const handleSave = (payload) => {
-    setItems((prev) => {
-      const exists = prev.some((p) => p.id === payload.id);
-      if (exists) return prev.map((p) => (p.id === payload.id ? payload : p));
-      return [payload, ...prev];
-    });
-  };
 
   const handleStop = async (id) => {
     try {
@@ -154,7 +111,39 @@ export default function PrescriptionsTab({
       console.error("error: ", e);
     }
   };
+  const handleDeletePrescription = async () => {
+    try {
+      setOpenDeleteDialog((prev) => ({
+        ...prev,
+        loading: true,
+      }));
 
+      const { error } = await supabase
+        .from("prescription_orders")
+        .delete()
+        .eq("id", deleteItem);
+      if (error) throw error;
+      setSnackbar({
+        open: true,
+        message: "Deleted Successfully!",
+        severity: "success",
+      });
+    } catch (e) {
+      console.error(e.message);
+      setSnackbar({
+        open: true,
+        message: "error deleting, contact admin",
+        severity: "error",
+      });
+    } finally {
+      setOpenDeleteDialog((prev) => ({
+        ...prev,
+        loading: false,
+        open: false,
+      }));
+      dispatch(fetchPatientProfile(params.id));
+    }
+  };
   return (
     <Box className="space-y-4">
       {/* Header */}
@@ -164,14 +153,15 @@ export default function PrescriptionsTab({
           {activeCount} Active Prescriptions{" "}
           <span className="font-normal text-slate-500">
             • Last Prescribed:{" "}
-            {new Date(prescriptionOrders?.[0].prescribed_at).toLocaleDateString(
-              "en-US",
-              {
-                year: "numeric",
-                month: "short",
-                day: "numeric",
-              },
-            )}
+            {activeCount
+              ? new Date(
+                  prescriptionOrders?.[0]?.prescribed_at,
+                )?.toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })
+              : "No record"}
           </span>
         </Typography>
 
@@ -179,6 +169,12 @@ export default function PrescriptionsTab({
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
+            if (patientVisits.length === 0)
+              return setSnackbar({
+                open: true,
+                message: "Add a visit first!",
+                severity: "warning",
+              });
             setEditItem(null);
             setOpenForm(true);
           }}
@@ -292,7 +288,6 @@ export default function PrescriptionsTab({
                             variant="outlined"
                             startIcon={<EditIcon />}
                             onClick={() => {
-                              setEditItem(p);
                               setOpenView(true);
                               setEditMode(true);
                               setViewItem(p);
@@ -322,6 +317,21 @@ export default function PrescriptionsTab({
                               Stop
                             </Button>
                           )}
+                          <IconButton
+                            aria-label="delete"
+                            color="error"
+                            onClick={() => {
+                              setOpenDeleteDialog({
+                                ...openDeleteDialog,
+                                open: true,
+                              });
+                              setDeleteItem(p.id);
+
+                              console.log(deleteItem);
+                            }}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
                         </Box>
                       </TableCell>
                     </TableRow>
@@ -353,6 +363,7 @@ export default function PrescriptionsTab({
       <PrescriptionCreateModal
         open={openForm}
         onClose={() => setOpenForm(false)}
+        setSnack={setSnackbar}
       />
 
       {/* View modal */}
@@ -376,6 +387,15 @@ export default function PrescriptionsTab({
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         message={snackbar.message}
         severity={snackbar.severity}
+      />
+      <ConfirmDeleteCancel
+        open={openDeleteDialog.open}
+        cancel={() => {
+          setOpenDeleteDialog({ ...openDeleteDialog, open: false });
+          // setVisitId(null);
+        }}
+        loading={openDeleteDialog.loading}
+        handleDelete={() => handleDeletePrescription(deleteItem)}
       />
     </Box>
   );

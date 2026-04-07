@@ -10,7 +10,7 @@ import {
 const ConfirmDeleteCancel = ({ open, cancel, handleDelete, loading }) => {
   return (
     <div>
-      <Dialog open={open}>
+      <Dialog open={open} onClose={cancel}>
         <DialogTitle>{"Confirm Delete"}</DialogTitle>
         <DialogContent>
           <DialogContentText>

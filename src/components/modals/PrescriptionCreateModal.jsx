@@ -1,5 +1,5 @@
 import { supabase } from "../../lib/supabaseClient";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -9,11 +9,19 @@ import {
   Button,
   CircularProgress,
   Autocomplete,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select,
 } from "@mui/material";
 
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import CloseIcon from "@mui/icons-material/Close";
+
+import { useSelector, useDispatch } from "react-redux";
+import { fetchPatientProfile } from "../../store/patientProfileSlice";
+import { useParams } from "react-router-dom";
 
 import drugs from "../../data/drugs.json";
 
@@ -34,9 +42,41 @@ export default function PrescriptionCreateModal({
     },
   ]);
 
+  const [doctors, setDoctors] = useState([]);
   const [saving, setSaving] = useState(false);
-
+  const [orderForm, setOrderForm] = useState({
+    visitId: "",
+    doctorId: "",
+  });
   const drugSearch = drugs;
+  const { id } = useParams();
+  const dispatch = useDispatch();
+  const { patientInfo } = useSelector((s) => s.patientProfile);
+  const visits = patientInfo?.visits;
+  const prescriptionOrder = visits?.flatMap((v) => v.prescription_orders);
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      const { data, error } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("role", "Doctor");
+      if (error) console.log(error);
+
+      setDoctors(data);
+    };
+    fetchDoctors();
+    const latestVisit = visits[0]?.id;
+    setOrderForm((prev) => ({
+      ...prev,
+      visitId: latestVisit,
+    }));
+  }, []);
+  useEffect(() => {
+    // console.log(prescriptionOrder);
+    console.log(
+      prescriptionOrder.find((v) => v.visit_id === orderForm.visitId)?.id,
+    );
+  }, [open]);
 
   // ➕ Add row
   const handleAddRow = () => {
@@ -81,12 +121,36 @@ export default function PrescriptionCreateModal({
   const handleSave = async () => {
     try {
       setSaving(true);
-
+      let prescriptionOrderId;
+      const selectedOrder = prescriptionOrder?.find(
+        (v) => v.visit_id === orderForm.visitId,
+      );
+      const orderPayload = {
+        visit_id: orderForm.visitId,
+        prescribed_by: orderForm.doctorId,
+      };
+      if (!orderForm.doctorId) {
+        setSnack({
+          open: true,
+          message: "Please Choose a Doctor",
+          severity: "warning",
+        });
+        return;
+      }
+      if (!selectedOrder) {
+        const { data, error: orderError } = await supabase
+          .from("prescription_orders")
+          .insert([orderPayload])
+          .select();
+        if (orderError) throw orderError;
+        prescriptionOrderId = data[0].id;
+      } else {
+        prescriptionOrderId = selectedOrder.id;
+      }
       const payload = form
         .filter((f) => f.medication.trim())
         .map((f) => ({
-          visit_id: visitId,
-          doctor_id: doctorId,
+          prescription_order_id: prescriptionOrderId,
           medication: f.medication,
           dosage: f.dosage,
           frequency: f.frequency,
@@ -105,7 +169,8 @@ export default function PrescriptionCreateModal({
 
       const { error } = await supabase
         .from("prescription_items")
-        .insert(payload);
+        .insert(payload)
+        .select();
 
       if (error) throw error;
 
@@ -117,13 +182,14 @@ export default function PrescriptionCreateModal({
 
       onClose();
     } catch (e) {
-      console.error(e);
+      console.error(e.message);
       setSnack({
         open: true,
-        message: "Error saving prescription",
+        message: "error saving contact admin",
         severity: "error",
       });
     } finally {
+      dispatch(fetchPatientProfile(id));
       setSaving(false);
     }
   };
@@ -149,8 +215,52 @@ export default function PrescriptionCreateModal({
         <Box display="flex" justifyContent="space-between" mb={2}>
           <Typography fontWeight={700}>Create Prescription</Typography>
 
-          <Box>
-            <TextField select size="small"></TextField>
+          <Box className="flex gap-3">
+            <FormControl fullWidth size="small" required sx={{ minWidth: 150 }}>
+              <InputLabel>Select Doctor</InputLabel>
+              <Select
+                name="doctorId"
+                value={orderForm.doctorId || ""}
+                onChange={(e) => {
+                  const { name, value } = e.target;
+                  setOrderForm((prev) => ({
+                    ...prev,
+                    [name]: value,
+                  }));
+                }}
+                label="Select Doctor"
+              >
+                {doctors?.map((d) => (
+                  <MenuItem key={d.id} value={d.id}>
+                    Dr. {d.full_name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <TextField
+              select
+              size="small"
+              label="Select Visit Date"
+              value={orderForm.visitId || "Select Visit Date"}
+              sx={{ minWidth: 190 }}
+              onChange={(e) => {
+                setOrderForm((prev) => ({
+                  ...prev,
+                  visitId: e.target.value,
+                }));
+              }}
+            >
+              {visits?.map((v) => (
+                <MenuItem key={v.id} value={v.id}>
+                  {" "}
+                  {new Date(v.created_at).toLocaleString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </MenuItem>
+              ))}
+            </TextField>
             <IconButton onClick={onClose}>
               <CloseIcon />
             </IconButton>
