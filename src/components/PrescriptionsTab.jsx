@@ -175,7 +175,7 @@ export default function PrescriptionsTab({
                 message: "Add a visit first!",
                 severity: "warning",
               });
-            setEditItem(null);
+
             setOpenForm(true);
           }}
         >

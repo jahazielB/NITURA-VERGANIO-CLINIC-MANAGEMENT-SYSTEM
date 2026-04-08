@@ -11,26 +11,29 @@ import {
 import SaveIcon from "@mui/icons-material/Save";
 import PrintIcon from "@mui/icons-material/Print";
 import SoapForm from "./forms/SoapForm";
+import { upperCaseFirstLetter } from "./helpers/nameHelper";
+import { useSelector, useDispatch } from "react-redux";
 
 // expects visits like:
 // [{ id, date, doctor, reason, vitals: {...} }]
-function getLatestVisitId(visits) {
-  if (!visits?.length) return "";
-  return [...visits].sort((a, b) => new Date(b.date) - new Date(a.date))[0].id;
-}
 
 export default function SoapTab({ visits = [] }) {
   const [selectedVisitId, setSelectedVisitId] = useState("");
   const [soapByVisit, setSoapByVisit] = useState({}); // { [visitId]: soapObj }
 
+  const { patientInfo } = useSelector((s) => s.patientProfile);
+
+  const visit = patientInfo?.visits;
+
   useEffect(() => {
-    if (!visits.length) return;
-    setSelectedVisitId((prev) => prev || getLatestVisitId(visits));
-  }, [visits]);
+    if (!visit.length) return;
+    setSelectedVisitId(visit[0]?.id);
+    console.log(visit);
+  }, [visit]);
 
   const selectedVisit = useMemo(
-    () => visits.find((v) => v.id === selectedVisitId) || null,
-    [visits, selectedVisitId],
+    () => visit.find((v) => v.id === selectedVisitId) || null,
+    [visit, selectedVisitId],
   );
 
   const soap = useMemo(() => {
@@ -67,7 +70,7 @@ export default function SoapTab({ visits = [] }) {
 
   return (
     <Box className="space-y-4">
-      {/* Header / Visit selector */}
+      {/* Header */}
       <Card className="rounded-2xl shadow">
         <CardContent className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <Box>
@@ -75,10 +78,11 @@ export default function SoapTab({ visits = [] }) {
               SOAP Notes
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Choose a visit and document notes for that encounter.
+              View and manage SOAP notes per patient visit.
             </Typography>
           </Box>
 
+          {/* Visit Selector */}
           <Box className="flex flex-col sm:flex-row gap-2 sm:items-center">
             <TextField
               select
@@ -87,13 +91,23 @@ export default function SoapTab({ visits = [] }) {
               value={selectedVisitId}
               onChange={(e) => setSelectedVisitId(e.target.value)}
               sx={{ minWidth: 260 }}
-              disabled={!visits.length}
+              disabled={!visit?.length}
             >
-              {visits.map((v) => (
-                <MenuItem key={v.id} value={v.id}>
-                  {v.date} • {v.doctor}
-                </MenuItem>
-              ))}
+              {[...(visit || [])]
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+                .map((v) => {
+                  const doctor = v?.doctor;
+                  return (
+                    <MenuItem key={v?.id} value={v?.id}>
+                      {new Date(v.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}{" "}
+                      • Dr. {doctor?.full_name}
+                    </MenuItem>
+                  );
+                })}
             </TextField>
 
             <Button
@@ -117,37 +131,61 @@ export default function SoapTab({ visits = [] }) {
         </CardContent>
       </Card>
 
-      {/* Visit meta preview (optional but helpful) */}
+      {/* Visit Info Card */}
       {selectedVisit && (
-        <Card className="rounded-2xl shadow">
-          <CardContent className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-            <Typography className="font-semibold">
-              {selectedVisit.reason}
+        <Card className="rounded-2xl shadow border border-slate-100">
+          <CardContent className="flex flex-col gap-1">
+            <Typography className="font-semibold text-base">
+              {upperCaseFirstLetter(selectedVisit?.chief_complaint) ||
+                "No reason provided"}
             </Typography>
+
             <Typography variant="body2" color="text.secondary">
-              {selectedVisit.date} • {selectedVisit.doctor} •{" "}
-              {selectedVisit.visitType || "—"}
+              {new Date(selectedVisit?.created_at).toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+              })}{" "}
+              • Dr. {selectedVisit?.doctor?.full_name || "N/A"} •{" "}
+              {selectedVisit?.visit_type || "General Consultation"}
             </Typography>
           </CardContent>
         </Card>
       )}
 
-      {/* Form */}
-      {!visits.length ? (
+      {/* Empty State */}
+      {!visit?.length ? (
         <Card className="rounded-2xl shadow">
           <CardContent>
             <Typography className="font-semibold">No visits yet</Typography>
             <Typography variant="body2" color="text.secondary">
-              Add a visit first to create SOAP notes.
+              Add a visit first to create or view SOAP notes.
             </Typography>
           </CardContent>
         </Card>
       ) : (
-        <SoapForm
-          soap={soap}
-          onChange={handleChange}
-          vitals={selectedVisit?.vitals}
-        />
+        /* SOAP Form Card */
+        <Card className="rounded-2xl shadow">
+          <CardContent>
+            <Box className="flex items-center justify-between mb-3">
+              <Typography className="font-semibold">SOAP Details</Typography>
+
+              {/* Admin Mode Indicator */}
+              <Typography
+                variant="caption"
+                className="bg-slate-100 px-2 py-1 rounded-md"
+              >
+                Admin View
+              </Typography>
+            </Box>
+
+            <SoapForm
+              soap={soap}
+              onChange={handleChange}
+              readOnly={true} // 🔥 admin mode
+            />
+          </CardContent>
+        </Card>
       )}
     </Box>
   );

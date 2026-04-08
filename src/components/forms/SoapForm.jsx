@@ -24,93 +24,131 @@ function fmtVitals(v) {
   ].filter(Boolean);
 }
 
-export default function SoapForm({ soap, onChange, vitals }) {
+export default function SoapForm({ soap, onChange, vitals, readOnly = false }) {
   const chips = fmtVitals(vitals);
+
+  const sectionStyle = "rounded-xl border border-slate-100";
 
   return (
     <Box className="space-y-4">
-      {/* Vitals summary (read-only) */}
+      {/* VITALS */}
       <Card className="rounded-2xl shadow">
         <CardContent>
           <Typography className="font-semibold mb-2">
-            Vitals (from this visit)
+            Vitals (this visit)
           </Typography>
 
           {chips.length ? (
             <Box className="flex flex-wrap gap-2">
               {chips.map((c) => (
-                <Chip key={c} label={c} />
+                <Chip key={c} label={c} size="small" />
               ))}
             </Box>
           ) : (
             <Typography variant="body2" color="text.secondary">
-              No vitals recorded for this visit yet.
+              No vitals recorded.
             </Typography>
           )}
         </CardContent>
       </Card>
 
-      {/* SOAP editor */}
+      {/* SOAP */}
       <Card className="rounded-2xl shadow">
         <CardContent>
-          <Typography className="font-semibold">SOAP Notes</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Saved per visit. Keep it concise but complete.
-          </Typography>
+          <Box className="mb-3">
+            <Typography className="font-semibold text-lg">
+              SOAP Notes
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Structured clinical documentation per visit.
+            </Typography>
+          </Box>
 
-          <Divider className="my-3" />
+          <Divider className="mb-4" />
 
           <Grid container spacing={2}>
+            {/* SUBJECTIVE */}
             <Grid item xs={12}>
-              <TextField
-                label="S — Subjective"
-                name="subjective"
-                value={soap.subjective}
-                onChange={onChange}
-                fullWidth
-                multiline
-                minRows={3}
-                placeholder="Chief complaint, symptoms, history..."
-              />
+              <Box className={sectionStyle + " p-3"}>
+                <Typography className="font-semibold text-sm mb-1 text-blue-600">
+                  S — Subjective
+                </Typography>
+
+                <TextField
+                  name="subjective"
+                  value={soap.subjective}
+                  onChange={onChange}
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  placeholder="Patient complaints, symptoms, history..."
+                  InputProps={{ readOnly }}
+                  helperText="What the patient reports"
+                />
+              </Box>
             </Grid>
 
+            {/* OBJECTIVE */}
             <Grid item xs={12}>
-              <TextField
-                label="O — Objective"
-                name="objective"
-                value={soap.objective}
-                onChange={onChange}
-                fullWidth
-                multiline
-                minRows={3}
-                placeholder="Physical exam findings, relevant observations..."
-              />
+              <Box className={sectionStyle + " p-3"}>
+                <Typography className="font-semibold text-sm mb-1 text-green-600">
+                  O — Objective
+                </Typography>
+
+                <TextField
+                  name="objective"
+                  value={soap.objective}
+                  onChange={onChange}
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  placeholder="Exam findings, vitals, observations..."
+                  InputProps={{ readOnly }}
+                  helperText="What you observe/measured"
+                />
+              </Box>
             </Grid>
 
+            {/* ASSESSMENT */}
             <Grid item xs={12}>
-              <TextField
-                label="A — Assessment"
-                name="assessment"
-                value={soap.assessment}
-                onChange={onChange}
-                fullWidth
-                multiline
-                minRows={3}
-                placeholder="Diagnosis / impression..."
-              />
+              <Box className={sectionStyle + " p-3"}>
+                <Typography className="font-semibold text-sm mb-1 text-purple-600">
+                  A — Assessment
+                </Typography>
+
+                <TextField
+                  name="assessment"
+                  value={soap.assessment}
+                  onChange={onChange}
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  placeholder="Diagnosis or clinical impression..."
+                  InputProps={{ readOnly }}
+                  helperText="Your clinical judgment"
+                />
+              </Box>
             </Grid>
 
+            {/* PLAN */}
             <Grid item xs={12}>
-              <TextField
-                label="P — Plan"
-                name="plan"
-                value={soap.plan}
-                onChange={onChange}
-                fullWidth
-                multiline
-                minRows={3}
-                placeholder="Treatment, meds, labs, follow-up..."
-              />
+              <Box className={sectionStyle + " p-3"}>
+                <Typography className="font-semibold text-sm mb-1 text-orange-600">
+                  P — Plan
+                </Typography>
+
+                <TextField
+                  name="plan"
+                  value={soap.plan}
+                  onChange={onChange}
+                  fullWidth
+                  multiline
+                  minRows={3}
+                  placeholder="Medications, labs, follow-up..."
+                  InputProps={{ readOnly }}
+                  helperText="Next steps for patient care"
+                />
+              </Box>
             </Grid>
           </Grid>
         </CardContent>
