@@ -47,7 +47,7 @@ export default function LatestSoapNoteCard({ onViewNote }) {
           variant="subtitle1"
           className="font-semibold text-slate-800 mb-2"
         >
-          Latest SOAP Note
+          Recent SOAP Note
         </Typography>
 
         {latestSoap?.length > 0 && latestSoap[0] ? (

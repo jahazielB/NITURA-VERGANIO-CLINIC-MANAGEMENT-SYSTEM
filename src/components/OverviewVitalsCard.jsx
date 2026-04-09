@@ -334,7 +334,7 @@ export default function OverviewVitalsCard({}) {
             ))
           ) : (
             <Typography variant="body2" color="text.secondary">
-              No vitals yet. Add vitals during a visit.
+              No vitals yet. Add vitals during a visit or here.
             </Typography>
           )}
         </Box>

@@ -8,6 +8,9 @@ import {
   Typography,
   Chip,
 } from "@mui/material";
+import { useEffect } from "react";
+
+import { useSelector } from "react-redux";
 
 function fmtVitals(v) {
   if (!v) return [];
@@ -26,31 +29,37 @@ function fmtVitals(v) {
 
 export default function SoapForm({ soap, onChange, vitals, readOnly = false }) {
   const chips = fmtVitals(vitals);
-
+  const { role } = useSelector((s) => s.auth);
   const sectionStyle = "rounded-xl border border-slate-100";
+
+  useEffect(() => {
+    console.log(soap);
+  }, []);
 
   return (
     <Box className="space-y-4">
       {/* VITALS */}
-      <Card className="rounded-2xl shadow">
-        <CardContent>
-          <Typography className="font-semibold mb-2">
-            Vitals (this visit)
-          </Typography>
-
-          {chips.length ? (
-            <Box className="flex flex-wrap gap-2">
-              {chips.map((c) => (
-                <Chip key={c} label={c} size="small" />
-              ))}
-            </Box>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No vitals recorded.
+      {role === "Doctor" && (
+        <Card className="rounded-2xl shadow">
+          <CardContent>
+            <Typography className="font-semibold mb-2">
+              Vitals (this visit)
             </Typography>
-          )}
-        </CardContent>
-      </Card>
+
+            {chips.length ? (
+              <Box className="flex flex-wrap gap-2">
+                {chips.map((c) => (
+                  <Chip key={c} label={c} size="small" />
+                ))}
+              </Box>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                No vitals recorded.
+              </Typography>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* SOAP */}
       <Card className="rounded-2xl shadow">

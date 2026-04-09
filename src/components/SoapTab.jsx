@@ -35,18 +35,24 @@ export default function SoapTab({ visits = [] }) {
     () => visit.find((v) => v.id === selectedVisitId) || null,
     [visit, selectedVisitId],
   );
-
+  useEffect(() => {
+    const soapNote = selectedVisit?.soap_notes;
+    console.log(
+      "soap: ",
+      soapNote?.find((s) => selectedVisitId === s.visit_id),
+    );
+  }, [selectedVisitId]);
   const soap = useMemo(() => {
-    const existing = soapByVisit[selectedVisitId];
+    const soapNote = selectedVisit?.soap_notes;
     return (
-      existing || {
+      soapNote?.find((s) => selectedVisitId === s.visit_id) || {
         subjective: "",
         objective: "",
         assessment: "",
         plan: "",
       }
     );
-  }, [soapByVisit, selectedVisitId]);
+  }, [visit, selectedVisitId]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
