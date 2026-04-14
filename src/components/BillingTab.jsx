@@ -14,7 +14,8 @@ import {
 import PrintIcon from "@mui/icons-material/Print";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import { money } from "./helpers/billingHelpers";
-
+import { useSelector } from "react-redux";
+import { useEffect } from "react";
 const statusColor = (s) => {
   if (s === "Unpaid") return "warning";
   if (s === "Partial") return "info";
@@ -35,6 +36,13 @@ const computeTotals = (inv) => {
 };
 
 export default function BillingTab({ patient }) {
+  const { patientInfo } = useSelector((s) => s.patientProfile);
+  const visits = patientInfo?.visits;
+  const invoice = visits?.flatMap((b) => b.billings || []);
+  useEffect(() => {
+    console.log(visits?.flatMap((b) => b.billings || []));
+  }, [visits]);
+
   // ✅ UI mock invoices for this patient profile
   const invoices = [
     {
@@ -60,14 +68,14 @@ export default function BillingTab({ patient }) {
     },
   ];
 
-  const totals = invoices
+  const totals = invoice
     .filter((x) => x.status !== "Voided")
     .reduce(
       (acc, inv) => {
         const t = computeTotals(inv);
-        acc.total += t.total;
-        acc.paid += t.paid;
-        acc.balance += t.balance;
+        acc.total += inv?.total;
+        acc.paid += inv?.paid_total;
+        acc.balance += inv?.balance;
         return acc;
       },
       { total: 0, paid: 0, balance: 0 },
@@ -108,12 +116,12 @@ export default function BillingTab({ patient }) {
               {money(totals.balance)}
             </Typography>
 
-            <Typography variant="caption" color="text.secondary">
+            {/* <Typography variant="caption" color="text.secondary">
               Patient:{" "}
               {patient?.firstName
                 ? `${patient.firstName} ${patient.lastName}`
                 : patient?.name || "—"}
-            </Typography>
+            </Typography> */}
           </CardContent>
         </Card>
       </Box>
@@ -150,55 +158,65 @@ export default function BillingTab({ patient }) {
             </TableHead>
 
             <TableBody>
-              {invoices.map((inv) => {
-                const t = computeTotals(inv);
-                return (
-                  <TableRow key={inv.id} hover>
-                    <TableCell className="font-semibold">{inv.id}</TableCell>
-                    <TableCell>{inv.date}</TableCell>
-                    <TableCell>{(inv.items || []).length}</TableCell>
-                    <TableCell align="right">{money(t.total)}</TableCell>
-                    <TableCell align="right">{money(t.paid)}</TableCell>
-                    <TableCell align="right">{money(t.balance)}</TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        label={inv.status}
-                        color={statusColor(inv.status)}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Box className="flex justify-end gap-1 flex-wrap">
-                        <Button
+              {invoice?.length > 0 ? (
+                invoice?.map((inv) => {
+                  const t = computeTotals(inv);
+                  return (
+                    <TableRow key={inv?.id} hover>
+                      <TableCell className="font-semibold">
+                        {(inv?.id).slice(0, 5)}
+                      </TableCell>
+                      <TableCell>
+                        {new Date(inv?.created_at).toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric",
+                        })}
+                      </TableCell>
+                      <TableCell>{inv?.billing_items.length}</TableCell>
+                      <TableCell align="right">{money(inv?.total)}</TableCell>
+                      <TableCell align="right">
+                        {money(inv?.paid_total)}
+                      </TableCell>
+                      <TableCell align="right">{money(inv?.balance)}</TableCell>
+                      <TableCell>
+                        <Chip
                           size="small"
-                          variant="outlined"
-                          startIcon={<PrintIcon />}
-                          onClick={() =>
-                            alert(`Print invoice #${inv.id} (mock)`)
-                          }
-                        >
-                          Print
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          startIcon={<PaymentsIcon />}
-                          disabled={
-                            inv.status === "Paid" || inv.status === "Voided"
-                          }
-                          onClick={() =>
-                            alert(`Record payment for #${inv.id} (mock)`)
-                          }
-                        >
-                          Pay
-                        </Button>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-
-              {invoices.length === 0 && (
+                          label={inv?.status}
+                          color={statusColor(inv?.status)}
+                        />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Box className="flex justify-end gap-1 flex-wrap">
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<PrintIcon />}
+                            onClick={() =>
+                              alert(`Print invoice #${inv?.id} (mock)`)
+                            }
+                          >
+                            Print
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<PaymentsIcon />}
+                            disabled={
+                              inv?.status === "Paid" || inv?.status === "Voided"
+                            }
+                            onClick={() =>
+                              alert(`Record payment for #${inv?.id} (mock)`)
+                            }
+                          >
+                            Pay
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
+              ) : (
                 <TableRow>
                   <TableCell colSpan={8} align="center">
                     No invoices yet

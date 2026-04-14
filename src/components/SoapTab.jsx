@@ -28,20 +28,13 @@ export default function SoapTab({ visits = [] }) {
   useEffect(() => {
     if (!visit.length) return;
     setSelectedVisitId(visit[0]?.id);
-    console.log(visit);
   }, [visit]);
 
   const selectedVisit = useMemo(
     () => visit.find((v) => v.id === selectedVisitId) || null,
     [visit, selectedVisitId],
   );
-  useEffect(() => {
-    const soapNote = selectedVisit?.soap_notes;
-    console.log(
-      "soap: ",
-      soapNote?.find((s) => selectedVisitId === s.visit_id),
-    );
-  }, [selectedVisitId]);
+
   const soap = useMemo(() => {
     const soapNote = selectedVisit?.soap_notes;
     return (
