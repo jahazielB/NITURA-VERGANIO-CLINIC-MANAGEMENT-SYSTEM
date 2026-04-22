@@ -1,3 +1,4 @@
+import { supabase } from "../../lib/supabaseClient";
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 
 export const STATUS = ["Unpaid", "Partial", "Paid", "Voided"];
@@ -71,3 +72,49 @@ export const endOfWeekISO = (refDate = new Date()) => {
   d.setHours(23, 59, 59, 999);
   return d.toISOString().slice(0, 10);
 };
+export async function addCharge({ visitId, item }) {
+  try {
+    // 1. Get or create billing
+    const { data: billingId, error: billingError } = await supabase.rpc(
+      "get_or_create_billing",
+      {
+        p_visit_id: visitId,
+      },
+    );
+
+    if (billingError) throw billingError;
+    if (!billingId) throw new Error("Failed to get billing ID");
+
+    // 2. Insert billing item
+    const { data: insertData, error: insertError } = await supabase
+      .from("billing_items")
+      .insert({
+        billing_id: billingId,
+        ...item,
+      })
+      .select()
+      .single();
+
+    if (insertError) throw insertError;
+
+    // 3. Recompute billing
+    const { error: recomputeError } = await supabase.rpc("recompute_billing", {
+      p_billing_id: billingId,
+    });
+
+    if (recomputeError) throw recomputeError;
+
+    return {
+      success: true,
+      billingId,
+      item: insertData,
+    };
+  } catch (error) {
+    console.error("addCharge error:", error);
+
+    return {
+      success: false,
+      error: error.message || "Failed to add charge",
+    };
+  }
+}

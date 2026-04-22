@@ -17,6 +17,7 @@ import {
   TableRow,
   Typography,
   IconButton,
+  TablePagination,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -63,6 +64,8 @@ export default function PrescriptionsTab({
     open: false,
     loading: false,
   });
+  const [page, setPage] = useState(0);
+  const rowsPerPage = 5;
 
   const dispatch = useDispatch();
   const { patientInfo } = useSelector((s) => s.patientProfile);
@@ -73,10 +76,12 @@ export default function PrescriptionsTab({
   );
 
   const params = useParams();
-
-  // useEffect(() => {
-  //   console.log("orders: ", prescriptionOrders);
-  // }, []);
+  useEffect(() => {
+    setPage(0);
+  }, [filter]);
+  useEffect(() => {
+    console.log("orders: ", prescriptionOrders);
+  }, []);
 
   const latestVisitId = useMemo(() => latestVisitIdFrom(visits), [visits]);
 
@@ -92,9 +97,13 @@ export default function PrescriptionsTab({
       return prescriptionOrders?.filter((x) => x.is_active !== true);
     return prescriptionOrders;
   }, [prescriptionOrders, filter]);
-
+  const paginatedData = useMemo(() => {
+    if (!filtered) return [];
+    const start = page * rowsPerPage;
+    return filtered.slice(start, start + rowsPerPage);
+  }, [filtered, page]);
   const visitLabel = (visitId) =>
-    visits.find((v) => v.id === visitId)?.date || visitId;
+    patientVisits?.find((v) => v.id === visitId)?.created_at || "";
 
   const handleStop = async (id) => {
     try {
@@ -123,6 +132,12 @@ export default function PrescriptionsTab({
         .delete()
         .eq("id", deleteItem);
       if (error) throw error;
+      const newTotal = (filtered?.length || 0) - 1;
+      const maxPage = Math.max(0, Math.ceil(newTotal / rowsPerPage) - 1);
+
+      if (page > maxPage) {
+        setPage(maxPage);
+      }
       setSnackbar({
         open: true,
         message: "Deleted Successfully!",
@@ -220,7 +235,7 @@ export default function PrescriptionsTab({
               </TableHead>
 
               <TableBody>
-                {filtered?.map((p) => {
+                {paginatedData?.map((p) => {
                   const medsCount = p?.prescription_items.length || 1; // future-proof
                   const firstMed =
                     p.prescription_items?.[0]?.medication || "No Medication";
@@ -230,7 +245,14 @@ export default function PrescriptionsTab({
                       {/* Visit */}
                       <TableCell>
                         <Typography className="font-semibold">
-                          {visitLabel(p.visitId)}
+                          {new Date(visitLabel(p?.visit_id)).toLocaleDateString(
+                            "en-US",
+                            {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            },
+                          )}
                         </Typography>
                       </TableCell>
 
@@ -338,7 +360,7 @@ export default function PrescriptionsTab({
                   );
                 })}
 
-                {filtered.length === 0 && (
+                {filtered?.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={5} align="center">
                       No prescriptions found.
@@ -348,6 +370,14 @@ export default function PrescriptionsTab({
               </TableBody>
             </Table>
           </TableContainer>
+          <TablePagination
+            component="div"
+            count={filtered?.length || 0}
+            page={page}
+            onPageChange={(_, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[5]}
+          />
         </CardContent>
       </Card>
 

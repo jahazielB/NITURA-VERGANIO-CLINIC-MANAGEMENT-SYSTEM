@@ -10,7 +10,7 @@ export const fetchPatients = createAsyncThunk(
 
       let query = supabase
         .from("patients")
-        .select("*", { count: "exact" })
+        .select(`*`, { count: "exact" })
         .order("created_at", { ascending: false });
 
       if (search?.trim()) {
@@ -49,6 +49,7 @@ export const addPatient = createAsyncThunk(
       if (!firstName || !lastName || !middleName) {
         throw new Error("First name, last name, and middle name are required.");
       }
+      if (!date) throw new Error("Birthday is required!");
 
       const payload = {
         first_name: firstName,
