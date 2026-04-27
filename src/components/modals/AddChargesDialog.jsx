@@ -209,7 +209,7 @@ export default function AddChargesDialog({
           ...snackbar,
           open: true,
           severity: "error",
-          message: "Select Visit First",
+          message: "Select Visit Date First",
         });
         return;
       }

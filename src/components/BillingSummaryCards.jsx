@@ -5,12 +5,7 @@ import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import { money } from "./helpers/billingHelpers";
 
-export default function BillingSummaryCards({
-  todayRevenue,
-  outstandingBalance,
-  unpaidCount,
-  onOpenReport,
-}) {
+export default function BillingSummaryCards({ todaySummary, onOpenReport }) {
   return (
     <Box className="grid grid-cols-1 md:grid-cols-3 gap-3">
       <Card className="rounded-2xl shadow">
@@ -20,7 +15,7 @@ export default function BillingSummaryCards({
               Today&apos;s Revenue
             </Typography>
             <Typography variant="h6" fontWeight={900}>
-              {money(todayRevenue)}
+              {money(todaySummary?.total_revenue)}
             </Typography>
           </Box>
           <PaymentsIcon />
@@ -34,7 +29,7 @@ export default function BillingSummaryCards({
               Outstanding Balance
             </Typography>
             <Typography variant="h6" fontWeight={900}>
-              {money(outstandingBalance)}
+              {money(todaySummary?.outstanding_balance)}
             </Typography>
           </Box>
           <WarningAmberIcon />
@@ -45,10 +40,10 @@ export default function BillingSummaryCards({
         <CardContent className="flex items-center justify-between gap-2">
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Unpaid Invoices
+              Unpaid/Partial Invoices
             </Typography>
             <Typography variant="h6" fontWeight={900}>
-              {unpaidCount}
+              {todaySummary?.unpaid_count}
             </Typography>
           </Box>
 

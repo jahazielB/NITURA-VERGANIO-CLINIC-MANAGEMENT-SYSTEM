@@ -1,6 +1,7 @@
+import { supabase } from "../lib/supabaseClient";
 import { Box, Button, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 import BillingSummaryCards from "../components/BillingSummaryCards";
 import BillingFilters from "../components/BillingFilters";
@@ -19,6 +20,52 @@ import {
 } from "../components/helpers/billingHelpers";
 
 export default function BillingPage({ patients: patientsProp }) {
+  const [todaySummary, setTodaySummary] = useState(null);
+  const [tableData, setTableData] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data, error } = await supabase.rpc("get_billing_summary", {
+        p_start: todayISO,
+        p_end: todayISO,
+      });
+      if (error) {
+        console.error(error);
+      }
+      setTodaySummary(data);
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const fetch = async () => {
+      const { data, error } = await supabase
+        .from("patients")
+        .select(
+          `
+    id,
+    first_name,
+    middle_name,
+    last_name,
+    visits (
+      id,
+      created_at,
+      billings (
+        *,
+        billing_items (*),
+        payments (*)
+      )
+    )
+  `,
+        )
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (error) console.error(error);
+      setTableData(data);
+      console.log(data);
+    };
+    fetch();
+  }, []);
   // mock patients if none passed
   const patients = useMemo(
     () =>
@@ -41,66 +88,19 @@ export default function BillingPage({ patients: patientsProp }) {
   const [openReport, setOpenReport] = useState(false);
   const [selected, setSelected] = useState(null);
 
-  const [invoices, setInvoices] = useState(() => [
-    {
-      id: 1005,
-      date: todayISO(),
-      patientId: 1,
-      patientName: "DELA CRUZ, JUAN",
-      items: [{ id: 1, desc: "Consultation", qty: 1, price: 500 }],
-      discount: 0,
-      paid: 0,
-      status: "Unpaid",
-      notes: "",
-    },
-    {
-      id: 1004,
-      date: todayISO(),
-      patientId: 2,
-      patientName: "SANTOS, MARIA",
-      items: [
-        { id: 1, desc: "Consultation", qty: 1, price: 500 },
-        { id: 2, desc: "CBC", qty: 1, price: 250 },
-      ],
-      discount: 0,
-      paid: 300,
-      status: "Partial",
-      notes: "",
-    },
-    {
-      id: 1003,
-      date: "2026-01-23",
-      patientId: 3,
-      patientName: "REYES, PEDRO",
-      items: [{ id: 1, desc: "Consultation", qty: 1, price: 500 }],
-      discount: 0,
-      paid: 500,
-      status: "Paid",
-      notes: "",
-    },
-    {
-      id: 1002,
-      date: "2026-01-22",
-      patientId: 1,
-      patientName: "DELA CRUZ, JUAN",
-      items: [{ id: 1, desc: "X-ray", qty: 1, price: 900 }],
-      discount: 0,
-      paid: 0,
-      status: "Unpaid",
-      notes: "",
-    },
-    {
-      id: 1001,
-      date: "2026-01-20",
-      patientId: 2,
-      patientName: "SANTOS, MARIA",
-      items: [{ id: 1, desc: "Consultation", qty: 1, price: 500 }],
-      discount: 0,
-      paid: 0,
-      status: "Voided",
-      notes: "",
-    },
-  ]);
+  const invoices = tableData?.flatMap((p) =>
+    (p.visits || [])
+      .filter((v) => v.billings)
+      .map(
+        (v) =>
+          ({
+            billingId: v.billings.id,
+            patientName: `${p.first_name} ${p.last_name}`,
+            date: v.created_at,
+            ...v.billings,
+          }) || [],
+      ),
+  );
 
   const upsertInvoice = (payload) => {
     const safe = normalizeInvoice(payload);
@@ -141,54 +141,68 @@ export default function BillingPage({ patients: patientsProp }) {
     alert(`Print invoice/receipt coming soon (Invoice #${inv.id})`);
   };
 
-  const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
+  // const filtered = useMemo(() => {
+  //   const qq = q.trim().toLowerCase();
 
-    const startWeek = startOfWeekISO();
-    const endWeek = endOfWeekISO();
+  //   const startWeek = startOfWeekISO();
+  //   const endWeek = endOfWeekISO();
 
-    return invoices
-      .filter((x) =>
-        filterStatus === "All" ? true : x.status === filterStatus,
-      )
-      .filter((x) => {
-        if (quickDate === "all") return true;
-        if (quickDate === "today") return x.date === todayISO();
-        if (quickDate === "thisWeek")
-          return x.date >= startWeek && x.date <= endWeek;
-        return true;
-      })
-      .filter((x) => {
-        if (!qq) return true;
-        return (
-          (x.patientName || "").toLowerCase().includes(qq) ||
-          String(x.id).includes(qq) ||
-          (x.date || "").includes(qq)
-        );
-      })
-      .sort((a, b) => String(b.date).localeCompare(String(a.date)));
-  }, [invoices, q, filterStatus, quickDate]);
+  //   return invoices
+  //     .filter((x) =>
+  //       filterStatus === "All" ? true : x.status === filterStatus,
+  //     )
+  //     .filter((x) => {
+  //       if (quickDate === "all") return true;
+  //       if (quickDate === "today") return x.date === todayISO();
+  //       if (quickDate === "thisWeek")
+  //         return x.date >= startWeek && x.date <= endWeek;
+  //       return true;
+  //     })
+  //     .filter((x) => {
+  //       if (!qq) return true;
+  //       return (
+  //         (x.patientName || "").toLowerCase().includes(qq) ||
+  //         String(x.id).includes(qq) ||
+  //         (x.date || "").includes(qq)
+  //       );
+  //     })
+  //     .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  // }, [invoices, q, filterStatus, quickDate]);
 
-  const summary = useMemo(() => {
-    const today = todayISO();
+  // const summary = useMemo(() => {
+  //   const today = todayISO();
 
-    let todayRevenue = 0;
-    let outstandingBalance = 0;
-    let unpaidCount = 0;
+  //   let todayRevenue = 0;
+  //   let outstandingBalance = 0;
+  //   let unpaidCount = 0;
 
-    filtered.forEach((inv) => {
-      if (inv.status === "Voided") return;
-      const t = computeInvoiceTotals(inv);
+  //   filtered.forEach((inv) => {
+  //     if (inv.status === "Voided") return;
+  //     const t = computeInvoiceTotals(inv);
 
-      outstandingBalance += t.balance;
-      if (inv.status === "Unpaid" || inv.status === "Partial") unpaidCount += 1;
+  //     outstandingBalance += t.balance;
+  //     if (inv.status === "Unpaid" || inv.status === "Partial") unpaidCount += 1;
 
-      // UI-only assumption: paid belongs to invoice date
-      if (inv.date === today) todayRevenue += t.paid;
-    });
+  //     // UI-only assumption: paid belongs to invoice date
+  //     if (inv.date === today) todayRevenue += t.paid;
+  //   });
 
-    return { todayRevenue, outstandingBalance, unpaidCount };
-  }, [filtered]);
+  //   return { todayRevenue, outstandingBalance, unpaidCount };
+  // }, [filtered]);
+
+  const sampleFetch = async () => {
+    const invoices = tableData.flatMap((p) =>
+      (p.visits || [])
+        .filter((v) => v.billings)
+        .map((v) => ({
+          billingId: v.billings.id,
+          patientName: `${p.first_name} ${p.last_name}`,
+          date: v.created_at,
+          ...v.billings,
+        })),
+    );
+    console.log(invoices);
+  };
 
   return (
     <Box className="space-y-4 p-5">
@@ -203,16 +217,18 @@ export default function BillingPage({ patients: patientsProp }) {
           </Typography>
         </Box>
 
-        <Button variant="contained" startIcon={<AddIcon />} onClick={openNew}>
+        <Button
+          variant="contained"
+          startIcon={<AddIcon />}
+          onClick={() => sampleFetch()}
+        >
           New Invoice
         </Button>
       </Box>
 
       {/* Summary + Report button */}
       <BillingSummaryCards
-        todayRevenue={summary.todayRevenue}
-        outstandingBalance={summary.outstandingBalance}
-        unpaidCount={summary.unpaidCount}
+        todaySummary={todaySummary?.[0]}
         onOpenReport={() => setOpenReport(true)}
       />
 
@@ -228,7 +244,7 @@ export default function BillingPage({ patients: patientsProp }) {
 
       {/* Table */}
       <InvoicesTable
-        rows={filtered}
+        rows={invoices}
         onEdit={openEdit}
         onPay={openPayment}
         onPrint={printInvoice}

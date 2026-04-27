@@ -37,7 +37,7 @@ export default function InvoicesTable({
             <TableHead>
               <TableRow className="bg-slate-100">
                 <TableCell>Invoice #</TableCell>
-                <TableCell>Date</TableCell>
+                <TableCell>Invoice Date</TableCell>
                 <TableCell>Patient</TableCell>
                 <TableCell align="right">Total</TableCell>
                 <TableCell align="right">Paid</TableCell>
@@ -48,16 +48,25 @@ export default function InvoicesTable({
             </TableHead>
 
             <TableBody>
-              {rows.map((inv) => {
+              {rows?.map((inv) => {
                 const c = computeInvoiceTotals(inv);
                 return (
                   <TableRow key={inv.id} hover>
-                    <TableCell className="font-semibold">{inv.id}</TableCell>
-                    <TableCell>{inv.date}</TableCell>
+                    <TableCell className="font-semibold">
+                      {inv.billingId.slice(0, 5)}
+                    </TableCell>
+                    <TableCell>
+                      {" "}
+                      {new Date(inv?.created_at).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </TableCell>
                     <TableCell>{inv.patientName}</TableCell>
-                    <TableCell align="right">{money(c.total)}</TableCell>
-                    <TableCell align="right">{money(c.paid)}</TableCell>
-                    <TableCell align="right">{money(c.balance)}</TableCell>
+                    <TableCell align="right">{money(inv.total)}</TableCell>
+                    <TableCell align="right">{money(inv.paid_total)}</TableCell>
+                    <TableCell align="right">{money(inv.balance)}</TableCell>
                     <TableCell>
                       <Chip
                         label={inv.status}
@@ -114,7 +123,7 @@ export default function InvoicesTable({
                 );
               })}
 
-              {rows.length === 0 && (
+              {rows?.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} align="center">
                     No invoices found
