@@ -1,5 +1,5 @@
 import { supabase } from "../lib/supabaseClient";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Typography, Pagination } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useMemo, useState, useEffect } from "react";
 
@@ -9,7 +9,8 @@ import InvoicesTable from "../components/BillingInvoicesTable";
 import InvoiceDialog from "../components/modals/InvoiceDialog";
 import PaymentDialog from "../components/modals/PaymentDialog";
 import DailySalesReportDialog from "../components/modals/DailySalesReportDialog";
-
+import { LocalizationProvider } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
   computeInvoiceTotals,
   computeNextStatus,
@@ -22,50 +23,78 @@ import {
 export default function BillingPage({ patients: patientsProp }) {
   const [todaySummary, setTodaySummary] = useState(null);
   const [tableData, setTableData] = useState(null);
+  const [page, setPage] = useState(0);
+  const [totalCount, setTotalCount] = useState(0);
+  const [q, setQ] = useState("");
+  const [filterStatus, setFilterStatus] = useState("All");
+  const [quickDate, setQuickDate] = useState("all"); // all | today | thisWee
+  const [openForm, setOpenForm] = useState(false);
+  const [openPay, setOpenPay] = useState(false);
+  const [openReport, setOpenReport] = useState(false);
+  const [selected, setSelected] = useState(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+
+  const PAGE_SIZE = 7;
 
   useEffect(() => {
     const fetchData = async () => {
       const { data, error } = await supabase.rpc("get_billing_summary", {
-        p_start: todayISO,
-        p_end: todayISO,
+        p_start: todayISO(),
+        p_end: todayISO(),
       });
       if (error) {
         console.error(error);
       }
+      // console.log(data, todayISO());
       setTodaySummary(data);
+      console.log(data);
     };
+
     fetchData();
   }, []);
 
   useEffect(() => {
     const fetch = async () => {
-      const { data, error } = await supabase
-        .from("patients")
-        .select(
-          `
-    id,
-    first_name,
-    middle_name,
-    last_name,
-    visits (
-      id,
-      created_at,
-      billings (
-        *,
-        billing_items (*),
-        payments (*)
-      )
-    )
-  `,
-        )
-        .order("created_at", { ascending: false })
-        .limit(5);
-      if (error) console.error(error);
-      setTableData(data);
+      const { data, error } = await supabase.rpc("get_billings_dashboard_v2", {
+        p_search: debouncedSearch || null,
+        p_status: filterStatus === "All" ? null : filterStatus,
+        p_start:
+          quickDate === "today"
+            ? todayISO()
+            : quickDate === "thisWeek"
+              ? startOfWeekISO()
+              : null,
+        p_end:
+          quickDate === "today"
+            ? todayISO()
+            : quickDate === "thisWeek"
+              ? endOfWeekISO()
+              : null,
+        p_limit: PAGE_SIZE,
+        p_offset: page * PAGE_SIZE,
+      });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      setTableData(data.rows);
+      setTotalCount(data.total_count);
       console.log(data);
     };
+
     fetch();
-  }, []);
+  }, [debouncedSearch, filterStatus, quickDate, page]);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setDebouncedSearch(searchInput);
+    }, 500);
+    setPage(0);
+    return () => clearTimeout(t);
+  }, [searchInput]);
   // mock patients if none passed
   const patients = useMemo(
     () =>
@@ -79,28 +108,19 @@ export default function BillingPage({ patients: patientsProp }) {
     [patientsProp],
   );
 
-  const [q, setQ] = useState("");
-  const [filterStatus, setFilterStatus] = useState("All");
-  const [quickDate, setQuickDate] = useState("all"); // all | today | thisWeek
-
-  const [openForm, setOpenForm] = useState(false);
-  const [openPay, setOpenPay] = useState(false);
-  const [openReport, setOpenReport] = useState(false);
-  const [selected, setSelected] = useState(null);
-
-  const invoices = tableData?.flatMap((p) =>
-    (p.visits || [])
-      .filter((v) => v.billings)
-      .map(
-        (v) =>
-          ({
-            billingId: v.billings.id,
-            patientName: `${p.first_name} ${p.last_name}`,
-            date: v.created_at,
-            ...v.billings,
-          }) || [],
-      ),
-  );
+  // const invoices = tableData?.flatMap((p) =>
+  //   (p.visits || [])
+  //     .filter((v) => v.billings)
+  //     .map(
+  //       (v) =>
+  //         ({
+  //           billingId: v.billings.id,
+  //           patientName: `${p.first_name} ${p.last_name}`,
+  //           date: v.created_at,
+  //           ...v.billings,
+  //         }) || [],
+  //     ),
+  // );
 
   const upsertInvoice = (payload) => {
     const safe = normalizeInvoice(payload);
@@ -141,67 +161,44 @@ export default function BillingPage({ patients: patientsProp }) {
     alert(`Print invoice/receipt coming soon (Invoice #${inv.id})`);
   };
 
-  // const filtered = useMemo(() => {
-  //   const qq = q.trim().toLowerCase();
+  const filtered = useMemo(() => {
+    const qq = q.trim().toLowerCase();
 
-  //   const startWeek = startOfWeekISO();
-  //   const endWeek = endOfWeekISO();
+    const startWeek = startOfWeekISO();
+    const endWeek = endOfWeekISO();
 
-  //   return invoices
-  //     .filter((x) =>
-  //       filterStatus === "All" ? true : x.status === filterStatus,
-  //     )
-  //     .filter((x) => {
-  //       if (quickDate === "all") return true;
-  //       if (quickDate === "today") return x.date === todayISO();
-  //       if (quickDate === "thisWeek")
-  //         return x.date >= startWeek && x.date <= endWeek;
-  //       return true;
-  //     })
-  //     .filter((x) => {
-  //       if (!qq) return true;
-  //       return (
-  //         (x.patientName || "").toLowerCase().includes(qq) ||
-  //         String(x.id).includes(qq) ||
-  //         (x.date || "").includes(qq)
-  //       );
-  //     })
-  //     .sort((a, b) => String(b.date).localeCompare(String(a.date)));
-  // }, [invoices, q, filterStatus, quickDate]);
-
-  // const summary = useMemo(() => {
-  //   const today = todayISO();
-
-  //   let todayRevenue = 0;
-  //   let outstandingBalance = 0;
-  //   let unpaidCount = 0;
-
-  //   filtered.forEach((inv) => {
-  //     if (inv.status === "Voided") return;
-  //     const t = computeInvoiceTotals(inv);
-
-  //     outstandingBalance += t.balance;
-  //     if (inv.status === "Unpaid" || inv.status === "Partial") unpaidCount += 1;
-
-  //     // UI-only assumption: paid belongs to invoice date
-  //     if (inv.date === today) todayRevenue += t.paid;
-  //   });
-
-  //   return { todayRevenue, outstandingBalance, unpaidCount };
-  // }, [filtered]);
+    return tableData
+      ?.filter((x) =>
+        filterStatus === "All" ? true : x.status === filterStatus,
+      )
+      .filter((x) => {
+        if (quickDate === "all") return true;
+        const d = new Date(x.created_at).toLocaleDateString("en-CA");
+        if (quickDate === "today") return d === todayISO();
+        if (quickDate === "thisWeek") return d >= startWeek && d <= endWeek;
+        return true;
+      })
+      .filter((x) => {
+        if (!qq) return true;
+        return (
+          (x.patientName || "").toLowerCase().includes(qq) ||
+          String(x.id).includes(qq) ||
+          (x.date || "").includes(qq)
+        );
+      });
+    // .sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  }, [tableData, q, filterStatus, quickDate]);
 
   const sampleFetch = async () => {
-    const invoices = tableData.flatMap((p) =>
-      (p.visits || [])
-        .filter((v) => v.billings)
-        .map((v) => ({
-          billingId: v.billings.id,
-          patientName: `${p.first_name} ${p.last_name}`,
-          date: v.created_at,
-          ...v.billings,
-        })),
-    );
-    console.log(invoices);
+    const { data, error } = await supabase.rpc("get_billings_dashboard_v2", {
+      p_search: debouncedSearch || null,
+      p_status: filterStatus === "All" ? null : filterStatus,
+      // p_start: startDate || null,
+      // p_end: endDate || null,
+      p_limit: PAGE_SIZE,
+      p_offset: page * PAGE_SIZE,
+    });
+    console.log(data);
   };
 
   return (
@@ -234,8 +231,8 @@ export default function BillingPage({ patients: patientsProp }) {
 
       {/* Filters */}
       <BillingFilters
-        q={q}
-        setQ={setQ}
+        search={searchInput}
+        setSearch={setSearchInput}
         filterStatus={filterStatus}
         setFilterStatus={setFilterStatus}
         quickDate={quickDate}
@@ -244,7 +241,7 @@ export default function BillingPage({ patients: patientsProp }) {
 
       {/* Table */}
       <InvoicesTable
-        rows={invoices}
+        rows={tableData}
         onEdit={openEdit}
         onPay={openPayment}
         onPrint={printInvoice}
@@ -272,12 +269,22 @@ export default function BillingPage({ patients: patientsProp }) {
           setOpenPay(false);
         }}
       />
-
-      <DailySalesReportDialog
-        open={openReport}
-        onClose={() => setOpenReport(false)}
-        invoices={invoices}
-      />
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <DailySalesReportDialog
+          open={openReport}
+          onClose={() => setOpenReport(false)}
+          invoices={[]}
+        />
+      </LocalizationProvider>
+      <Box className="flex justify-center mt-3">
+        <Pagination
+          count={Math.ceil(totalCount / PAGE_SIZE)}
+          page={page + 1}
+          onChange={(e, value) => setPage(value - 1)}
+          color="primary"
+          size="small"
+        />
+      </Box>
     </Box>
   );
 }

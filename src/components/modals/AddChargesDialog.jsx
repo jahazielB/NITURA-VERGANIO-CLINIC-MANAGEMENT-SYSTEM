@@ -41,6 +41,7 @@ export default function AddChargesDialog({
   open,
   onClose,
   onSave,
+  setSnack,
   // patients,
   showPatient = false,
 }) {
@@ -55,11 +56,6 @@ export default function AddChargesDialog({
     patientId: "",
   });
   const [visitData, setVisitData] = useState([]);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "",
-  });
 
   const dispatch = useDispatch();
   const { patientInfo } = useSelector((s) => s.patientProfile);
@@ -205,8 +201,7 @@ export default function AddChargesDialog({
     try {
       setSaving(true);
       if (!form.visitId) {
-        setSnackbar({
-          ...snackbar,
+        setSnack({
           open: true,
           severity: "error",
           message: "Select Visit Date First",
@@ -252,19 +247,16 @@ export default function AddChargesDialog({
 
       if (recomputeError) throw recomputeError;
       dispatch(fetchPatientProfile(form.patientId));
-      setSnackbar({
-        ...snackbar,
+      setSnack({
         open: true,
         severity: "success",
         message: "Charges Saved!",
       });
-      setTimeout(() => {
-        onClose();
-      }, 3000);
+
+      onClose();
     } catch (err) {
       console.error(err);
-      setSnackbar({
-        ...snackbar,
+      setSnack({
         open: true,
         severity: "error",
         message: "Failed to saved charges",
@@ -637,12 +629,6 @@ export default function AddChargesDialog({
           {saving ? "Saving..." : "Save Charges"}
         </Button>
       </DialogActions>
-      <CustomSnackbar
-        open={snackbar.open}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        message={snackbar.message}
-        severity={snackbar.severity}
-      />
     </Dialog>
   );
 }

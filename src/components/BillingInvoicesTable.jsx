@@ -39,6 +39,8 @@ export default function InvoicesTable({
                 <TableCell>Invoice #</TableCell>
                 <TableCell>Invoice Date</TableCell>
                 <TableCell>Patient</TableCell>
+                <TableCell align="right">SubTotal</TableCell>
+                <TableCell align="right">Discount</TableCell>
                 <TableCell align="right">Total</TableCell>
                 <TableCell align="right">Paid</TableCell>
                 <TableCell align="right">Balance</TableCell>
@@ -53,20 +55,32 @@ export default function InvoicesTable({
                 return (
                   <TableRow key={inv.id} hover>
                     <TableCell className="font-semibold">
-                      {inv.billingId.slice(0, 5)}
+                      {inv?.id ? inv.id.slice(0, 5) : "—"}
                     </TableCell>
                     <TableCell>
                       {" "}
-                      {new Date(inv?.created_at).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {inv?.created_at
+                        ? new Date(inv.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric",
+                          })
+                        : "—"}
                     </TableCell>
-                    <TableCell>{inv.patientName}</TableCell>
-                    <TableCell align="right">{money(inv.total)}</TableCell>
-                    <TableCell align="right">{money(inv.paid_total)}</TableCell>
-                    <TableCell align="right">{money(inv.balance)}</TableCell>
+                    <TableCell>{inv.patient_name}</TableCell>
+                    <TableCell align="right">
+                      {money(inv.subtotal ?? 0)}
+                    </TableCell>
+                    <TableCell align="right">
+                      {money(inv.discount_total)}
+                    </TableCell>
+                    <TableCell align="right">{money(inv.total ?? 0)}</TableCell>
+                    <TableCell align="right">
+                      {money(inv.paid_total ?? 0)}
+                    </TableCell>
+                    <TableCell align="right">
+                      {money(inv.balance ?? 0)}
+                    </TableCell>
                     <TableCell>
                       <Chip
                         label={inv.status}
@@ -80,7 +94,13 @@ export default function InvoicesTable({
                           size="small"
                           variant="outlined"
                           startIcon={<EditIcon />}
-                          onClick={() => onEdit(inv)}
+                          onClick={() =>
+                            console.log(
+                              new Date(inv?.created_at).toLocaleDateString(
+                                "en-CA",
+                              ),
+                            )
+                          }
                           disabled={inv.status === "Voided"}
                         >
                           Edit

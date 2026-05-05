@@ -6,48 +6,93 @@ import {
   MenuItem,
   Box,
   Chip,
-  Divider,
   Typography,
+  InputAdornment,
+  IconButton,
+  Tooltip,
 } from "@mui/material";
+import { Search, FilterList, RestartAlt } from "@mui/icons-material";
 import { STATUS, todayISO } from "./helpers/billingHelpers";
 
 export default function BillingFilters({
-  q,
-  setQ,
+  search,
+  setSearch,
   filterStatus,
   setFilterStatus,
   quickDate,
   setQuickDate,
 }) {
-  return (
-    <Card className="rounded-2xl shadow">
-      <CardContent>
-        <Typography variant="subtitle2" fontWeight={800} sx={{ mb: 1 }}>
-          Filters
-        </Typography>
+  const handleReset = () => {
+    setQ("");
+    setFilterStatus("All");
+    setQuickDate("all");
+  };
 
-        {/* ✅ more space between inputs */}
-        <Grid container spacing={3} alignItems="flex-start">
-          <Grid item xs={12} md={4}>
+  return (
+    <Card
+      elevation={0}
+      sx={{
+        border: "1px solid",
+        borderColor: "divider",
+        borderRadius: 3,
+      }}
+    >
+      <CardContent sx={{ py: 1, px: 1.5 }}>
+        {/* Header */}
+        <Box
+          display="flex"
+          justifyContent="space-between"
+          alignItems="center"
+          mb={1}
+        >
+          <Box display="flex" alignItems="center" gap={0.5}>
+            <FilterList color="primary" fontSize="small" />
+            <Typography variant="subtitle2" fontWeight={700}>
+              Filter Invoices
+            </Typography>
+          </Box>
+
+          <Tooltip title="Reset Filters">
+            <IconButton onClick={handleReset} size="small">
+              <RestartAlt fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        </Box>
+
+        <Grid container spacing={1.5}>
+          {/* Search */}
+          <Grid item xs={12} md={7}>
             <TextField
-              label="Search"
+              placeholder="Search patient, invoice..."
               size="small"
               fullWidth
-              placeholder="Patient name, invoice #, date..."
-              value={q}
-              onChange={(e) => setQ(e.target.value)}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search sx={{ color: "text.secondary", fontSize: 18 }} />
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                bgcolor: "grey.50",
+                borderRadius: 2,
+                "& fieldset": { border: "none" },
+                border: "1px solid #e0e0e0",
+              }}
             />
           </Grid>
 
-          <Grid item xs={12} md={4}>
+          {/* Timeline (kept readable) */}
+          <Grid item xs={12} md={5}>
             <TextField
               select
-              label="Date Filter"
+              label="Timeline"
               size="small"
               fullWidth
               value={quickDate}
               onChange={(e) => setQuickDate(e.target.value)}
-              helperText={`Today: ${todayISO()}`}
             >
               <MenuItem value="all">All Dates</MenuItem>
               <MenuItem value="today">Today</MenuItem>
@@ -55,39 +100,41 @@ export default function BillingFilters({
             </TextField>
           </Grid>
 
-          {/* ✅ separate the chips */}
+          {/* Status */}
           <Grid item xs={12}>
-            <Divider sx={{ my: 1.5 }} />
-
-            <Box className="flex flex-col sm:flex-row sm:items-center gap-2">
+            <Box
+              display="flex"
+              alignItems="center"
+              gap={0.5}
+              flexWrap="wrap"
+              mt={0.5}
+            >
               <Typography
-                variant="body2"
+                variant="caption"
+                fontWeight={600}
                 color="text.secondary"
-                sx={{ minWidth: 110 }}
               >
-                Quick Status:
+                Status:
               </Typography>
 
-              {/* ✅ more gap between chips */}
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1.5 }}>
+              <Chip
+                size="small"
+                label="All"
+                onClick={() => setFilterStatus("All")}
+                variant={filterStatus === "All" ? "filled" : "outlined"}
+                color={filterStatus === "All" ? "primary" : "default"}
+              />
+
+              {STATUS.map((s) => (
                 <Chip
+                  key={s}
                   size="small"
-                  label="All"
-                  clickable
-                  color={filterStatus === "All" ? "primary" : "default"}
-                  onClick={() => setFilterStatus("All")}
+                  label={s}
+                  onClick={() => setFilterStatus(s)}
+                  variant={filterStatus === s ? "filled" : "outlined"}
+                  color={filterStatus === s ? "primary" : "default"}
                 />
-                {STATUS.map((s) => (
-                  <Chip
-                    key={s}
-                    size="small"
-                    label={s}
-                    clickable
-                    color={filterStatus === s ? "primary" : "default"}
-                    onClick={() => setFilterStatus(s)}
-                  />
-                ))}
-              </Box>
+              ))}
             </Box>
           </Grid>
         </Grid>

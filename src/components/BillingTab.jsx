@@ -215,6 +215,8 @@ export default function BillingTab({ patient }) {
                 <TableCell>Visit Date</TableCell>
                 <TableCell>Invoice Date</TableCell>
                 <TableCell>Items</TableCell>
+                <TableCell align="right">SubTotal</TableCell>
+                <TableCell align="right">Discount</TableCell>
                 <TableCell align="right">Total</TableCell>
                 <TableCell align="right">Paid</TableCell>
                 <TableCell align="right">Balance</TableCell>
@@ -247,6 +249,12 @@ export default function BillingTab({ patient }) {
                         })}
                       </TableCell>
                       <TableCell>{inv?.billing_items.length || 0}</TableCell>
+                      <TableCell align="right">
+                        {money(inv?.subtotal)}
+                      </TableCell>
+                      <TableCell align="right">
+                        {money(inv?.discount_total)}
+                      </TableCell>
                       <TableCell align="right">{money(inv?.total)}</TableCell>
                       <TableCell align="right">
                         {money(inv?.paid_total)}
@@ -306,6 +314,7 @@ export default function BillingTab({ patient }) {
               page={page}
               onChange={(e, value) => setPage(value)}
               size="small"
+              color="primary"
             />
           </Box>
         </CardContent>
@@ -330,6 +339,7 @@ export default function BillingTab({ patient }) {
         // billingId={}
         // onSaved={refetch}
         showPatient={false}
+        setSnack={setSnackbar}
       />
     </Box>
   );

@@ -1,5 +1,11 @@
 import { supabase } from "../../lib/supabaseClient";
-export const todayISO = () => new Date().toISOString().slice(0, 10);
+export const todayISO = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
 
 export const STATUS = ["Unpaid", "Partial", "Paid", "Voided"];
 
@@ -54,14 +60,15 @@ export const isBetweenInclusive = (d, start, end) => {
   if (!d) return false;
   return String(d) >= String(start) && String(d) <= String(end);
 };
-
+export const formatLocalDate = (d) =>
+  new Intl.DateTimeFormat("en-CA").format(d);
 export const startOfWeekISO = (refDate = new Date()) => {
   const d = new Date(refDate);
   const day = d.getDay(); // 0..6 (Sun..Sat)
   const diffToMon = (day + 6) % 7;
   d.setDate(d.getDate() - diffToMon);
   d.setHours(0, 0, 0, 0);
-  return d.toISOString().slice(0, 10);
+  return formatLocalDate(d);
 };
 
 export const endOfWeekISO = (refDate = new Date()) => {
@@ -70,7 +77,7 @@ export const endOfWeekISO = (refDate = new Date()) => {
   const diffToMon = (day + 6) % 7;
   d.setDate(d.getDate() - diffToMon + 6);
   d.setHours(23, 59, 59, 999);
-  return d.toISOString().slice(0, 10);
+  return formatLocalDate(d);
 };
 export async function addCharge({ visitId, item }) {
   try {

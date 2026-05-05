@@ -1,3 +1,4 @@
+import { supabase } from "../../lib/supabaseClient";
 import {
   Dialog,
   DialogTitle,
@@ -7,7 +8,6 @@ import {
   Button,
   Box,
   Typography,
-  TextField,
   Table,
   TableHead,
   TableRow,
@@ -17,221 +17,373 @@ import {
   Divider,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import PrintIcon from "@mui/icons-material/Print";
-import DownloadIcon from "@mui/icons-material/Download";
 
-import { useEffect, useMemo, useState } from "react";
-import {
-  todayISO,
-  money,
-  computeInvoiceTotals,
-  isBetweenInclusive,
-  startOfWeekISO,
-  endOfWeekISO,
-} from "../helpers/billingHelpers";
+import { useEffect, useState, useRef, useCallback } from "react";
+import dayjs from "dayjs";
 
-export default function DailySalesReportDialog({
-  open,
-  onClose,
-  invoices = [],
-}) {
-  const [rangeMode, setRangeMode] = useState("today"); // today | thisWeek | custom
-  const [start, setStart] = useState(todayISO());
-  const [end, setEnd] = useState(todayISO());
+import { money, statusColor } from "../helpers/billingHelpers";
+import { DatePicker } from "@mui/x-date-pickers";
 
+export default function DailySalesReportDialog({ open, onClose }) {
+  // =========================
+  // MODE (NEW)
+  // =========================
+  const [mode, setMode] = useState("single"); // single | range
+
+  const [singleDate, setSingleDate] = useState(null);
+  const [dateRange, setDateRange] = useState([null, null]);
+
+  const [summary, setSummary] = useState(null);
+  const [invoice, setInvoice] = useState([]);
+
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
+
+  const observerRef = useRef(null);
+  const PAGE_SIZE = 10;
+
+  // =========================
+  // RESET ON FILTER CHANGE
+  // =========================
   useEffect(() => {
     if (!open) return;
 
-    if (rangeMode === "today") {
-      const t = todayISO();
-      setStart(t);
-      setEnd(t);
+    setInvoice([]);
+    setPage(0);
+    setHasMore(true);
+    setSummary(null);
+  }, [singleDate, dateRange, mode, open]);
+
+  // reset when switching mode
+  useEffect(() => {
+    setSingleDate(null);
+    setDateRange([null, null]);
+  }, [mode]);
+
+  // =========================
+  // STYLES
+  // =========================
+  const datePickerSx = {
+    width: 180,
+    "& .MuiOutlinedInput-root": {
+      borderRadius: "12px",
+      backgroundColor: "#fff",
+      fontSize: 13,
+    },
+    "& .MuiOutlinedInput-root:hover": {
+      backgroundColor: "#f9fafb",
+    },
+    "& .MuiOutlinedInput-root.Mui-focused": {
+      boxShadow: "0 0 0 3px rgba(59,130,246,0.15)",
+    },
+  };
+
+  const calendarSlots = {
+    paper: {
+      sx: {
+        borderRadius: 3,
+        boxShadow: "0 10px 40px rgba(0,0,0,0.12)",
+        border: "1px solid #e5e7eb",
+        "& .MuiPickersDay-root": {
+          borderRadius: 2,
+        },
+        "& .Mui-selected": {
+          backgroundColor: "#2563eb !important",
+        },
+      },
+    },
+  };
+
+  // =========================
+  // FETCH (INFINITE SCROLL SAFE)
+  // =========================
+  const fetchData = useCallback(async () => {
+    if (!open || loading || !hasMore) return;
+
+    setLoading(true);
+
+    let start = null;
+    let end = null;
+
+    if (mode === "single" && singleDate) {
+      start = singleDate.format("YYYY-MM-DD");
+      end = start;
     }
-    if (rangeMode === "thisWeek") {
-      setStart(startOfWeekISO());
-      setEnd(endOfWeekISO());
+
+    if (mode === "range" && dateRange[0] && dateRange[1]) {
+      start = dayjs(dateRange[0]).format("YYYY-MM-DD");
+      end = dayjs(dateRange[1]).format("YYYY-MM-DD");
     }
-  }, [open, rangeMode]);
 
-  const reportRows = useMemo(() => {
-    return invoices
-      .filter((inv) => inv.status !== "Voided")
-      .filter((inv) => isBetweenInclusive(inv.date, start, end))
-      .map((inv) => {
-        const t = computeInvoiceTotals(inv);
-        return { inv, t };
-      })
-      .sort((a, b) => String(b.inv.date).localeCompare(String(a.inv.date)));
-  }, [invoices, start, end]);
-
-  const summary = useMemo(() => {
-    const s = {
-      invoiceCount: 0,
-      totalCharges: 0,
-      totalDiscounts: 0,
-      totalNet: 0,
-      totalCollected: 0,
-      totalOutstanding: 0,
-      unpaidCount: 0,
-      partialCount: 0,
-      paidCount: 0,
-    };
-
-    reportRows.forEach(({ inv, t }) => {
-      s.invoiceCount += 1;
-      s.totalCharges += t.subtotal;
-      s.totalDiscounts += t.discount;
-      s.totalNet += t.total;
-      s.totalCollected += t.paid; // UI-only assumption: paid belongs to invoice date
-      s.totalOutstanding += t.balance;
-
-      if (inv.status === "Unpaid") s.unpaidCount += 1;
-      if (inv.status === "Partial") s.partialCount += 1;
-      if (inv.status === "Paid") s.paidCount += 1;
+    const { data, error } = await supabase.rpc("get_billings_dashboard_v2", {
+      p_start: start,
+      p_end: end,
+      p_limit: PAGE_SIZE,
+      p_offset: page * PAGE_SIZE,
     });
 
-    return s;
-  }, [reportRows]);
+    if (error) {
+      console.error(error);
+      setLoading(false);
+      return;
+    }
 
-  const printReport = () => alert("Print report layout coming soon (UI-only).");
-  const exportReport = () => alert("Export CSV/PDF coming soon (UI-only).");
+    if (page === 0) setSummary(data?.summary);
+
+    const rows = data?.rows || [];
+
+    setInvoice((prev) => (page === 0 ? rows : [...prev, ...rows]));
+
+    if (rows.length < PAGE_SIZE) setHasMore(false);
+
+    setLoading(false);
+  }, [page, mode, singleDate, dateRange, open, loading, hasMore]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // =========================
+  // INFINITE SCROLL
+  // =========================
+  useEffect(() => {
+    const el = observerRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && hasMore && !loading) {
+          setPage((p) => p + 1);
+        }
+      },
+      { threshold: 1 },
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasMore, loading]);
+
+  const dateLabel =
+    mode === "single"
+      ? singleDate?.format("MMM DD, YYYY") || "Select date"
+      : dateRange[0] && dateRange[1]
+        ? `${dateRange[0].format("MMM DD")} → ${dateRange[1].format(
+            "MMM DD, YYYY",
+          )}`
+        : "Select range";
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
-      <DialogTitle className="flex items-center justify-between">
-        Daily Sales Report
+      {/* HEADER */}
+      <DialogTitle className="flex justify-between items-center">
+        <Box>
+          <Typography fontWeight={700}>Sales Report</Typography>
+          <Chip
+            label={dateLabel}
+            size="small"
+            sx={{ mt: 1, fontWeight: 600 }}
+          />
+        </Box>
+
         <IconButton onClick={onClose}>
           <CloseIcon />
         </IconButton>
       </DialogTitle>
 
       <DialogContent dividers>
-        {/* Range Controls */}
-        <Box className="flex flex-col md:flex-row gap-2 md:items-end md:justify-between">
-          <Box className="flex flex-col sm:flex-row gap-2">
-            <TextField
-              select
-              size="small"
-              label="Range"
-              value={rangeMode}
-              onChange={(e) => setRangeMode(e.target.value)}
-              sx={{ minWidth: 160 }}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 2,
+            mb: 3,
+            p: 1.5,
+            border: "1px solid #e5e7eb",
+            borderRadius: 2,
+            backgroundColor: "#fafafa",
+            flexWrap: "wrap",
+          }}
+        >
+          {/* LEFT SIDE: TOGGLE + DATE */}
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: 2,
+              flexWrap: "wrap",
+            }}
+          >
+            {/* TOGGLE */}
+            <Box
+              sx={{
+                display: "flex",
+                backgroundColor: "#fff",
+                border: "1px solid #e5e7eb",
+                borderRadius: 2,
+                overflow: "hidden",
+              }}
             >
-              <option value="today">Today</option>
-              <option value="thisWeek">This Week</option>
-              <option value="custom">Custom</option>
-            </TextField>
+              <Button
+                size="small"
+                onClick={() => setMode("single")}
+                variant={mode === "single" ? "contained" : "text"}
+                sx={{
+                  textTransform: "none",
+                  fontSize: 12,
+                  borderRadius: 0,
+                  px: 2,
+                }}
+              >
+                Single
+              </Button>
 
-            <TextField
-              size="small"
-              type="date"
-              label="Start"
-              value={start}
-              onChange={(e) => {
-                setRangeMode("custom");
-                setStart(e.target.value);
-              }}
-              InputLabelProps={{ shrink: true }}
-            />
+              <Button
+                size="small"
+                onClick={() => setMode("range")}
+                variant={mode === "range" ? "contained" : "text"}
+                sx={{
+                  textTransform: "none",
+                  fontSize: 12,
+                  borderRadius: 0,
+                  px: 2,
+                }}
+              >
+                Range
+              </Button>
+            </Box>
 
-            <TextField
-              size="small"
-              type="date"
-              label="End"
-              value={end}
-              onChange={(e) => {
-                setRangeMode("custom");
-                setEnd(e.target.value);
-              }}
-              InputLabelProps={{ shrink: true }}
-            />
+            {/* DATE PICKERS */}
+            {mode === "single" && (
+              <DatePicker
+                value={singleDate}
+                onChange={(val) => setSingleDate(val)}
+                slotProps={{
+                  textField: {
+                    size: "small",
+                    sx: {
+                      width: 180,
+                      "& .MuiOutlinedInput-root": {
+                        borderRadius: "10px",
+                        backgroundColor: "#fff",
+                        fontSize: 13,
+                      },
+                    },
+                  },
+                }}
+              />
+            )}
+
+            {mode === "range" && (
+              <>
+                <DatePicker
+                  value={dateRange[0]}
+                  onChange={(val) => setDateRange([val, dateRange[1]])}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                      sx: {
+                        width: 150,
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "10px",
+                          backgroundColor: "#fff",
+                          fontSize: 13,
+                        },
+                      },
+                    },
+                  }}
+                />
+
+                <Typography sx={{ color: "#9ca3af" }}>→</Typography>
+
+                <DatePicker
+                  value={dateRange[1]}
+                  onChange={(val) => setDateRange([dateRange[0], val])}
+                  slotProps={{
+                    textField: {
+                      size: "small",
+                      sx: {
+                        width: 150,
+                        "& .MuiOutlinedInput-root": {
+                          borderRadius: "10px",
+                          backgroundColor: "#fff",
+                          fontSize: 13,
+                        },
+                      },
+                    },
+                  }}
+                />
+              </>
+            )}
           </Box>
 
-          <Box className="flex gap-2">
-            <Button
-              variant="outlined"
-              startIcon={<PrintIcon />}
-              onClick={printReport}
-            >
+          {/* RIGHT SIDE: ACTIONS */}
+          <Box sx={{ display: "flex", gap: 1 }}>
+            <Button size="small" variant="contained">
               Print
             </Button>
-            <Button
-              variant="outlined"
-              startIcon={<DownloadIcon />}
-              onClick={exportReport}
-            >
+
+            <Button size="small" variant="outlined">
               Export
             </Button>
           </Box>
         </Box>
 
-        <Divider sx={{ my: 2 }} />
-
-        {/* Summary */}
-        <Box className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <Box className="rounded-2xl border border-slate-200 p-3">
-            <Typography variant="body2" color="text.secondary">
-              Total Collected
-            </Typography>
-            <Typography variant="h6" fontWeight={900}>
-              {money(summary.totalCollected)}
-            </Typography>
+        {/* =========================
+    SUMMARY CARDS (RESTORED)
+   ========================= */}
+        <Box className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+          {/* SUBTOTAL */}
+          <Box className="border rounded-xl p-3">
             <Typography variant="caption" color="text.secondary">
-              {start} → {end}
+              Subtotal
+            </Typography>
+            <Typography fontWeight={700}>
+              {money(summary?.total_subtotal) || 0}
             </Typography>
           </Box>
 
-          <Box className="rounded-2xl border border-slate-200 p-3">
-            <Typography variant="body2" color="text.secondary">
-              Outstanding Balance (within range)
-            </Typography>
-            <Typography variant="h6" fontWeight={900}>
-              {money(summary.totalOutstanding)}
-            </Typography>
+          {/* DISCOUNT */}
+          <Box className="border rounded-xl p-3">
             <Typography variant="caption" color="text.secondary">
-              Net billed: {money(summary.totalNet)}
+              Discount
+            </Typography>
+            <Typography fontWeight={700}>
+              {money(summary?.total_discount) || 0}
             </Typography>
           </Box>
 
-          <Box className="rounded-2xl border border-slate-200 p-3">
-            <Typography variant="body2" color="text.secondary">
-              Invoice Counts
+          {/* TOTAL (NET) */}
+          <Box className="border rounded-xl p-3 bg-slate-50">
+            <Typography variant="caption" color="text.secondary">
+              Total (Net)
             </Typography>
-            <Box className="flex flex-wrap gap-1 mt-1">
-              <Chip
-                size="small"
-                label={`Unpaid: ${summary.unpaidCount}`}
-                color="warning"
-              />
-              <Chip
-                size="small"
-                label={`Partial: ${summary.partialCount}`}
-                color="info"
-              />
-              <Chip
-                size="small"
-                label={`Paid: ${summary.paidCount}`}
-                color="success"
-              />
-              <Chip size="small" label={`Total: ${summary.invoiceCount}`} />
-            </Box>
+            <Typography fontWeight={800} className="text-slate-900">
+              {money(summary?.total_total) || 0}
+            </Typography>
+          </Box>
+
+          {/* OUTSTANDING */}
+          <Box className="border rounded-xl p-3">
+            <Typography variant="caption" color="text.secondary">
+              Outstanding
+            </Typography>
+            <Typography fontWeight={700}>
+              {money(summary?.total_balance) || 0}
+            </Typography>
           </Box>
         </Box>
 
-        <Divider sx={{ my: 2 }} />
-
-        {/* Table */}
-        <Typography fontWeight={900} sx={{ mb: 1 }}>
-          Invoices in Range
-        </Typography>
-
+        {/* TABLE */}
         <Table size="small">
           <TableHead>
-            <TableRow className="bg-slate-100">
-              <TableCell>Invoice #</TableCell>
+            <TableRow>
+              <TableCell>#</TableCell>
               <TableCell>Date</TableCell>
               <TableCell>Patient</TableCell>
-              <TableCell align="right">Net</TableCell>
+              <TableCell align="right">Subtotal</TableCell>
+              <TableCell align="right">Discount</TableCell>
               <TableCell align="right">Paid</TableCell>
               <TableCell align="right">Balance</TableCell>
               <TableCell>Status</TableCell>
@@ -239,30 +391,42 @@ export default function DailySalesReportDialog({
           </TableHead>
 
           <TableBody>
-            {reportRows.map(({ inv, t }) => (
+            {invoice.map((inv) => (
               <TableRow key={inv.id} hover>
-                <TableCell className="font-semibold">{inv.id}</TableCell>
-                <TableCell>{inv.date}</TableCell>
-                <TableCell>{inv.patientName}</TableCell>
-                <TableCell align="right">{money(t.total)}</TableCell>
-                <TableCell align="right">{money(t.paid)}</TableCell>
-                <TableCell align="right">{money(t.balance)}</TableCell>
-                <TableCell>{inv.status}</TableCell>
-              </TableRow>
-            ))}
-
-            {reportRows.length === 0 && (
-              <TableRow>
-                <TableCell colSpan={7} align="center">
-                  No invoices found for this range.
+                <TableCell>{inv.id?.slice(0, 5)}</TableCell>
+                <TableCell>
+                  {new Date(inv.created_at).toLocaleDateString()}
+                </TableCell>
+                <TableCell>{inv.patient_name}</TableCell>
+                <TableCell align="right">{money(inv.subtotal)}</TableCell>
+                <TableCell align="right">{money(inv.discount_total)}</TableCell>
+                <TableCell align="right">{money(inv.paid_total)}</TableCell>
+                <TableCell align="right">{money(inv.balance)}</TableCell>
+                <TableCell>
+                  <Chip size="small" label={inv.status} />
                 </TableCell>
               </TableRow>
-            )}
+            ))}
           </TableBody>
         </Table>
+
+        {/* OBSERVER */}
+        <Box ref={observerRef} sx={{ height: 40 }} />
+
+        {loading && (
+          <Typography align="center" fontSize={12}>
+            Loading...
+          </Typography>
+        )}
+
+        {!hasMore && (
+          <Typography align="center" fontSize={12}>
+            No more data
+          </Typography>
+        )}
       </DialogContent>
 
-      <DialogActions className="px-6 py-4">
+      <DialogActions>
         <Button onClick={onClose} variant="contained">
           Close
         </Button>

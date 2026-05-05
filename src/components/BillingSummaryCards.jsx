@@ -26,10 +26,10 @@ export default function BillingSummaryCards({ todaySummary, onOpenReport }) {
         <CardContent className="flex items-center justify-between gap-2">
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Outstanding Balance
+              Today&apos;s outstanding balance
             </Typography>
             <Typography variant="h6" fontWeight={900}>
-              {money(todaySummary?.outstanding_balance)}
+              {money(todaySummary?.total_balance)}
             </Typography>
           </Box>
           <WarningAmberIcon />
@@ -40,7 +40,7 @@ export default function BillingSummaryCards({ todaySummary, onOpenReport }) {
         <CardContent className="flex items-center justify-between gap-2">
           <Box>
             <Typography variant="body2" color="text.secondary">
-              Unpaid/Partial Invoices
+              Today&apos;s Unpaid/Partial Invoices
             </Typography>
             <Typography variant="h6" fontWeight={900}>
               {todaySummary?.unpaid_count}
