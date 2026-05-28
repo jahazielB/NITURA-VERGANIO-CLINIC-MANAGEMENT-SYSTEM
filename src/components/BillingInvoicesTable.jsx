@@ -10,6 +10,7 @@ import {
   Chip,
   Box,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import PrintIcon from "@mui/icons-material/Print";
@@ -28,6 +29,7 @@ export default function InvoicesTable({
   onPay,
   onPrint,
   onVoid,
+  voidingInvoiceId,
 }) {
   return (
     <Card className="rounded-2xl shadow">
@@ -52,6 +54,7 @@ export default function InvoicesTable({
             <TableBody>
               {rows?.map((inv) => {
                 const c = computeInvoiceTotals(inv);
+                const isVoiding = voidingInvoiceId === inv.id;
                 return (
                   <TableRow key={inv.id} hover>
                     <TableCell className="font-semibold">
@@ -94,14 +97,8 @@ export default function InvoicesTable({
                           size="small"
                           variant="outlined"
                           startIcon={<EditIcon />}
-                          onClick={() =>
-                            console.log(
-                              new Date(inv?.created_at).toLocaleDateString(
-                                "en-CA",
-                              ),
-                            )
-                          }
-                          disabled={inv.status === "Voided"}
+                          onClick={() => onEdit(inv)}
+                          disabled={inv.status === "Voided" || isVoiding}
                         >
                           Edit
                         </Button>
@@ -112,7 +109,9 @@ export default function InvoicesTable({
                           startIcon={<PaymentsIcon />}
                           onClick={() => onPay(inv)}
                           disabled={
-                            inv.status === "Paid" || inv.status === "Voided"
+                            inv.status === "Paid" ||
+                            inv.status === "Voided" ||
+                            isVoiding
                           }
                         >
                           Payment
@@ -123,6 +122,7 @@ export default function InvoicesTable({
                           variant="outlined"
                           startIcon={<PrintIcon />}
                           onClick={() => onPrint(inv)}
+                          disabled={isVoiding}
                         >
                           Print
                         </Button>
@@ -131,11 +131,17 @@ export default function InvoicesTable({
                           size="small"
                           variant="outlined"
                           color="error"
-                          startIcon={<DeleteOutlineIcon />}
+                          startIcon={
+                            isVoiding ? (
+                              <CircularProgress size={14} color="inherit" />
+                            ) : (
+                              <DeleteOutlineIcon />
+                            )
+                          }
                           onClick={() => onVoid(inv.id)}
-                          disabled={inv.status === "Voided"}
+                          disabled={inv.status !== "Unpaid" || isVoiding}
                         >
-                          Void
+                          {isVoiding ? "Voiding..." : "Void"}
                         </Button>
                       </Box>
                     </TableCell>

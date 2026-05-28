@@ -19,13 +19,17 @@ import {
   startOfWeekISO,
   endOfWeekISO,
 } from "../components/helpers/billingHelpers";
+import { defaultVisitDateTime } from "../components/helpers/dateHelper";
+import CustomSnackbar from "../components/modals/CustomSnackBar";
+
+import { useSelector, useDispatch } from "react-redux";
+import { fetchPatientProfile } from "../store/patientProfileSlice";
 
 export default function BillingPage({ patients: patientsProp }) {
   const [todaySummary, setTodaySummary] = useState(null);
   const [tableData, setTableData] = useState(null);
   const [page, setPage] = useState(0);
   const [totalCount, setTotalCount] = useState(0);
-  const [q, setQ] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
   const [quickDate, setQuickDate] = useState("all"); // all | today | thisWee
   const [openForm, setOpenForm] = useState(false);
@@ -34,58 +38,65 @@ export default function BillingPage({ patients: patientsProp }) {
   const [selected, setSelected] = useState(null);
   const [searchInput, setSearchInput] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [voidingInvoiceId, setVoidingInvoiceId] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "",
+  });
 
   const PAGE_SIZE = 7;
+  const { role, userName, user } = useSelector((s) => s.auth);
+  const dispatch = useDispatch();
 
+  const fetchSummary = async () => {
+    const { data, error } = await supabase.rpc("get_billing_summary", {
+      p_start: todayISO(),
+      p_end: todayISO(),
+    });
+    if (error) {
+      console.error(error);
+    }
+    // console.log(data, todayISO());
+    setTodaySummary(data);
+    console.log(data);
+  };
   useEffect(() => {
-    const fetchData = async () => {
-      const { data, error } = await supabase.rpc("get_billing_summary", {
-        p_start: todayISO(),
-        p_end: todayISO(),
-      });
-      if (error) {
-        console.error(error);
-      }
-      // console.log(data, todayISO());
-      setTodaySummary(data);
-      console.log(data);
-    };
-
-    fetchData();
+    fetchSummary();
   }, []);
 
+  const fetchData = async () => {
+    const { data, error } = await supabase.rpc("get_billings_dashboard_v2", {
+      p_search: debouncedSearch || null,
+      p_status: filterStatus === "All" ? null : filterStatus,
+      p_start:
+        quickDate === "today"
+          ? todayISO()
+          : quickDate === "thisWeek"
+            ? startOfWeekISO()
+            : null,
+      p_end:
+        quickDate === "today"
+          ? todayISO()
+          : quickDate === "thisWeek"
+            ? endOfWeekISO()
+            : null,
+      p_limit: PAGE_SIZE,
+      p_offset: page * PAGE_SIZE,
+    });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setTableData(data.rows);
+    setTotalCount(data.total_count);
+    console.log(data);
+  };
+
   useEffect(() => {
-    const fetch = async () => {
-      const { data, error } = await supabase.rpc("get_billings_dashboard_v2", {
-        p_search: debouncedSearch || null,
-        p_status: filterStatus === "All" ? null : filterStatus,
-        p_start:
-          quickDate === "today"
-            ? todayISO()
-            : quickDate === "thisWeek"
-              ? startOfWeekISO()
-              : null,
-        p_end:
-          quickDate === "today"
-            ? todayISO()
-            : quickDate === "thisWeek"
-              ? endOfWeekISO()
-              : null,
-        p_limit: PAGE_SIZE,
-        p_offset: page * PAGE_SIZE,
-      });
-
-      if (error) {
-        console.error(error);
-        return;
-      }
-
-      setTableData(data.rows);
-      setTotalCount(data.total_count);
-      console.log(data);
-    };
-
-    fetch();
+    fetchData();
   }, [debouncedSearch, filterStatus, quickDate, page]);
 
   useEffect(() => {
@@ -108,31 +119,48 @@ export default function BillingPage({ patients: patientsProp }) {
     [patientsProp],
   );
 
-  // const invoices = tableData?.flatMap((p) =>
-  //   (p.visits || [])
-  //     .filter((v) => v.billings)
-  //     .map(
-  //       (v) =>
-  //         ({
-  //           billingId: v.billings.id,
-  //           patientName: `${p.first_name} ${p.last_name}`,
-  //           date: v.created_at,
-  //           ...v.billings,
-  //         }) || [],
-  //     ),
-  // );
+  const handlePayment = async ({
+    billingId = selected?.id,
+    amount,
+    method = "Cash",
+    receivedBy = user?.id,
+  }) => {
+    try {
+      console.log(selected);
+      const { error: insertError } = await supabase.from("payments").insert({
+        billing_id: billingId,
+        amount: Number(amount),
+        method,
+        received_by: receivedBy,
+        paid_at: defaultVisitDateTime(),
+        created_at: defaultVisitDateTime(),
+      });
 
-  const upsertInvoice = (payload) => {
-    const safe = normalizeInvoice(payload);
-    const next = { ...safe, status: computeNextStatus(safe) };
+      if (insertError) throw insertError;
 
-    setInvoices((prev) => {
-      if (!next.id) {
-        const id = Date.now();
-        return [{ ...next, id }, ...prev];
-      }
-      return prev.map((x) => (x.id === next.id ? next : x));
-    });
+      const { error: recomputeError } = await supabase.rpc(
+        "recompute_billing",
+        {
+          p_billing_id: billingId,
+        },
+      );
+
+      if (recomputeError) throw recomputeError;
+
+      setSnackbar({
+        open: true,
+        severity: "success",
+        message: "Payment Saved!",
+      });
+      await fetchSummary();
+      await fetchData();
+    } catch (e) {
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: "Error Saving payment",
+      });
+    }
   };
 
   const openNew = () => {
@@ -148,46 +176,64 @@ export default function BillingPage({ patients: patientsProp }) {
   const openPayment = (inv) => {
     setSelected(inv);
     setOpenPay(true);
+    console.log(inv);
   };
 
-  const voidInvoice = (id) => {
+  const voidInvoice = async (id) => {
+    const invoice = tableData?.find((x) => x.id === id);
+
+    if (!invoice) {
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: "Invoice not found.",
+      });
+      return;
+    }
+
+    if (invoice.status !== "Unpaid") {
+      setSnackbar({
+        open: true,
+        severity: "warning",
+        message: "Only unpaid invoices can be voided.",
+      });
+      return;
+    }
+
     if (!confirm("Void this invoice?")) return;
-    setInvoices((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, status: "Voided" } : x)),
-    );
+
+    try {
+      setVoidingInvoiceId(id);
+      const { error: updateError } = await supabase
+        .from("billings")
+        .update({ status: "Voided" })
+        .eq("id", id);
+
+      if (updateError) throw updateError;
+      console.log(updateError);
+
+      setSnackbar({
+        open: true,
+        severity: "success",
+        message: "Invoice voided successfully.",
+      });
+
+      await fetchSummary();
+      await fetchData();
+    } catch (e) {
+      setSnackbar({
+        open: true,
+        severity: "error",
+        message: "Failed to void invoice.",
+      });
+    } finally {
+      setVoidingInvoiceId(null);
+    }
   };
 
   const printInvoice = (inv) => {
     alert(`Print invoice/receipt coming soon (Invoice #${inv.id})`);
   };
-
-  const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
-
-    const startWeek = startOfWeekISO();
-    const endWeek = endOfWeekISO();
-
-    return tableData
-      ?.filter((x) =>
-        filterStatus === "All" ? true : x.status === filterStatus,
-      )
-      .filter((x) => {
-        if (quickDate === "all") return true;
-        const d = new Date(x.created_at).toLocaleDateString("en-CA");
-        if (quickDate === "today") return d === todayISO();
-        if (quickDate === "thisWeek") return d >= startWeek && d <= endWeek;
-        return true;
-      })
-      .filter((x) => {
-        if (!qq) return true;
-        return (
-          (x.patientName || "").toLowerCase().includes(qq) ||
-          String(x.id).includes(qq) ||
-          (x.date || "").includes(qq)
-        );
-      });
-    // .sort((a, b) => String(b.date).localeCompare(String(a.date)));
-  }, [tableData, q, filterStatus, quickDate]);
 
   const sampleFetch = async () => {
     const { data, error } = await supabase.rpc("get_billings_dashboard_v2", {
@@ -246,6 +292,7 @@ export default function BillingPage({ patients: patientsProp }) {
         onPay={openPayment}
         onPrint={printInvoice}
         onVoid={voidInvoice}
+        voidingInvoiceId={voidingInvoiceId}
       />
 
       {/* Dialogs */}
@@ -253,21 +300,27 @@ export default function BillingPage({ patients: patientsProp }) {
         open={openForm}
         onClose={() => setOpenForm(false)}
         onSave={(payload) => {
-          upsertInvoice(payload);
+          // upsertInvoice(payload);
           setOpenForm(false);
         }}
         patients={patients}
         invoice={selected}
+        setSnack={setSnackbar}
+        refetchSummary={fetchSummary}
+        refetchData={fetchData}
       />
 
       <PaymentDialog
         open={openPay}
         onClose={() => setOpenPay(false)}
         invoice={selected}
-        onSave={(next) => {
-          upsertInvoice(next);
-          setOpenPay(false);
-        }}
+        onSave={handlePayment}
+      />
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
+        message={snackbar.message}
+        severity={snackbar.severity}
       />
       <LocalizationProvider dateAdapter={AdapterDayjs}>
         <DailySalesReportDialog
