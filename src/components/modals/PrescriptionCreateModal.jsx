@@ -65,7 +65,7 @@ export default function PrescriptionCreateModal({
       setDoctors(data);
     };
     fetchDoctors();
-    const latestVisit = visits[0]?.id;
+    const latestVisit = visits?.[0]?.id;
     setOrderForm((prev) => ({
       ...prev,
       visitId: latestVisit,
@@ -74,7 +74,7 @@ export default function PrescriptionCreateModal({
   useEffect(() => {
     // console.log(prescriptionOrder);
     console.log(
-      prescriptionOrder.find((v) => v.visit_id === orderForm.visitId)?.id,
+      prescriptionOrder?.find((v) => v.visit_id === orderForm.visitId)?.id,
     );
   }, [open]);
 

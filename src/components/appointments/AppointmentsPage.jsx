@@ -6,6 +6,7 @@ import {
   Card,
   CardContent,
   CircularProgress,
+  Pagination,
   Tab,
   Tabs,
   TextField,
@@ -15,6 +16,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EventIcon from "@mui/icons-material/Event";
 import AppointmentsTable from "./AppointmentsTable";
 import AppointmentFormDialog from "../forms/AppointmentFormDialog";
+import CustomSnackbar from "../modals/CustomSnackBar";
 import {
   APPT_STATUS,
   APPT_TAB,
@@ -32,12 +34,15 @@ import {
   createQueueEntry,
   deleteQueueEntry,
   getTodayQueue,
+  subscribeToQueueChanges,
   updateQueueEntry,
 } from "../../services/queueService";
 
 export default function AppointmentsPage() {
   const [tab, setTab] = useState(APPT_TAB.TODAY);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 5;
 
   const [openForm, setOpenForm] = useState(false);
   const [formMode, setFormMode] = useState("walkin");
@@ -47,6 +52,19 @@ export default function AppointmentsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionError, setActionError] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    severity: "info",
+    message: "",
+  });
+
+  const showSnackbar = useCallback((severity, message) => {
+    setSnackbar({
+      open: true,
+      severity,
+      message,
+    });
+  }, []);
 
   const loadQueue = useCallback(async () => {
     setLoading(true);
@@ -55,15 +73,27 @@ export default function AppointmentsPage() {
       const data = await getTodayQueue();
       setRows(data.map(mapQueueEntryToRow));
     } catch (e) {
-      setError(e.message || "Failed to load today's queue");
+      const message = e.message || "Failed to load today's queue";
+      setError(message);
+      showSnackbar("error", message);
       setRows([]);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [showSnackbar]);
 
   useEffect(() => {
     loadQueue();
+  }, [loadQueue]);
+
+  useEffect(() => {
+    const channel = subscribeToQueueChanges(() => {
+      loadQueue();
+    });
+
+    return () => {
+      channel.unsubscribe();
+    };
   }, [loadQueue]);
 
   const upsertRow = useCallback((entry) => {
@@ -75,16 +105,19 @@ export default function AppointmentsPage() {
     });
   }, []);
 
-  const runAction = useCallback(async (fn) => {
+  const runAction = useCallback(async (fn, successMessage) => {
     setActionError(null);
     try {
       await fn();
+      if (successMessage) showSnackbar("success", successMessage);
       return true;
     } catch (e) {
-      setActionError(e.message || "Action failed");
+      const message = e.message || "Action failed";
+      setActionError(message);
+      showSnackbar("error", message);
       return false;
     }
-  }, []);
+  }, [showSnackbar]);
 
   const openWalkIn = () => {
     setFormMode("walkin");
@@ -105,6 +138,11 @@ export default function AppointmentsPage() {
   };
 
   const handleSave = async (appt) => {
+    const successMessage =
+      formMode === "edit"
+        ? "Appointment updated successfully."
+        : "Appointment created successfully.";
+
     const ok = await runAction(async () => {
       if (formMode === "edit" && appt.id) {
         const updated = await updateQueueEntry(
@@ -116,7 +154,7 @@ export default function AppointmentsPage() {
         const created = await createQueueEntry(mapFormToCreatePayload(appt));
         upsertRow(created);
       }
-    });
+    }, successMessage);
     if (ok) setOpenForm(false);
   };
 
@@ -126,13 +164,13 @@ export default function AppointmentsPage() {
         status: APPT_STATUS.IN_CONSULT,
       });
       upsertRow(updated);
-    });
+    }, "Appointment marked as In Consult.");
 
   const handleDone = (r) =>
     runAction(async () => {
       const updated = await updateQueueEntry(r.id, { status: APPT_STATUS.DONE });
       upsertRow(updated);
-    });
+    }, "Appointment marked as completed.");
 
   const handleCancelMore = (r) => {
     const choice = prompt(
@@ -142,7 +180,7 @@ export default function AppointmentsPage() {
 
     const normalized = choice.toLowerCase().trim();
     if (normalized !== "cancel" && normalized !== "noshow") {
-      alert("Invalid choice.");
+      showSnackbar("error", "Invalid choice.");
       return;
     }
 
@@ -154,7 +192,9 @@ export default function AppointmentsPage() {
         status: mapUiStatusToDb(status),
       });
       upsertRow(updated);
-    });
+    }, status === APPT_STATUS.CANCELLED
+      ? "Appointment cancelled."
+      : "Appointment marked as no-show.");
   };
 
   const handleDelete = (r) => {
@@ -163,7 +203,7 @@ export default function AppointmentsPage() {
     runAction(async () => {
       await deleteQueueEntry(r.id);
       setRows((prev) => prev.filter((x) => x.id !== r.id));
-    });
+    }, "Appointment removed from the queue.");
   };
 
   const filtered = useMemo(() => {
@@ -178,16 +218,40 @@ export default function AppointmentsPage() {
           return (
             r.status === APPT_STATUS.CANCELLED ||
             r.status === APPT_STATUS.NO_SHOW
-          );
+        );
         return true;
       });
 
     return base.sort((a, b) => {
+      if (tab === APPT_TAB.TODAY) {
+        const aq = a.queueNumber ?? null;
+        const bq = b.queueNumber ?? null;
+        if (aq != null && bq != null && aq !== bq) return aq - bq;
+        if (aq != null && bq == null) return -1;
+        if (aq == null && bq != null) return 1;
+        const da = new Date(`${a.date}T${a.time}:00`);
+        const db = new Date(`${b.date}T${b.time}:00`);
+        return da - db;
+      }
+
       const da = new Date(`${a.date}T${a.time}:00`);
       const db = new Date(`${b.date}T${b.time}:00`);
       return db - da;
     });
   }, [rows, search, tab]);
+
+  const totalPages = Math.ceil(filtered.length / rowsPerPage);
+  const paginated = filtered.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+
+  useEffect(() => {
+    setPage(1);
+  }, [tab, search]);
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   const showEmpty = !loading && !error && filtered.length === 0;
 
@@ -280,14 +344,27 @@ export default function AppointmentsPage() {
           )}
 
           {!loading && !error && !showEmpty && (
-            <AppointmentsTable
-              rows={filtered}
-              onStart={handleStart}
-              onDone={handleDone}
-              onEdit={openEdit}
-              onCancel={handleCancelMore}
-              onDelete={handleDelete}
-            />
+            <>
+              <AppointmentsTable
+                rows={paginated}
+                onStart={handleStart}
+                onDone={handleDone}
+                onEdit={openEdit}
+                onCancel={handleCancelMore}
+                onDelete={handleDelete}
+              />
+
+              {totalPages > 1 && (
+                <Box className="mt-4 flex justify-center">
+                  <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={(_, value) => setPage(value)}
+                    color="primary"
+                  />
+                </Box>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
@@ -298,6 +375,13 @@ export default function AppointmentsPage() {
         onClose={() => setOpenForm(false)}
         onSave={handleSave}
         initialValues={selected}
+      />
+
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        message={snackbar.message}
+        severity={snackbar.severity}
       />
     </Box>
   );

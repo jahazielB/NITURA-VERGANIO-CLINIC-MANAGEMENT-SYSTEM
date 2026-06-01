@@ -37,6 +37,7 @@ function queuedAtToTime(queuedAt) {
 
 export function mapQueueEntryToRow(entry) {
   const visit = entry.visits ?? null;
+  const doctorProfile = entry.doctor_profile ?? null;
 
   return {
     id: entry.id,
@@ -46,8 +47,9 @@ export function mapQueueEntryToRow(entry) {
     date: entry.queue_date ?? todayISO(),
     time: queuedAtToTime(entry.queued_at),
     status: mapDbStatusToUi(entry.status),
-    doctor: "—",
-    visitType: visit?.visit_type ?? "—",
+    doctor: doctorProfile?.full_name ?? "Unassigned",
+    doctorId: entry.doctor ?? "",
+    visitType: visit?.visit_type ?? "-",
     isWalkIn: !entry.visit_id || visit?.visit_type === "Walk-in",
     queueNumber: entry.queue_number,
   };
@@ -60,6 +62,8 @@ export function mapFormToCreatePayload(form) {
     chief_complaint: form.reason?.trim() || null,
     status: mapUiStatusToDb(form.status ?? APPT_STATUS.WAITING),
     queue_date: form.date ?? todayISO(),
+    patient_id: form.patient_id || null,
+    doctor: form.doctor || null,
   };
 }
 
@@ -69,5 +73,6 @@ export function mapFormToUpdatePatch(form) {
     contact_number: form.contact?.trim() || null,
     chief_complaint: form.reason?.trim() || null,
     status: mapUiStatusToDb(form.status),
+    doctor: form.doctor || null,
   };
 }

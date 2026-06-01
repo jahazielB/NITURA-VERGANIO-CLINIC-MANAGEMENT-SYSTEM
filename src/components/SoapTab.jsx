@@ -26,12 +26,12 @@ export default function SoapTab({ visits = [] }) {
   const visit = patientInfo?.visits;
 
   useEffect(() => {
-    if (!visit.length) return;
+    if (!visit?.length) return;
     setSelectedVisitId(visit[0]?.id);
   }, [visit]);
 
   const selectedVisit = useMemo(
-    () => visit.find((v) => v.id === selectedVisitId) || null,
+    () => visit?.find((v) => v.id === selectedVisitId) || null,
     [visit, selectedVisitId],
   );
 

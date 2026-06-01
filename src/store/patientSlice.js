@@ -1,6 +1,52 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../lib/supabaseClient";
 
+const formatBirthDate = (value) => {
+  if (!value) return null;
+
+  if (typeof value?.format === "function") {
+    return value.format("YYYY-MM-DD");
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
+
+const normalizeName = (value) => (value || "").trim().toLowerCase();
+
+async function findDuplicatePatient({
+  firstName,
+  middleName,
+  lastName,
+  birthDate,
+  excludeId = null,
+}) {
+  const { data, error } = await supabase
+    .from("patients")
+    .select("id, first_name, middle_name, last_name, birth_date")
+    .eq("birth_date", birthDate);
+
+  if (error) throw error;
+
+  return (data ?? []).find((patient) => {
+    if (excludeId && patient.id === excludeId) {
+      return false;
+    }
+
+    return (
+      normalizeName(patient.first_name) === firstName &&
+      normalizeName(patient.middle_name) === middleName &&
+      normalizeName(patient.last_name) === lastName
+    );
+  });
+}
+
 export const fetchPatients = createAsyncThunk(
   "patients/fetchPatients",
   async ({ page, rowsPerPage, search }, { rejectWithValue }) => {
@@ -45,11 +91,28 @@ export const addPatient = createAsyncThunk(
       const contact = (form.contact || "").trim();
       const address = (form.address || "").trim();
       const date = form.dateOfBirth;
+      const birthDate = formatBirthDate(date);
+      const normalizedFirstName = normalizeName(firstName);
+      const normalizedMiddleName = normalizeName(middleName);
+      const normalizedLastName = normalizeName(lastName);
 
       if (!firstName || !lastName || !middleName) {
         throw new Error("First name, last name, and middle name are required.");
       }
-      if (!date) throw new Error("Birthday is required!");
+      if (!date || !birthDate) throw new Error("Birthday is required!");
+
+      const duplicate = await findDuplicatePatient({
+        firstName: normalizedFirstName,
+        middleName: normalizedMiddleName,
+        lastName: normalizedLastName,
+        birthDate,
+      });
+
+      if (duplicate) {
+        throw new Error(
+          "Duplicate patient found. Full name and birth date must be unique.",
+        );
+      }
 
       const payload = {
         first_name: firstName,
@@ -57,7 +120,7 @@ export const addPatient = createAsyncThunk(
         middle_name: middleName,
         contact_number: contact,
         gender: form.gender || null,
-        birth_date: date.$d || null,
+        birth_date: birthDate,
         address: address,
       };
 
@@ -100,10 +163,31 @@ export const editPatient = createAsyncThunk(
       const address = (updatedData.address || "").trim();
       const gender = updatedData.gender || null;
       const date = updatedData.dateOfBirth;
+      const birthDate = formatBirthDate(date);
+      const normalizedFirstName = normalizeName(firstName);
+      const normalizedMiddleName = normalizeName(middleName);
+      const normalizedLastName = normalizeName(lastName);
 
       if (!firstName || !lastName || !middleName) {
         throw new Error("First name, last name, and middle name are required.");
       }
+
+      if (!date || !birthDate) throw new Error("Birthday is required!");
+
+      const duplicate = await findDuplicatePatient({
+        firstName: normalizedFirstName,
+        middleName: normalizedMiddleName,
+        lastName: normalizedLastName,
+        birthDate,
+        excludeId: id,
+      });
+
+      if (duplicate) {
+        throw new Error(
+          "Duplicate patient found. Full name and birth date must be unique.",
+        );
+      }
+
       const updatedPayload = {
         first_name: firstName,
         middle_name: middleName,
@@ -111,7 +195,7 @@ export const editPatient = createAsyncThunk(
         contact_number: contact,
         address: address,
         gender: gender,
-        birth_date: date.$d || null,
+        birth_date: birthDate,
       };
       const { data, error } = await supabase
         .from("patients")

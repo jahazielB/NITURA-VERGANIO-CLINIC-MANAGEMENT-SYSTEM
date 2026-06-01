@@ -86,7 +86,7 @@ export default function PrescriptionsTab({
   const latestVisitId = useMemo(() => latestVisitIdFrom(visits), [visits]);
 
   const activeCount = useMemo(
-    () => prescriptionOrders.filter((x) => x.is_active === true).length,
+    () => prescriptionOrders?.filter((x) => x.is_active === true).length,
     [],
   );
 

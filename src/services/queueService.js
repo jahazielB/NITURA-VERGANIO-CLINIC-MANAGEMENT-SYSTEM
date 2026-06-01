@@ -4,7 +4,8 @@ import { todayISO } from "../components/helpers/labHelpers";
 const QUEUE_SELECT = `
   *,
   patients ( id, first_name, middle_name, last_name, contact_number ),
-  visits ( id, visit_type, status, scheduled_for, chief_complaint )
+  visits ( id, visit_type, status, scheduled_for, chief_complaint ),
+  doctor_profile:user_profiles ( id, full_name )
 `;
 
 const UPDATE_ALLOWED_KEYS = new Set([
@@ -16,6 +17,7 @@ const UPDATE_ALLOWED_KEYS = new Set([
   "patient_id",
   "visit_id",
   "queue_number",
+  "doctor",
 ]);
 
 function assertNoError(error, context) {
@@ -41,20 +43,6 @@ function pickAllowedPatch(patch) {
   return safe;
 }
 
-async function getNextQueueNumber(queueDate) {
-  const { data, error } = await supabase
-    .from("queue_entries")
-    .select("queue_number")
-    .eq("queue_date", queueDate)
-    .order("queue_number", { ascending: false, nullsFirst: false })
-    .limit(1)
-    .maybeSingle();
-
-  assertNoError(error, "Failed to resolve next queue number");
-
-  return (data?.queue_number ?? 0) + 1;
-}
-
 async function resolveCreatedBy() {
   const { data, error } = await supabase.auth.getSession();
   if (error) {
@@ -75,6 +63,17 @@ export async function getTodayQueue() {
   return data ?? [];
 }
 
+export function subscribeToQueueChanges(callback) {
+  return supabase
+    .channel("queue_entries_changes")
+    .on(
+      "postgres_changes",
+      { event: "*", schema: "public", table: "queue_entries" },
+      callback,
+    )
+    .subscribe();
+}
+
 export async function createQueueEntry(entry) {
   const display_name = (entry?.display_name ?? "").trim();
   if (!display_name) {
@@ -82,21 +81,18 @@ export async function createQueueEntry(entry) {
   }
 
   const queue_date = entry.queue_date ?? todayISO();
-  const [queue_number, created_by] = await Promise.all([
-    getNextQueueNumber(queue_date),
-    resolveCreatedBy(),
-  ]);
+  const created_by = await resolveCreatedBy();
 
   const payload = {
     display_name,
     queue_date,
-    queue_number,
     status: entry.status ?? "Waiting",
     contact_number: trimOrNull(entry.contact_number),
     chief_complaint: trimOrNull(entry.chief_complaint),
     notes: trimOrNull(entry.notes),
     patient_id: entry.patient_id ?? null,
     visit_id: entry.visit_id ?? null,
+    doctor: trimOrNull(entry.doctor),
     created_by,
   };
 
