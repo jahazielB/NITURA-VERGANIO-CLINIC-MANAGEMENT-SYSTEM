@@ -246,7 +246,7 @@ export default function AddChargesDialog({
       );
 
       if (recomputeError) throw recomputeError;
-      dispatch(fetchPatientProfile(form.patientId));
+      await dispatch(fetchPatientProfile(form?.patientId)).unwrap();
       setSnack({
         open: true,
         severity: "success",
