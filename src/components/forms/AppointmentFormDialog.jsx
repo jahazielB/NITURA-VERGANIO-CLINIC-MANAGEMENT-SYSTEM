@@ -78,9 +78,8 @@ export default function AppointmentFormDialog({
       patientName: form.patientName.trim(),
       reason: (form.reason || "").trim(),
       contact: (form.contact || "").trim(),
-      id: isEdit ? form.id : Date.now(),
+      id: isEdit ? form.id : undefined,
     });
-    onClose();
   };
 
   const title =
