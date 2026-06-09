@@ -47,14 +47,7 @@ export default function UrinalysisTemplate({
 }) {
   const data = useMemo(() => ({ ...DEFAULTS, ...(value || {}) }), [value]);
 
-  const p = patient || {
-    name: "ABON, YLIZAH BETTINA",
-    age: "4",
-    sex: "F",
-    date: "10/28/23",
-    address: "NAMONITAN, SANTO TOMAS, LA UNION",
-    requestingPhysician: "DRA. VERGANIO",
-  };
+  const p = patient || {};
 
   const setField = (key, val) => {
     if (!onChange) return;
@@ -229,7 +222,7 @@ export default function UrinalysisTemplate({
       >
         <Box width="45%">
           <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            JENINA A MACADAEG, RMT
+            &nbsp;
           </Typography>
           <Typography
             variant="body2"
@@ -237,7 +230,7 @@ export default function UrinalysisTemplate({
           >
             &nbsp;
           </Typography>
-          <Typography variant="caption">PRC LIC NO. 89605</Typography>
+          <Typography variant="caption">PRC LIC NO. &nbsp;</Typography>
           <Typography variant="caption" display="block">
             MEDICAL TECHNOLOGIST
           </Typography>
@@ -245,7 +238,7 @@ export default function UrinalysisTemplate({
 
         <Box width="45%" textAlign="right">
           <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            MICHAEL L. MOSTALES, MD, DPSP
+            &nbsp;
           </Typography>
           <Typography
             variant="body2"
@@ -253,7 +246,7 @@ export default function UrinalysisTemplate({
           >
             &nbsp;
           </Typography>
-          <Typography variant="caption">PRC LIC NO.: 102433</Typography>
+          <Typography variant="caption">PRC LIC NO.: &nbsp;</Typography>
           <Typography variant="caption" display="block">
             PATHOLOGIST
           </Typography>

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Box, Card, CardContent, Typography } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { Box, Card, CardContent, Pagination, Typography } from "@mui/material";
 
 import LabFilters from "../components/LabSidebar/Labfilters";
 import LabWorklistTable from "../components/LabSidebar/LabWorklistTable";
@@ -11,13 +11,18 @@ import EnterResultsDialog from "../components/forms/EnterResultsDialog";
 
 // Reuse helper
 import { todayISO } from "../components/helpers/labHelpers";
+import { getLabRequests } from "../services/labRequestService";
 
 export default function LaboratorySidebarPage({
   visits = [],
   patients = [],
   labItems = [],
 }) {
+  const PAGE_SIZE = 10;
   const [items, setItems] = useState(labItems.length ? labItems : []);
+  const [totalItems, setTotalItems] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("All");
   const [q, setQ] = useState("");
@@ -31,6 +36,37 @@ export default function LaboratorySidebarPage({
     [items, visits, patients],
   );
 
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchRequests = async () => {
+      try {
+        setLoading(true);
+        const { rows, total } = await getLabRequests({
+          page,
+          limit: PAGE_SIZE,
+        });
+        if (mounted) {
+          setItems(rows);
+          setTotalItems(total);
+        }
+      } catch (error) {
+        console.error("Failed to fetch lab requests:", error);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchRequests();
+
+    return () => {
+      mounted = false;
+    };
+  }, [page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [q, statusFilter]);
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
     return enriched
@@ -100,6 +136,7 @@ export default function LaboratorySidebarPage({
 
       <LabWorklistTable
         rows={filtered}
+        loading={loading}
         showPatientColumn
         onView={(row) => {
           setSelected(row);
@@ -113,6 +150,17 @@ export default function LaboratorySidebarPage({
         onRelease={release}
         onPrint={() => alert("Print lab result coming soon")}
       />
+
+      {totalItems > PAGE_SIZE && (
+        <Box className="flex justify-end">
+          <Pagination
+            count={Math.ceil(totalItems / PAGE_SIZE)}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+            color="primary"
+          />
+        </Box>
+      )}
 
       <EnterResultsDialog
         open={openEnter}

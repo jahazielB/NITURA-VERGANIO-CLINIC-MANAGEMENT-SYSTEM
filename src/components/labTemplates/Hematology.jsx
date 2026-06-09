@@ -46,14 +46,7 @@ export default function HematologyTemplate({
 }) {
   const data = useMemo(() => ({ ...DEFAULTS, ...(value || {}) }), [value]);
 
-  const p = patient || {
-    name: "DOE, JUAN",
-    age: "25",
-    sex: "M",
-    date: "01/29/26",
-    address: "SANTO TOMAS, LA UNION",
-    requestingPhysician: "DRA. VERGANIO",
-  };
+  const p = patient || {};
 
   const setField = (key, val) => {
     if (!onChange) return;
@@ -262,7 +255,7 @@ export default function HematologyTemplate({
       >
         <Box width="45%">
           <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            JENINA A. MACADAEG, RMT
+            &nbsp;
           </Typography>
           <Typography
             variant="body2"
@@ -270,7 +263,7 @@ export default function HematologyTemplate({
           >
             &nbsp;
           </Typography>
-          <Typography variant="caption">PRC LIC NO. 0089605</Typography>
+          <Typography variant="caption">PRC LIC NO. &nbsp;</Typography>
           <Typography variant="caption" display="block">
             MEDICAL TECHNOLOGIST
           </Typography>
@@ -278,7 +271,7 @@ export default function HematologyTemplate({
 
         <Box width="45%" textAlign="right">
           <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            MICHAEL L. MOSTALES, MD, DPSP
+            &nbsp;
           </Typography>
           <Typography
             variant="body2"
@@ -286,7 +279,7 @@ export default function HematologyTemplate({
           >
             &nbsp;
           </Typography>
-          <Typography variant="caption">PRC LIC NO.: 102433</Typography>
+          <Typography variant="caption">PRC LIC NO.: &nbsp;</Typography>
           <Typography variant="caption" display="block">
             PATHOLOGIST
           </Typography>

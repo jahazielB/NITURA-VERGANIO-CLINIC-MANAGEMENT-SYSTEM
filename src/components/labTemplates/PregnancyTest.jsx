@@ -28,14 +28,7 @@ export default function PregnancyTestTemplate({
 }) {
   const data = useMemo(() => ({ ...DEFAULTS, ...(value || {}) }), [value]);
 
-  const p = patient || {
-    name: "DOE, JANE",
-    age: "24",
-    sex: "F",
-    date: "01/29/26",
-    address: "SANTO TOMAS, LA UNION",
-    requestingPhysician: "DR. SAMPLE",
-  };
+  const p = patient || {};
 
   const setField = (key, val) => {
     if (!onChange) return;

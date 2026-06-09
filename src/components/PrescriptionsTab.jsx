@@ -184,7 +184,7 @@ export default function PrescriptionsTab({
           variant="contained"
           startIcon={<AddIcon />}
           onClick={() => {
-            if (patientVisits.length === 0)
+            if (patientVisits?.length === 0)
               return setSnackbar({
                 open: true,
                 message: "Add a visit first!",

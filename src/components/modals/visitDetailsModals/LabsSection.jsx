@@ -2,8 +2,6 @@ import { Card, Typography, Stack, Chip, Box } from "@mui/material";
 import ScienceIcon from "@mui/icons-material/Science";
 
 export default function LabsSection({ labRequests }) {
-  const services = labRequests?.flatMap((l) => l.lab_services) || [];
-
   return (
     <Card className="rounded-2xl p-4 shadow-sm">
       <Box display="flex" alignItems="center" gap={1} mb={2}>
@@ -19,11 +17,7 @@ export default function LabsSection({ labRequests }) {
               className="flex justify-between items-center p-2 border rounded-lg"
             >
               <Stack>
-                {services.map((s) => (
-                  <Typography key={s.id} variant="body2">
-                    {s.name}
-                  </Typography>
-                ))}
+                <Typography variant="body2">{l.test_type}</Typography>
               </Stack>
 
               <Chip

@@ -22,6 +22,15 @@ import AutorenewIcon from "@mui/icons-material/Autorenew";
 // Adjust path if needed
 import { statusColor } from "../helpers/labHelpers";
 
+function formatRequestedDate(value) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return `${date.toLocaleDateString("en-US")} ${date.toLocaleTimeString("en-US")}`;
+}
+
 export default function LabWorklistTable({
   rows = [],
   onView,
@@ -32,7 +41,7 @@ export default function LabWorklistTable({
   showPatientColumn = true,
 }) {
   return (
-    <Card className="rounded-2xl shadow h-[500px]">
+    <Card className="rounded-2xl shadow">
       <CardContent>
         <TableContainer sx={{ overflowX: "auto" }}>
           <Table size="small" sx={{ minWidth: 1150 }}>
@@ -52,11 +61,11 @@ export default function LabWorklistTable({
             <TableBody>
               {rows.map((x) => (
                 <TableRow key={x.id} hover>
-                  <TableCell>{x.requestedDate}</TableCell>
+                  <TableCell>{formatRequestedDate(x.requestedDate)}</TableCell>
 
                   {showPatientColumn && (
                     <TableCell className="font-semibold">
-                      {x.patientName || "—"}
+                      {x.patientName || "â€”"}
                     </TableCell>
                   )}
 
@@ -149,7 +158,7 @@ export default function LabWorklistTable({
 
         <Box mt={1}>
           <Typography variant="caption" color="text.secondary">
-            Pending → Processing → Ready → Released
+            Pending â†’ Processing â†’ Ready â†’ Released
           </Typography>
         </Box>
       </CardContent>

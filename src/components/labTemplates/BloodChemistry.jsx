@@ -75,9 +75,11 @@ export default function BloodChemTemplate({
   value,
   onChange,
   readOnly = false,
+  patient,
 }) {
   const defaults = useMemo(() => buildDefaults(), []);
   const data = { ...defaults, ...(value || {}) };
+  const p = patient || {};
 
   const setVal = (test, field, val) => {
     if (!onChange) return;
@@ -128,22 +130,25 @@ export default function BloodChemTemplate({
       {/* Patient info lines (visual only, real values come from main dialog) */}
       <Grid container spacing={2} mb={3}>
         <Grid item xs={6}>
-          <Line label="NAME" value="PANIT, TERESITA" />
+          <Line label="NAME" value={p.name} />
         </Grid>
         <Grid item xs={2}>
-          <Line label="AGE" value="68" />
+          <Line label="AGE" value={p.age} />
         </Grid>
         <Grid item xs={2}>
-          <Line label="SEX" value="F" />
+          <Line label="SEX" value={p.sex} />
         </Grid>
         <Grid item xs={2}>
-          <Line label="DATE" value="07-29-22" />
+          <Line label="DATE" value={p.date} />
         </Grid>
         <Grid item xs={6}>
-          <Line label="ADDRESS" value="DAMORTIS, SANTO TOMAS, LA UNION" />
+          <Line label="ADDRESS" value={p.address} />
         </Grid>
         <Grid item xs={6}>
-          <Line label="REQUESTING PHYSICIAN" value="DRA. VERGANIO" />
+          <Line
+            label="REQUESTING PHYSICIAN"
+            value={p.requestingPhysician}
+          />
         </Grid>
       </Grid>
 

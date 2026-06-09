@@ -1,19 +1,16 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Grid,
-  TextField,
-  Button,
-  Typography,
   Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Typography,
 } from "@mui/material";
-import { todayISO } from "../helpers/labHelpers";
 import BloodChemTemplate from "../labTemplates/BloodChemistry";
 import ClinicalChemistry from "../labTemplates/ClinicalChemistry";
-import Urinalysis from "../labTemplates/Urinalysis";
+import UrinalysisTemplate from "../labTemplates/Urinalysis";
 import Serology from "../labTemplates/Serology";
 import PregnancyTestTemplate from "../labTemplates/PregnancyTest";
 import Hba1cTemplate from "../labTemplates/HBA1C";
@@ -21,135 +18,115 @@ import BloodTyping from "../labTemplates/BloodTyping";
 import Fecalysis from "../labTemplates/Fecalysis";
 import HematologyTemplate from "../labTemplates/Hematology";
 import KOHTemplate from "../labTemplates/KOH";
+import { labResultItemsRowsToTemplateValues } from "../helpers/labResultMapper";
+import { saveLabResults } from "../../services/labRequestService";
 
-export default function EnterResultsDialog({ open, onClose, item, onSave }) {
-  const [form, setForm] = useState(null);
+const normalizeServiceName = (value) => String(value || "").trim().toLowerCase();
 
-  useEffect(() => {
-    if (!open) return;
-    if (!item) return;
+const TEMPLATE_BY_SERVICE = {
+  cbc: HematologyTemplate,
+  hematology: HematologyTemplate,
+  "blood chemistry": BloodChemTemplate,
+  "clinical chemistry": ClinicalChemistry,
+  urinalysis: UrinalysisTemplate,
+  serology: Serology,
+  "pregnancy test": PregnancyTestTemplate,
+  "glycated hemoglobin (hba1c)": Hba1cTemplate,
+  "hemoglobin(hba1c)": Hba1cTemplate,
+  "hemoglobin (hba1c)": Hba1cTemplate,
+  "blood typing": BloodTyping,
+  fecalysis: Fecalysis,
+  koh: KOHTemplate,
+};
 
-    setForm({
-      ...item,
-      performedDate: item.performedDate || todayISO(),
-      performedBy: item.performedBy || "Med Tech",
-    });
-  }, [open, item]);
+export default function EnterResultsDialog({
+  open,
+  onClose,
+  item,
+  onSave,
+  patient,
+}) {
+  if (!item) return null;
 
-  if (!form) return null;
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((p) => ({ ...p, [name]: value }));
-  };
-
-  const submit = () => {
-    onSave({
-      ...form,
-      resultSummary: (form.resultSummary || "").trim(),
-      impression: (form.impression || "").trim(),
-      techNotes: (form.techNotes || "").trim(),
-      status: "Ready",
-    });
-    onClose();
-  };
+  const serviceName = Array.isArray(item?.testType)
+    ? item.testType[0]
+    : item?.testType;
+  const SelectedTemplate = TEMPLATE_BY_SERVICE[normalizeServiceName(serviceName)];
+  const initialValues = labResultItemsRowsToTemplateValues(
+    item.lab_result_items || [],
+  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <ResultsTemplateBody
+        key={`${item.id}-${open ? "open" : "closed"}`}
+        Template={SelectedTemplate}
+        initialValues={initialValues}
+        item={item}
+        onClose={onClose}
+        onSave={onSave}
+        patient={patient}
+      />
+    </Dialog>
+  );
+}
+
+function ResultsTemplateBody({
+  Template,
+  initialValues,
+  item,
+  onClose,
+  onSave,
+  patient,
+}) {
+  const [values, setValues] = useState(initialValues);
+  const [saving, setSaving] = useState(false);
+
+  const submit = async () => {
+    if (saving) return;
+
+    setSaving(true);
+    try {
+      const updatedRequest = await saveLabResults(item.id, values);
+      onSave?.(updatedRequest);
+      onClose();
+    } catch (error) {
+      console.error("Failed to save lab results:", error);
+      alert(error?.message || "Failed to save lab results.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <>
       <DialogTitle>Enter Lab Results</DialogTitle>
-      {/* <BloodChemTemplate /> */}
-      {/* <ClinicalChemistry /> */}
-      {/* <Urinalysis /> */}
-      {/* <Serology /> */}
-      {/* <PregnancyTestTemplate /> */}
-      {/* <Hba1cTemplate /> */}
-      {/* <BloodTyping /> */}
-      {/* <Fecalysis /> */}
-      {/* <HematologyTemplate /> */}
-      <KOHTemplate />
 
-      {/* <DialogContent dividers>
-        <Box className="mb-3">
-          <Typography className="font-semibold">
-            {form.testType} • Requested: {form.requestedDate}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Saving will set status to <b>Ready</b>.
-          </Typography>
-        </Box>
-
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Performed By"
-              name="performedBy"
-              value={form.performedBy}
-              onChange={handleChange}
-              fullWidth
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Performed Date"
-              type="date"
-              name="performedDate"
-              value={form.performedDate}
-              onChange={handleChange}
-              fullWidth
-              InputLabelProps={{ shrink: true }}
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              label="Result Summary"
-              name="resultSummary"
-              value={form.resultSummary}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              minRows={4}
-              placeholder="Enter result values or summary..."
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              label="Impression"
-              name="impression"
-              value={form.impression}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              minRows={2}
-              placeholder="Optional impression / findings..."
-            />
-          </Grid>
-
-          <Grid item xs={12}>
-            <TextField
-              label="Technician Notes"
-              name="techNotes"
-              value={form.techNotes}
-              onChange={handleChange}
-              fullWidth
-              multiline
-              minRows={2}
-              placeholder="Optional notes..."
-            />
-          </Grid>
-        </Grid>
-      </DialogContent> */}
+      <DialogContent dividers sx={{ p: 2.5 }}>
+        {Template ? (
+          <Template
+            value={values}
+            onChange={setValues}
+            readOnly={saving}
+            patient={patient}
+          />
+        ) : (
+          <Box sx={{ py: 4 }}>
+            <Typography variant="body2" color="text.secondary">
+              No template is available for this service.
+            </Typography>
+          </Box>
+        )}
+      </DialogContent>
 
       <DialogActions className="px-6 py-4">
-        <Button onClick={onClose} variant="outlined">
+        <Button onClick={onClose} variant="outlined" disabled={saving}>
           Cancel
         </Button>
-        <Button onClick={submit} variant="contained">
-          Save Results (Ready)
+        <Button onClick={submit} variant="contained" disabled={saving}>
+          {saving ? "Saving..." : "Save Results (Ready)"}
         </Button>
       </DialogActions>
-    </Dialog>
+    </>
   );
 }
