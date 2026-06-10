@@ -24,6 +24,41 @@ const LAB_REQUEST_SELECT = `
   lab_result_items(*)
 `;
 
+const LAB_REQUEST_SIDEBAR = `
+  *,
+  visit:visits!visit_id (
+    id,
+    created_at,
+    scheduled_for,
+    patient:patients!patient_id (
+      id,
+      first_name,
+      middle_name,
+      last_name,
+      birth_date,
+      gender,
+      address
+    )
+  ),
+  lab_services (
+    id,
+    name
+  ),
+  requested_by_profile:user_profiles!requested_by (
+    id,
+    full_name
+  ),
+  entered_by_profile:user_profiles!entered_by (
+    id,
+    full_name
+  ),
+  released_by_profile:user_profiles!released_by (
+    id,
+    full_name
+  ),
+  lab_result_items(*)
+`;
+
 const profileIdCache = new Map();
 const labServiceIdCache = new Map();
 
@@ -138,26 +173,34 @@ function mapSidebarLabRequestRow(row) {
   const visit = row.visit ?? {};
   const patientList = Array.isArray(visit.patients) ? visit.patients : [];
   const patient = visit.patient ?? patientList[0] ?? {};
+  const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
   const firstName = (patient.first_name ?? patient.firstName ?? "").trim();
   const middleName = (patient.middle_name ?? patient.middleName ?? "").trim();
   const lastName = (patient.last_name ?? patient.lastName ?? "").trim();
+  const middleInitial = middleName ? `${middleName.charAt(0).toUpperCase()}.` : "";
   const patientName = row.patientName
     ? row.patientName
-    : [lastName, [firstName, middleName].filter(Boolean).join(" ")]
-        .filter(Boolean)
-        .join(", ");
+    : [firstName && cap(firstName), middleInitial, lastName && cap(lastName)].filter(Boolean).join(" ");
 
   return {
     id: row.id,
     visitId: row.visit_id ?? "",
     visitLabel:
-      visit.scheduled_for ?? visit.visit_date ?? visit.created_at ?? row.visit_id ?? "",
+      visit.scheduled_for ??
+      visit.visit_date ??
+      visit.created_at ??
+      row.visit_id ??
+      "",
     patientName,
+    birthDate: patient.birth_date ?? null,
+    gender: patient.gender ?? null,
+    address: patient.address ?? null,
     testType: row.lab_services?.name ?? "",
     priority: row.priority ?? "Routine",
     requestedBy: row.requested_by_profile?.full_name ?? "",
     requestedDate: row.created_at ?? "",
     status: row.status ?? "Pending",
+    lab_result_items: row.lab_result_items ?? [],
   };
 }
 export async function getLabRequestsByVisitIds(
@@ -179,13 +222,61 @@ export async function getLabRequestsByVisitIds(
 
   return { rows: (data ?? []).map(mapLabRequestRow), total: count ?? 0 };
 }
-export async function getLabRequests({ page = 1, limit = 10 } = {}) {
+export async function getLabRequests({ page = 1, limit = 10, search = "" } = {}) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
-  const { data, count, error } = await supabase
+  let query = supabase
     .from("lab_requests")
-    .select(LAB_REQUEST_SELECT, { count: "exact" })
+    .select(LAB_REQUEST_SIDEBAR, { count: "exact" });
+
+  const q = search.trim();
+  if (q) {
+    const requestIds = new Set();
+
+    try {
+      const { data: matchingPatients } = await supabase
+        .from("patients")
+        .select("id")
+        .or(`first_name.ilike.%${q}%,last_name.ilike.%${q}%`);
+
+      if (matchingPatients?.length) {
+        const { data: matchingVisits } = await supabase
+          .from("visits")
+          .select("id")
+          .in("patient_id", matchingPatients.map((p) => p.id));
+
+        const visitIds = matchingVisits?.map((v) => v.id) ?? [];
+        if (visitIds.length) {
+          const { data: byVisit } = await supabase
+            .from("lab_requests")
+            .select("id")
+            .in("visit_id", visitIds);
+          byVisit?.forEach((r) => requestIds.add(r.id));
+        }
+      }
+    } catch {}
+
+    try {
+      const { data: matchingServices } = await supabase
+        .from("lab_services")
+        .select("id")
+        .ilike("name", `%${q}%`);
+
+      if (matchingServices?.length) {
+        const { data: byService } = await supabase
+          .from("lab_requests")
+          .select("id")
+          .in("lab_service_id", matchingServices.map((s) => s.id));
+        byService?.forEach((r) => requestIds.add(r.id));
+      }
+    } catch {}
+
+    if (!requestIds.size) return { rows: [], total: 0 };
+    query = query.in("id", [...requestIds]);
+  }
+
+  const { data, count, error } = await query
     .order("created_at", { ascending: false })
     .range(from, to);
 

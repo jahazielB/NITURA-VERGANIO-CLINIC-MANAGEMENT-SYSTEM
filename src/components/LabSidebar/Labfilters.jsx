@@ -13,8 +13,8 @@ export default function LabFilters({ q, onQChange, status, onStatusChange }) {
         <TextField
           size="small"
           fullWidth
-          label="Search"
-          placeholder="Patient name, test type, doctor, date..."
+          label="Search Patient Name, Lab test"
+          placeholder="Search patient name"
           value={q}
           onChange={(e) => onQChange(e.target.value)}
         />
