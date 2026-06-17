@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
   Chip,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -9,6 +11,7 @@ import {
   GlobalStyles,
   Paper,
   Stack,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import PrintIcon from "@mui/icons-material/Print";
@@ -22,7 +25,10 @@ import BloodTyping from "../labTemplates/BloodTyping";
 import Fecalysis from "../labTemplates/Fecalysis";
 import HematologyTemplate from "../labTemplates/Hematology";
 import KOHTemplate from "../labTemplates/KOH";
-import { labResultItemsRowsToTemplateValues } from "../helpers/labResultMapper";
+import {
+  fetchLabServiceItemsWithResults,
+  normalizedToTemplateValues,
+} from "../../services/labResultNormalizer";
 
 const normalizeServiceName = (value) =>
   String(value || "")
@@ -54,14 +60,45 @@ export default function ViewLabModal({
   visitLabel = "",
   patient,
 }) {
+  const [loading, setLoading] = useState(false);
+  const [templateValues, setTemplateValues] = useState({});
+
   const serviceName = Array.isArray(item?.testType)
     ? item.testType[0]
     : item?.testType;
   const SelectedTemplate =
     TEMPLATE_BY_SERVICE[normalizeServiceName(serviceName)];
-  const templateValues = labResultItemsRowsToTemplateValues(
-    item?.lab_result_items || [],
-  );
+
+  useEffect(() => {
+    if (!open || !item?.id || !item?.labServiceId) return;
+
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const result = await fetchLabServiceItemsWithResults(
+          item.id,
+          item.labServiceId,
+        );
+        if (!cancelled) {
+          setTemplateValues(
+            normalizedToTemplateValues(result.normalizedItems, serviceName),
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load lab results:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, item?.id, item?.labServiceId, serviceName]);
 
   if (!item) return null;
 
@@ -130,8 +167,20 @@ export default function ViewLabModal({
             </Typography>
             <Typography variant="body2" color="text.secondary">
               {item.testType || "Laboratory Service"} • Visit:{" "}
-              {visitLabel || item.visitId || "N/A"} • Requested:{" "}
-              {item.requestedDate || "N/A"}
+              {(visitLabel || item.visitId)
+                ? new Date(visitLabel || item.visitId).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : "N/A"} • Requested:{" "}
+              {item.requestedDate
+                ? new Date(item.requestedDate).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })
+                : "N/A"}
             </Typography>
           </Stack>
         </DialogTitle>
@@ -185,8 +234,16 @@ export default function ViewLabModal({
               </Stack>
             </Stack>
 
-            {SelectedTemplate ? (
-              <SelectedTemplate value={templateValues} readOnly patient={patient} />
+            {loading ? (
+              <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : SelectedTemplate ? (
+              <SelectedTemplate
+                value={templateValues}
+                readOnly
+                patient={patient}
+              />
             ) : (
               <Box sx={{ py: 4 }}>
                 <Typography variant="body2" color="text.secondary">
@@ -198,9 +255,13 @@ export default function ViewLabModal({
         </DialogContent>
 
         <DialogActions className="no-print" sx={{ px: 3, py: 2 }}>
-          <Button startIcon={<PrintIcon />} onClick={handlePrint}>
-            Print
-          </Button>
+          <Tooltip title={item?.status !== "Released" ? "Results must be released first" : ""}>
+            <span>
+              <Button startIcon={<PrintIcon />} onClick={handlePrint} disabled={item?.status !== "Released"}>
+                Print
+              </Button>
+            </span>
+          </Tooltip>
           <Button onClick={onClose} variant="outlined">
             Close
           </Button>

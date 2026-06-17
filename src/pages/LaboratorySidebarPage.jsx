@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Card,
@@ -6,7 +6,9 @@ import {
   CircularProgress,
   Pagination,
   Typography,
+  Button,
 } from "@mui/material";
+import { supabase } from "../lib/supabaseClient";
 
 import LabFilters from "../components/LabSidebar/Labfilters";
 import LabWorklistTable from "../components/LabSidebar/LabWorklistTable";
@@ -21,9 +23,14 @@ import CustomSnackbar from "../components/modals/CustomSnackBar";
 // Reuse helper
 import { todayISO } from "../components/helpers/labHelpers";
 import { getAge } from "../components/helpers/dateHelper";
-import { getLabRequests, updateLabRequest, deleteLabRequest, subscribeToLabRequestChanges } from "../services/labRequestService";
+import {
+  getLabRequests,
+  updateLabRequest,
+  deleteLabRequest,
+  subscribeToLabRequestChanges,
+} from "../services/labRequestService";
 import useDebounce from "../hooks/useDebounce";
-
+import seedLabData from "../services/labDataSeeder";
 export default function LaboratorySidebarPage({
   visits = [],
   patients = [],
@@ -39,8 +46,13 @@ export default function LaboratorySidebarPage({
   const [q, setQ] = useState("");
   const debouncedQ = useDebounce(q, 400);
 
-  const [snack, setSnack] = useState({ open: false, message: "", severity: "success" });
-  const notify = (message, severity = "success") => setSnack({ open: true, message, severity });
+  const [snack, setSnack] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const notify = (message, severity = "success") =>
+    setSnack({ open: true, message, severity });
 
   const [openEnter, setOpenEnter] = useState(false);
   const [openView, setOpenView] = useState(false);
@@ -72,10 +84,15 @@ export default function LaboratorySidebarPage({
     fetchRequests();
   }, [fetchRequests]);
 
+  const fetchRequestsRef = useRef(fetchRequests);
+  fetchRequestsRef.current = fetchRequests;
+
   useEffect(() => {
-    const channel = subscribeToLabRequestChanges(() => fetchRequests());
+    const channel = subscribeToLabRequestChanges(() =>
+      fetchRequestsRef.current(),
+    );
     return () => channel.unsubscribe();
-  }, [fetchRequests]);
+  }, []);
 
   useEffect(() => {
     setPage(1);
@@ -107,18 +124,32 @@ export default function LaboratorySidebarPage({
       .catch(() => notify("Failed to update status.", "error"));
   };
 
-  const release = (id) => {
+  const release = async (id) => {
     if (!confirm("Release this result?")) return;
-    updateLabRequest(id, { status: "Released", releasedBy: "Doctor", releasedDate: todayISO() })
-      .then(() => {
-        notify("Result released.");
-        setItems((prev) =>
-          prev.map((x) =>
-            x.id === id ? { ...x, status: "Released" } : x,
-          ),
-        );
-      })
-      .catch(() => notify("Failed to release result.", "error"));
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const authUserId = userData?.user?.id;
+      let profileId = null;
+      if (authUserId) {
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("id")
+          .eq("id", authUserId)
+          .maybeSingle();
+        profileId = profile?.id ?? null;
+      }
+      await updateLabRequest(id, {
+        status: "Released",
+        releasedBy: profileId,
+        releasedDate: todayISO(),
+      });
+      notify("Result released.");
+      setItems((prev) =>
+        prev.map((x) => (x.id === id ? { ...x, status: "Released" } : x)),
+      );
+    } catch {
+      notify("Failed to release result.", "error");
+    }
   };
 
   const handleDelete = (id) => {
@@ -158,18 +189,18 @@ export default function LaboratorySidebarPage({
         <LabWorklistTable
           rows={filtered}
           showPatientColumn
-        onView={(row) => {
-          setSelected(row);
-          setOpenView(true);
-        }}
-        onEnter={(row) => {
-          setSelected(row);
-          setOpenEnter(true);
-        }}
-        onMarkProcessing={markProcessing}
-        onRelease={release}
-        onDelete={handleDelete}
-      />
+          onView={(row) => {
+            setSelected(row);
+            setOpenView(true);
+          }}
+          onEnter={(row) => {
+            setSelected(row);
+            setOpenEnter(true);
+          }}
+          onMarkProcessing={markProcessing}
+          onRelease={release}
+          onDelete={handleDelete}
+        />
       )}
 
       {totalItems > PAGE_SIZE && (
@@ -188,6 +219,21 @@ export default function LaboratorySidebarPage({
         onClose={() => setOpenEnter(false)}
         item={selected}
         onSave={(updated) => updateItem(updated)}
+        onNotify={notify}
+        patient={{
+          name: selected?.patientName || "",
+          age: selected?.birthDate ? String(getAge(selected.birthDate)) : "",
+          sex: selected?.gender || "",
+          date: selected?.requestedDate
+            ? new Intl.DateTimeFormat("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              }).format(new Date(selected.requestedDate))
+            : "",
+          address: selected?.address || "",
+          requestingPhysician: selected?.requestedBy || "",
+        }}
       />
 
       <ViewLabModal
@@ -199,14 +245,13 @@ export default function LaboratorySidebarPage({
           name: selected?.patientName || "",
           age: selected?.birthDate ? String(getAge(selected.birthDate)) : "",
           sex: selected?.gender || "",
-          date:
-            selected?.requestedDate
-              ? new Intl.DateTimeFormat("en-US", {
-                  month: "2-digit",
-                  day: "2-digit",
-                  year: "numeric",
-                }).format(new Date(selected.requestedDate))
-              : "",
+          date: selected?.requestedDate
+            ? new Intl.DateTimeFormat("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              }).format(new Date(selected.requestedDate))
+            : "",
           address: selected?.address || "",
           requestingPhysician: selected?.requestedBy || "",
         }}

@@ -14,7 +14,13 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { useEffect, useState } from "react";
 
-export default function EnterResultsDialog({ open, onClose, row, onSave }) {
+export default function EnterResultsDialog({
+  open,
+  onClose,
+  row,
+  onSave,
+  onNotify,
+}) {
   const [summary, setSummary] = useState("");
   const [remarks, setRemarks] = useState("");
 
@@ -27,7 +33,11 @@ export default function EnterResultsDialog({ open, onClose, row, onSave }) {
   if (!row) return null;
 
   const submit = () => {
-    if (!summary.trim()) return alert("Enter at least a result summary.");
+    if (!summary.trim()) {
+      onNotify?.("Enter at least a result summary.", "warning");
+      return;
+    }
+
     onSave({
       ...row,
       results: {
@@ -35,7 +45,7 @@ export default function EnterResultsDialog({ open, onClose, row, onSave }) {
         summary: summary.trim(),
         remarks: remarks.trim(),
       },
-      status: "Ready", // ✅ after entering results -> Ready
+      status: "Ready",
     });
   };
 

@@ -1,7 +1,7 @@
 import { supabase } from "../lib/supabaseClient";
 import { todayISO } from "../components/helpers/labHelpers";
-import { templateValuesToLabResultItemsPayloads } from "../components/helpers/labResultMapper";
 import { defaultVisitDateTime } from "../components/helpers/dateHelper";
+import { templateValuesToUpsertPayloads } from "./labResultNormalizer";
 
 const LAB_REQUEST_SELECT = `
   *,
@@ -119,7 +119,7 @@ async function resolveProfileId(value) {
   return promise;
 }
 
-async function resolveLabServiceId(value) {
+export async function resolveLabServiceId(value) {
   const key = trimOrNull(value);
   if (!key) return null;
 
@@ -156,6 +156,7 @@ export function mapLabRequestRow(row) {
     id: row.id,
     visitId: row.visit_id ?? "",
     testType: row.lab_services?.name ?? "",
+    labServiceId: row.lab_services?.id ?? "",
     priority: row.priority ?? "Routine",
     notes: row.notes ?? "",
     requestedBy: row.requested_by_profile?.full_name ?? "",
@@ -177,10 +178,14 @@ function mapSidebarLabRequestRow(row) {
   const firstName = (patient.first_name ?? patient.firstName ?? "").trim();
   const middleName = (patient.middle_name ?? patient.middleName ?? "").trim();
   const lastName = (patient.last_name ?? patient.lastName ?? "").trim();
-  const middleInitial = middleName ? `${middleName.charAt(0).toUpperCase()}.` : "";
+  const middleInitial = middleName
+    ? `${middleName.charAt(0).toUpperCase()}.`
+    : "";
   const patientName = row.patientName
     ? row.patientName
-    : [firstName && cap(firstName), middleInitial, lastName && cap(lastName)].filter(Boolean).join(" ");
+    : [firstName && cap(firstName), middleInitial, lastName && cap(lastName)]
+        .filter(Boolean)
+        .join(" ");
 
   return {
     id: row.id,
@@ -191,6 +196,7 @@ function mapSidebarLabRequestRow(row) {
       visit.created_at ??
       row.visit_id ??
       "",
+    labServiceId: row.lab_services?.id ?? "",
     patientName,
     birthDate: patient.birth_date ?? null,
     gender: patient.gender ?? null,
@@ -222,7 +228,11 @@ export async function getLabRequestsByVisitIds(
 
   return { rows: (data ?? []).map(mapLabRequestRow), total: count ?? 0 };
 }
-export async function getLabRequests({ page = 1, limit = 10, search = "" } = {}) {
+export async function getLabRequests({
+  page = 1,
+  limit = 10,
+  search = "",
+} = {}) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
 
@@ -244,7 +254,10 @@ export async function getLabRequests({ page = 1, limit = 10, search = "" } = {})
         const { data: matchingVisits } = await supabase
           .from("visits")
           .select("id")
-          .in("patient_id", matchingPatients.map((p) => p.id));
+          .in(
+            "patient_id",
+            matchingPatients.map((p) => p.id),
+          );
 
         const visitIds = matchingVisits?.map((v) => v.id) ?? [];
         if (visitIds.length) {
@@ -267,7 +280,10 @@ export async function getLabRequests({ page = 1, limit = 10, search = "" } = {})
         const { data: byService } = await supabase
           .from("lab_requests")
           .select("id")
-          .in("lab_service_id", matchingServices.map((s) => s.id));
+          .in(
+            "lab_service_id",
+            matchingServices.map((s) => s.id),
+          );
         byService?.forEach((r) => requestIds.add(r.id));
       }
     } catch {}
@@ -281,6 +297,7 @@ export async function getLabRequests({ page = 1, limit = 10, search = "" } = {})
     .range(from, to);
 
   assertNoError(error, "Failed to fetch lab requests");
+  console.log(data);
   return {
     rows: (data ?? []).map(mapSidebarLabRequestRow),
     total: count ?? 0,
@@ -361,6 +378,10 @@ export async function updateLabRequest(id, patch) {
   if ("status" in patch) updatePayload.status = patch.status;
   if ("performedBy" in patch) updatePayload.entered_by = enteredById;
   if ("releasedBy" in patch) updatePayload.released_by = releasedById;
+  if ("releasedDate" in patch)
+    updatePayload.released_at = toTimestampWithCurrentTime(patch.releasedDate);
+  if ("performedDate" in patch)
+    updatePayload.entered_at = toTimestampWithCurrentTime(patch.performedDate);
 
   const { data, error } = await supabase
     .from("lab_requests")
@@ -383,29 +404,47 @@ export async function deleteLabRequest(id) {
   assertNoError(error, "Failed to delete lab request");
 }
 
-export async function saveLabResults(labRequestId, templateValues) {
+export async function saveLabResults(
+  labRequestId,
+  templateValues,
+  serviceName,
+  serviceItems,
+) {
   if (!labRequestId) {
     throw new Error("Lab request id is required.");
   }
 
-  const rows = templateValuesToLabResultItemsPayloads(templateValues, {
-    extraFields: { lab_request_id: labRequestId },
-  });
+  const payloads = templateValuesToUpsertPayloads(
+    templateValues,
+    serviceName,
+    labRequestId,
+    serviceItems,
+  );
 
-  const { error: deleteError } = await supabase
-    .from("lab_result_items")
-    .delete()
-    .eq("lab_request_id", labRequestId);
+  if (payloads.length > 0) {
+    const { error } = await supabase.from("lab_result_items").upsert(payloads, {
+      onConflict: "lab_request_id,lab_service_item_id",
+      ignoreDuplicates: false,
+    });
 
-  assertNoError(deleteError, "Failed to clear existing lab result items");
-
-  if (rows.length > 0) {
-    const { error: insertError } = await supabase
-      .from("lab_result_items")
-      .insert(rows);
-
-    assertNoError(insertError, "Failed to save lab result items");
+    assertNoError(error, "Failed to upsert lab result items");
   }
 
-  return updateLabRequest(labRequestId, { status: "Ready" });
+  const { data: userData } = await supabase.auth.getUser();
+  const authUserId = userData?.user?.id;
+  let profileId = null;
+  if (authUserId) {
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("id")
+      .eq("id", authUserId)
+      .maybeSingle();
+    profileId = profile?.id ?? null;
+  }
+
+  return updateLabRequest(labRequestId, {
+    status: "Ready",
+    performedBy: profileId,
+    performedDate: todayISO(),
+  });
 }

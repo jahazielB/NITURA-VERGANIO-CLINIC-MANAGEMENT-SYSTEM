@@ -63,6 +63,7 @@ export default function LabWorklistTable({
   useEffect(() => {
     setLoadingKey(null);
     setDeleteTarget(null);
+    console.log(rows);
   }, [rows]);
 
   return (
@@ -140,7 +141,7 @@ export default function LabWorklistTable({
                               onMarkProcessing?.(x.id);
                             }}
                           >
-                            Processing
+                            Process
                           </Button>
                         )}
 
@@ -156,10 +157,15 @@ export default function LabWorklistTable({
                         <Button
                           size="small"
                           variant="outlined"
+                          disabled={
+                            x.status === "Pending" || x.status === "Released"
+                          }
                           startIcon={<EditNoteIcon />}
                           onClick={() => onEnter?.(x)}
                         >
-                          Enter Results
+                          {x.status === "Ready"
+                            ? "Edit Result"
+                            : "Enter Results"}
                         </Button>
 
                         {x.status === "Ready" && (

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabaseClient";
 import {
   Box,
@@ -182,20 +182,24 @@ export default function LabResultsTab({ visits = [], role }) {
 
   useEffect(() => {
     loadRequests();
-    console.log("im running");
   }, [loadRequests]);
+
   useEffect(() => {
     setPage(1);
   }, [visitsData.length]);
+
+  const loadRequestsRef = useRef(loadRequests);
+  loadRequestsRef.current = loadRequests;
+
   useEffect(() => {
     const channel = subscribeToLabRequestChanges(() => {
-      loadRequests();
+      loadRequestsRef.current();
     });
 
     return () => {
       channel.unsubscribe();
     };
-  }, [loadRequests]);
+  }, []);
 
   const handleRequestSave = (payload) => {
     const services = Array.isArray(payload.testType)
@@ -221,21 +225,32 @@ export default function LabResultsTab({ visits = [], role }) {
 
   const handleEnterSave = () => {};
 
-  const handleRelease = (id) => {
+  const handleRelease = async (id) => {
     if (!confirm("Release this result?")) return;
 
-    updateLabRequest(id, {
-      status: "Released",
-      releasedBy: "Doctor",
-      releasedDate: todayISO(),
-    })
-      .then(() => {
-        notify("Lab result released successfully.");
-      })
-      .catch((error) => {
-        console.error("Failed to release lab request:", error);
-        notify("Failed to release lab result.", "error");
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const authUserId = userData?.user?.id;
+      let profileId = null;
+      if (authUserId) {
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("id")
+          .eq("id", authUserId)
+          .maybeSingle();
+        profileId = profile?.id ?? null;
+      }
+
+      await updateLabRequest(id, {
+        status: "Released",
+        releasedBy: profileId,
+        releasedDate: todayISO(),
       });
+      notify("Lab result released successfully.");
+    } catch (error) {
+      console.error("Failed to release lab request:", error);
+      notify("Failed to release lab result.", "error");
+    }
   };
 
   const handleDeleteClick = (item) => {
@@ -482,6 +497,7 @@ export default function LabResultsTab({ visits = [], role }) {
         item={selected}
         onSave={handleEnterSave}
         patient={templatePatient}
+        onNotify={notify}
       />
 
       <ViewLabModal

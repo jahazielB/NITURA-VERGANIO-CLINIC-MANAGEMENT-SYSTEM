@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Box,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -18,8 +19,14 @@ import BloodTyping from "../labTemplates/BloodTyping";
 import Fecalysis from "../labTemplates/Fecalysis";
 import HematologyTemplate from "../labTemplates/Hematology";
 import KOHTemplate from "../labTemplates/KOH";
-import { labResultItemsRowsToTemplateValues } from "../helpers/labResultMapper";
-import { saveLabResults } from "../../services/labRequestService";
+import {
+  fetchLabServiceItemsWithResults,
+  normalizedToTemplateValues,
+} from "../../services/labResultNormalizer";
+import {
+  resolveLabServiceId,
+  saveLabResults,
+} from "../../services/labRequestService";
 
 const normalizeServiceName = (value) => String(value || "").trim().toLowerCase();
 
@@ -45,6 +52,7 @@ export default function EnterResultsDialog({
   item,
   onSave,
   patient,
+  onNotify,
 }) {
   if (!item) return null;
 
@@ -52,20 +60,18 @@ export default function EnterResultsDialog({
     ? item.testType[0]
     : item?.testType;
   const SelectedTemplate = TEMPLATE_BY_SERVICE[normalizeServiceName(serviceName)];
-  const initialValues = labResultItemsRowsToTemplateValues(
-    item.lab_result_items || [],
-  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <ResultsTemplateBody
         key={`${item.id}-${open ? "open" : "closed"}`}
         Template={SelectedTemplate}
-        initialValues={initialValues}
         item={item}
+        serviceName={serviceName}
         onClose={onClose}
         onSave={onSave}
         patient={patient}
+        onNotify={onNotify}
       />
     </Dialog>
   );
@@ -73,26 +79,69 @@ export default function EnterResultsDialog({
 
 function ResultsTemplateBody({
   Template,
-  initialValues,
   item,
+  serviceName,
   onClose,
   onSave,
   patient,
+  onNotify,
 }) {
-  const [values, setValues] = useState(initialValues);
+  const [loading, setLoading] = useState(true);
+  const [values, setValues] = useState({});
+  const [normalizedItems, setNormalizedItems] = useState([]);
+  const [serviceItems, setServiceItems] = useState([]);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function load() {
+      setLoading(true);
+      try {
+        const serviceId =
+          item.labServiceId ||
+          item.labServiceID ||
+          (serviceName ? await resolveLabServiceId(serviceName) : "");
+        const result = await fetchLabServiceItemsWithResults(
+          item.id,
+          serviceId,
+        );
+        if (cancelled) return;
+
+        setNormalizedItems(result.normalizedItems);
+        setServiceItems(result.serviceItems);
+        setValues(normalizedToTemplateValues(result.normalizedItems, serviceName));
+      } catch (err) {
+        console.error("Failed to load lab service items:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [item.id, item.labServiceId, item.labServiceID, serviceName]);
 
   const submit = async () => {
     if (saving) return;
 
     setSaving(true);
     try {
-      const updatedRequest = await saveLabResults(item.id, values);
+      const updatedRequest = await saveLabResults(
+        item.id,
+        values,
+        serviceName,
+        serviceItems,
+      );
       onSave?.(updatedRequest);
+      onNotify?.("Lab results saved successfully.", "success");
       onClose();
     } catch (error) {
       console.error("Failed to save lab results:", error);
-      alert(error?.message || "Failed to save lab results.");
+      onNotify?.(error?.message || "Failed to save lab results.", "error");
     } finally {
       setSaving(false);
     }
@@ -103,7 +152,11 @@ function ResultsTemplateBody({
       <DialogTitle>Enter Lab Results</DialogTitle>
 
       <DialogContent dividers sx={{ p: 2.5 }}>
-        {Template ? (
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 4 }}>
+            <CircularProgress />
+          </Box>
+        ) : Template ? (
           <Template
             value={values}
             onChange={setValues}
@@ -120,10 +173,14 @@ function ResultsTemplateBody({
       </DialogContent>
 
       <DialogActions className="px-6 py-4">
-        <Button onClick={onClose} variant="outlined" disabled={saving}>
+        <Button onClick={onClose} variant="outlined" disabled={saving || loading}>
           Cancel
         </Button>
-        <Button onClick={submit} variant="contained" disabled={saving}>
+        <Button
+          onClick={submit}
+          variant="contained"
+          disabled={saving || loading}
+        >
           {saving ? "Saving..." : "Save Results (Ready)"}
         </Button>
       </DialogActions>

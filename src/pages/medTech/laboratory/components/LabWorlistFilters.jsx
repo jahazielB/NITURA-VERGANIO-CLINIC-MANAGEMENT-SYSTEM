@@ -7,7 +7,7 @@ import {
   Box,
   Chip,
 } from "@mui/material";
-import { LAB_STATUS, LAB_PRIORITY, todayISO } from "./LabWorklistHelpers";
+import { LAB_STATUS, LAB_PRIORITY } from "./LabWorklistHelpers";
 
 export default function LabWorklistFilters({
   q,
@@ -16,8 +16,6 @@ export default function LabWorklistFilters({
   setStatus,
   priority,
   setPriority,
-  quickDate,
-  setQuickDate,
 }) {
   return (
     <Card className="rounded-2xl shadow">
@@ -67,21 +65,6 @@ export default function LabWorklistFilters({
                   {p}
                 </MenuItem>
               ))}
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
-            <TextField
-              select
-              label="Date Filter"
-              size="small"
-              fullWidth
-              value={quickDate}
-              onChange={(e) => setQuickDate(e.target.value)}
-              helperText={`Today: ${todayISO()}`}
-            >
-              <MenuItem value="all">All Dates</MenuItem>
-              <MenuItem value="today">Today</MenuItem>
             </TextField>
           </Grid>
 

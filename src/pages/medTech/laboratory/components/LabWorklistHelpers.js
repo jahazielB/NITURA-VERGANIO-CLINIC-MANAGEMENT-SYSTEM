@@ -1,5 +1,5 @@
 export const LAB_STATUS = ["Pending", "Processing", "Ready", "Released"];
-export const LAB_PRIORITY = ["Routine", "STAT"];
+export const LAB_PRIORITY = ["Routine", "Urgent"];
 
 export const statusColor = (s) => {
   if (s === "Pending") return "warning";
@@ -9,7 +9,7 @@ export const statusColor = (s) => {
   return "default";
 };
 
-export const priorityColor = (p) => (p === "STAT" ? "error" : "default");
+export const priorityColor = (p) => (p === "Urgent" ? "error" : "default");
 
 export const todayISO = () => new Date().toISOString().slice(0, 10);
 

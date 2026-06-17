@@ -1,3 +1,9 @@
+/**
+ * DEPRECATED — This mapper serialized template values into
+ * { field_name, field_value, sort_order } columns that no longer
+ * exist in the database. Use labResultNormalizer.js instead.
+ */
+
 const DEFAULT_ROW_KEY_FIELDS = [
   "field_name",
   "fieldName",
