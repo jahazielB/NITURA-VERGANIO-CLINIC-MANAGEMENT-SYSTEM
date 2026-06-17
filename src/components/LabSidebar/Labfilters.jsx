@@ -1,6 +1,6 @@
 import { Box, Chip, Stack, TextField } from "@mui/material";
 
-const STATUSES = ["All", "Pending", "Processing", "Ready", "Released"];
+const STATUSES = ["All", "Pending", "Processing", "Ready", "Released", "Cancelled"];
 
 export default function LabFilters({ q, onQChange, status, onStatusChange }) {
   return (

@@ -19,6 +19,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import DoneAllIcon from "@mui/icons-material/DoneAll";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CancelIcon from "@mui/icons-material/Cancel";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
 
 // Adjust path if needed
@@ -56,6 +57,7 @@ export default function LabWorklistTable({
   onRelease,
   onDelete,
   showPatientColumn = true,
+  role,
 }) {
   const [loadingKey, setLoadingKey] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -193,11 +195,11 @@ export default function LabWorklistTable({
                         <Button
                           size="small"
                           variant="outlined"
-                          color="error"
-                          startIcon={<DeleteIcon />}
+                          color={role === "medtech" ? "warning" : "error"}
+                          startIcon={role === "medtech" ? <CancelIcon /> : <DeleteIcon />}
                           onClick={() => setDeleteTarget(x.id)}
                         >
-                          Delete
+                          {role === "medtech" ? "Cancel" : "Delete"}
                         </Button>
                       </Box>
                     </TableCell>

@@ -1,4 +1,4 @@
-export const LAB_STATUS = ["Pending", "Processing", "Ready", "Released"];
+export const LAB_STATUS = ["Pending", "Processing", "Ready", "Released", "Cancelled"];
 export const LAB_PRIORITY = ["Routine", "Urgent"];
 
 export const statusColor = (s) => {
@@ -6,6 +6,7 @@ export const statusColor = (s) => {
   if (s === "Processing") return "info";
   if (s === "Ready") return "success";
   if (s === "Released") return "default";
+  if (s === "Cancelled") return "error";
   return "default";
 };
 

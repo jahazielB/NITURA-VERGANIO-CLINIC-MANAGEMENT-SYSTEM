@@ -232,6 +232,7 @@ export async function getLabRequests({
   page = 1,
   limit = 10,
   search = "",
+  status,
 } = {}) {
   const from = (page - 1) * limit;
   const to = from + limit - 1;
@@ -239,6 +240,10 @@ export async function getLabRequests({
   let query = supabase
     .from("lab_requests")
     .select(LAB_REQUEST_SIDEBAR, { count: "exact" });
+
+  if (status && status !== "All") {
+    query = query.eq("status", status);
+  }
 
   const q = search.trim();
   if (q) {

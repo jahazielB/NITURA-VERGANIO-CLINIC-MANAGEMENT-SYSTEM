@@ -9,8 +9,10 @@ export function todayISO() {
 
 export function statusColor(status) {
   if (status === "Pending") return "warning";
-  if (status === "Ready") return "info";
-  if (status === "Released") return "success";
+  if (status === "Processing") return "info";
+  if (status === "Ready") return "success";
+  if (status === "Released") return "default";
+  if (status === "Cancelled") return "error";
   return "default";
 }
 

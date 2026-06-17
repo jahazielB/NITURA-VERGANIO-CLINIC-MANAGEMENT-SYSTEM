@@ -13,7 +13,7 @@ import CustomSnackbar from "../../../components/modals/CustomSnackBar";
 import ViewLabModal from "../../../components/modals/ViewLabModal";
 import LabWorklistTable from "../../../components/LabSidebar/LabWorklistTable";
 import LabWorklistFilters from "./components/LabWorlistFilters";
-import EnterResultsDialog from "./components/EnterResultsDialog";
+import EnterResultsDialog from "../../../components/forms/EnterResultsDialog";
 import useDebounce from "../../../hooks/useDebounce";
 import {
   deleteLabRequest,
@@ -60,6 +60,7 @@ export default function MedTechLaboratoryPage() {
         page,
         limit: PAGE_SIZE,
         search: debouncedQ,
+        status,
       });
       setItems(rows);
       setTotalItems(total);
@@ -68,7 +69,7 @@ export default function MedTechLaboratoryPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedQ, notify]);
+  }, [page, debouncedQ, status, notify]);
 
   useEffect(() => {
     fetchRequests();
@@ -90,14 +91,13 @@ export default function MedTechLaboratoryPage() {
 
   const filtered = useMemo(() => {
     return items
-      .filter((r) => (status === "All" ? true : r.status === status))
       .filter((r) => (priority === "All" ? true : r.priority === priority))
       .sort((a, b) =>
         String(b.requestedDate || "").localeCompare(
           String(a.requestedDate || ""),
         ),
       );
-  }, [items, status, priority]);
+  }, [items, priority]);
 
   const onStart = async (id) => {
     try {
@@ -120,8 +120,6 @@ export default function MedTechLaboratoryPage() {
     setItems((prev) =>
       prev.map((x) => (x.id === updatedRow.id ? updatedRow : x)),
     );
-    setOpenEnter(false);
-    notify(`Results saved for ${updatedRow.testType}.`, "success");
   };
 
   const onRelease = async (id) => {
@@ -156,21 +154,14 @@ export default function MedTechLaboratoryPage() {
     }
   };
 
-  const onDelete = async (id) => {
-    const row = items.find((x) => x.id === id);
-    if (!confirm("Delete this lab request?")) return;
-
-    try {
-      await deleteLabRequest(id);
-      setItems((prev) => {
-        const next = prev.filter((x) => x.id !== id);
-        if (next.length === 0 && page > 1) setPage((prevPage) => prevPage - 1);
-        return next;
-      });
-      notify(`Deleted ${row?.testType || "request"}.`, "success");
-    } catch (error) {
-      notify(error?.message || "Failed to delete lab request.", "error");
-    }
+  const onDelete = (id) => {
+    deleteLabRequest(id)
+      .then(() => {
+        notify("Lab request deleted.");
+        if (items.length === 1 && page > 1) setPage(page - 1);
+        setItems((prev) => prev.filter((x) => x.id !== id));
+      })
+      .catch(() => notify("Failed to delete lab request.", "error"));
   };
 
   const onView = (row) => {
@@ -215,6 +206,7 @@ export default function MedTechLaboratoryPage() {
           onMarkProcessing={onStart}
           onRelease={onRelease}
           onDelete={onDelete}
+          role="medtech"
         />
       )}
 
@@ -232,7 +224,7 @@ export default function MedTechLaboratoryPage() {
       <EnterResultsDialog
         open={openEnter}
         onClose={() => setOpenEnter(false)}
-        row={selected}
+        item={selected}
         onSave={onSaveResults}
         onNotify={notify}
         patient={{

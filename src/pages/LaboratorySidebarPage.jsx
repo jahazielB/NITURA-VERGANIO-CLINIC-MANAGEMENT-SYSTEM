@@ -70,6 +70,7 @@ export default function LaboratorySidebarPage({
         page,
         limit: PAGE_SIZE,
         search: debouncedQ,
+        status: statusFilter,
       });
       setItems(rows);
       setTotalItems(total);
@@ -78,7 +79,7 @@ export default function LaboratorySidebarPage({
     } finally {
       setLoading(false);
     }
-  }, [page, debouncedQ]);
+  }, [page, debouncedQ, statusFilter]);
 
   useEffect(() => {
     fetchRequests();
@@ -98,16 +99,12 @@ export default function LaboratorySidebarPage({
     setPage(1);
   }, [debouncedQ, statusFilter]);
   const filtered = useMemo(() => {
-    return enriched
-      .filter((x) =>
-        statusFilter === "All" ? true : x.status === statusFilter,
-      )
-      .sort((a, b) =>
+    return enriched.sort((a, b) =>
         String(b.requestedDate || "").localeCompare(
           String(a.requestedDate || ""),
         ),
       );
-  }, [enriched, statusFilter]);
+  }, [enriched]);
 
   const updateItem = (updated) => {
     setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
