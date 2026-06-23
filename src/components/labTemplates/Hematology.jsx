@@ -30,7 +30,6 @@ const DEFAULTS = {
   eosinophils: "",
   monocytes: "",
   basophils: "",
-  total: "",
 
   // times + blood type
   clottingTime: "",
@@ -47,6 +46,32 @@ export default function HematologyTemplate({
   const data = useMemo(() => ({ ...DEFAULTS, ...(value || {}) }), [value]);
 
   const p = patient || {};
+  const computedTotal = useMemo(() => {
+    const fields = [
+      data.segmenters,
+      data.lymphocytes,
+      data.eosinophils,
+      data.monocytes,
+      data.basophils,
+    ]
+      .map((v) => {
+        const trimmed = String(v ?? "").trim();
+        if (!trimmed) return null;
+        const parsed = Number.parseFloat(trimmed);
+        return Number.isFinite(parsed) ? parsed : null;
+      })
+      .filter((v) => v !== null);
+
+    if (!fields.length) return "";
+
+    return fields.reduce((sum, v) => sum + v, 0).toFixed(2);
+  }, [
+    data.segmenters,
+    data.lymphocytes,
+    data.eosinophils,
+    data.monocytes,
+    data.basophils,
+  ]);
 
   const setField = (key, val) => {
     if (!onChange) return;
@@ -227,7 +252,7 @@ export default function HematologyTemplate({
               borderBottom="1px solid black"
               sx={{ minHeight: 20, fontSize: 13, px: 1 }}
             >
-              {data.total || ""}
+              {computedTotal}
             </Box>
           </Box>
         </Grid>

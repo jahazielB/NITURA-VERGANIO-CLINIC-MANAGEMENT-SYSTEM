@@ -9,7 +9,7 @@ import {
   TableBody,
   Chip,
   Box,
-  Button,
+  CircularProgress,
 } from "@mui/material";
 
 const statusColor = (s) => {
@@ -22,13 +22,22 @@ const statusColor = (s) => {
 
 const priorityColor = (p) => (p === "STAT" ? "error" : "default");
 
-export default function WorklistPreviewTable({
-  rows,
-  onStart,
-  onEnter,
-  onRelease,
-  onSeeAll,
-}) {
+const formatRequestDate = (value) => {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+
+  return date.toLocaleDateString("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+  });
+};
+
+export default function WorklistPreviewTable({ rows, onSeeAll, loading = false }) {
+  const pendingRows = rows.filter((r) => r.status === "Pending");
+
   return (
     <Card className="rounded-2xl shadow-2xl">
       <CardContent>
@@ -39,22 +48,28 @@ export default function WorklistPreviewTable({
           </Typography>
         </Box>
 
-        <Table size="small">
+        {loading ? (
+          <Box className="flex justify-center py-10">
+            <CircularProgress size={28} />
+          </Box>
+        ) : (
+          <Table size="small">
           <TableHead>
             <TableRow className="bg-slate-100">
-              <TableCell>Lab ID</TableCell>
+              <TableCell>Date Requested</TableCell>
               <TableCell>Patient</TableCell>
               <TableCell>Test</TableCell>
               <TableCell>Priority</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
 
           <TableBody>
-            {rows.map((r) => (
+            {pendingRows.map((r) => (
               <TableRow key={r.id} hover>
-                <TableCell className="font-semibold">{r.id}</TableCell>
+                <TableCell className="font-semibold">
+                  {formatRequestDate(r.requestedDate || r.dateRequested)}
+                </TableCell>
                 <TableCell>{r.patientName}</TableCell>
                 <TableCell>{r.testType}</TableCell>
                 <TableCell>
@@ -71,46 +86,19 @@ export default function WorklistPreviewTable({
                     color={statusColor(r.status)}
                   />
                 </TableCell>
-                <TableCell align="right">
-                  <Box className="flex justify-end gap-1 flex-wrap">
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={r.status !== "Pending"}
-                      onClick={() => onStart(r)}
-                    >
-                      Start
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="contained"
-                      disabled={r.status !== "Processing"}
-                      onClick={() => onEnter(r)}
-                    >
-                      Enter Results
-                    </Button>
-                    <Button
-                      size="small"
-                      variant="outlined"
-                      disabled={r.status !== "Ready"}
-                      onClick={() => onRelease(r)}
-                    >
-                      Release
-                    </Button>
-                  </Box>
-                </TableCell>
               </TableRow>
             ))}
 
-            {rows.length === 0 && (
+            {pendingRows.length === 0 && (
               <TableRow>
-                <TableCell colSpan={6} align="center">
-                  No lab requests todayISO
+                <TableCell colSpan={5} align="center">
+                  No lab requests
                 </TableCell>
               </TableRow>
             )}
           </TableBody>
-        </Table>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );

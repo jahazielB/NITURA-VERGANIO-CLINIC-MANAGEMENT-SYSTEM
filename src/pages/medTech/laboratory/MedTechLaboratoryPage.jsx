@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../../../lib/supabaseClient";
+import { useSearchParams } from "react-router-dom";
 
 import CustomSnackbar from "../../../components/modals/CustomSnackBar";
 import ViewLabModal from "../../../components/modals/ViewLabModal";
@@ -16,7 +17,6 @@ import LabWorklistFilters from "./components/LabWorlistFilters";
 import EnterResultsDialog from "../../../components/forms/EnterResultsDialog";
 import useDebounce from "../../../hooks/useDebounce";
 import {
-  deleteLabRequest,
   getLabRequests,
   subscribeToLabRequestChanges,
   updateLabRequest,
@@ -26,6 +26,7 @@ import { getAge } from "../../../components/helpers/dateHelper";
 
 export default function MedTechLaboratoryPage() {
   const PAGE_SIZE = 10;
+  const [searchParams] = useSearchParams();
   const [items, setItems] = useState([]);
   const [totalItems, setTotalItems] = useState(0);
   const [page, setPage] = useState(1);
@@ -52,8 +53,10 @@ export default function MedTechLaboratoryPage() {
       severity,
     });
   }, []);
+  const fetchSeqRef = useRef(0);
 
   const fetchRequests = useCallback(async () => {
+    const seq = ++fetchSeqRef.current;
     try {
       setLoading(true);
       const { rows, total } = await getLabRequests({
@@ -62,11 +65,14 @@ export default function MedTechLaboratoryPage() {
         search: debouncedQ,
         status,
       });
+      if (seq !== fetchSeqRef.current) return;
       setItems(rows);
       setTotalItems(total);
     } catch (error) {
+      if (seq !== fetchSeqRef.current) return;
       notify(error?.message || "Failed to fetch lab requests.", "error");
     } finally {
+      if (seq !== fetchSeqRef.current) return;
       setLoading(false);
     }
   }, [page, debouncedQ, status, notify]);
@@ -89,15 +95,22 @@ export default function MedTechLaboratoryPage() {
     setPage(1);
   }, [debouncedQ, status, priority]);
 
+  useEffect(() => {
+    const nextStatus = searchParams.get("status");
+    if (!nextStatus) return;
+    setStatus(nextStatus);
+  }, [searchParams]);
+
   const filtered = useMemo(() => {
     return items
+      .filter((r) => (status === "All" ? true : r.status === status))
       .filter((r) => (priority === "All" ? true : r.priority === priority))
       .sort((a, b) =>
         String(b.requestedDate || "").localeCompare(
           String(a.requestedDate || ""),
         ),
       );
-  }, [items, priority]);
+  }, [items, status, priority]);
 
   const onStart = async (id) => {
     try {
@@ -154,14 +167,18 @@ export default function MedTechLaboratoryPage() {
     }
   };
 
-  const onDelete = (id) => {
-    deleteLabRequest(id)
-      .then(() => {
-        notify("Lab request deleted.");
-        if (items.length === 1 && page > 1) setPage(page - 1);
-        setItems((prev) => prev.filter((x) => x.id !== id));
-      })
-      .catch(() => notify("Failed to delete lab request.", "error"));
+  const onCancel = async (id) => {
+    const row = items.find((x) => x.id === id);
+
+    try {
+      await updateLabRequest(id, { status: "Cancelled" });
+      setItems((prev) =>
+        prev.map((x) => (x.id === id ? { ...x, status: "Cancelled" } : x)),
+      );
+      notify(`Cancelled ${row?.testType || "request"}.`, "success");
+    } catch (error) {
+      notify(error?.message || "Failed to cancel lab request.", "error");
+    }
   };
 
   const onView = (row) => {
@@ -205,7 +222,7 @@ export default function MedTechLaboratoryPage() {
           onEnter={(row) => onEnterResults(row)}
           onMarkProcessing={onStart}
           onRelease={onRelease}
-          onDelete={onDelete}
+          onCancel={onCancel}
           role="medtech"
         />
       )}

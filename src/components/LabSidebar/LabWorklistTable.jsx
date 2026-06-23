@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   Box,
   Button,
@@ -56,17 +56,12 @@ export default function LabWorklistTable({
   onMarkProcessing,
   onRelease,
   onDelete,
+  onCancel,
   showPatientColumn = true,
   role,
 }) {
   const [loadingKey, setLoadingKey] = useState(null);
-  const [deleteTarget, setDeleteTarget] = useState(null);
-
-  useEffect(() => {
-    setLoadingKey(null);
-    setDeleteTarget(null);
-    console.log(rows);
-  }, [rows]);
+  const [actionTarget, setActionTarget] = useState(null);
 
   return (
     <>
@@ -140,7 +135,11 @@ export default function LabWorklistTable({
                             }
                             onClick={() => {
                               setLoadingKey(`proc-${x.id}`);
-                              onMarkProcessing?.(x.id);
+                              Promise.resolve()
+                                .then(() => onMarkProcessing?.(x.id))
+                                .finally(() => {
+                                  setLoadingKey(null);
+                                });
                             }}
                           >
                             Process
@@ -185,7 +184,11 @@ export default function LabWorklistTable({
                             }
                             onClick={() => {
                               setLoadingKey(`rel-${x.id}`);
-                              onRelease?.(x.id);
+                              Promise.resolve()
+                                .then(() => onRelease?.(x.id))
+                                .finally(() => {
+                                  setLoadingKey(null);
+                                });
                             }}
                           >
                             Release
@@ -196,8 +199,15 @@ export default function LabWorklistTable({
                           size="small"
                           variant="outlined"
                           color={role === "medtech" ? "warning" : "error"}
-                          startIcon={role === "medtech" ? <CancelIcon /> : <DeleteIcon />}
-                          onClick={() => setDeleteTarget(x.id)}
+                          disabled={
+                            role === "medtech" &&
+                            (x.status === "Cancelled" ||
+                              loadingKey === `action-${x.id}`)
+                          }
+                          startIcon={
+                            role === "medtech" ? <CancelIcon /> : <DeleteIcon />
+                          }
+                          onClick={() => setActionTarget(x.id)}
                         >
                           {role === "medtech" ? "Cancel" : "Delete"}
                         </Button>
@@ -229,12 +239,30 @@ export default function LabWorklistTable({
       </Card>
 
       <ConfirmDelete
-        open={!!deleteTarget}
-        cancel={() => setDeleteTarget(null)}
-        loading={loadingKey === `del-${deleteTarget}`}
-        handleDelete={() => {
-          setLoadingKey(`del-${deleteTarget}`);
-          onDelete?.(deleteTarget);
+        open={!!actionTarget}
+        cancel={() => setActionTarget(null)}
+        loading={loadingKey === `action-${actionTarget}`}
+        title={role === "medtech" ? "Confirm Cancel" : "Confirm Delete"}
+        description={
+          role === "medtech"
+            ? "Are you sure you want to cancel this lab request? This will update its status to Cancelled."
+            : "Are you sure you want to delete this record? This action cannot be undone."
+        }
+        confirmLabel={role === "medtech" ? "Cancel Request" : "Delete"}
+        confirmColor={role === "medtech" ? "warning" : "error"}
+        handleDelete={async () => {
+          const targetId = actionTarget;
+          if (!targetId) return;
+
+          setLoadingKey(`action-${targetId}`);
+          try {
+            await (role === "medtech"
+              ? onCancel?.(targetId)
+              : onDelete?.(targetId));
+            setActionTarget(null);
+          } finally {
+            setLoadingKey(null);
+          }
         }}
       />
     </>

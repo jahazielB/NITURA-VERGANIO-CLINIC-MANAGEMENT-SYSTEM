@@ -12,6 +12,7 @@ import {
   Typography,
   Divider,
   Chip,
+  CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
@@ -24,31 +25,69 @@ import {
   generateTempPassword,
 } from "./helper/accountHelpers";
 
-export default function AccountDialog({ open, onClose, onSave, account }) {
+const normalizeRole = (role) => {
+  if (role === "MedTech") return "Med Tech";
+  return ROLES.includes(role) ? role : "Doctor";
+};
+
+const asTrimmedString = (value) =>
+  typeof value === "string" || typeof value === "number"
+    ? String(value).trim()
+    : "";
+
+export default function AccountDialog({
+  open,
+  onClose,
+  onSave,
+  account,
+  saving = false,
+}) {
   const [form, setForm] = useState(null);
+  const showPrcLicenseNumber =
+    form?.role === "Doctor" || form?.role === "Med Tech";
 
   useEffect(() => {
-    if (!open) return;
+    let cancelled = false;
 
-    if (account) {
-      setForm(JSON.parse(JSON.stringify(account)));
-      return;
-    }
+    queueMicrotask(() => {
+      if (cancelled) return;
 
-    setForm({
-      id: null,
-      firstName: "",
-      lastName: "",
-      role: "Doctor",
-      email: "",
-      username: "",
-      status: "Active",
-      staffId: "",
-      tempPassword: generateTempPassword(),
-      requireChangePassword: true,
-      avatarUrl: "",
-      lastLogin: "",
+      if (!open) {
+        setForm(null);
+        return;
+      }
+
+      if (account) {
+        setForm({
+          id: null,
+          status: "Active",
+          tempPassword: generateTempPassword(),
+          requireChangePassword: true,
+          createdAt: "",
+          ...JSON.parse(JSON.stringify(account)),
+          role: normalizeRole(account?.role),
+          full_name: asTrimmedString(account?.full_name),
+          prcLicenseNumber: asTrimmedString(account?.prcLicenseNumber),
+        });
+        return;
+      }
+
+      setForm({
+        id: null,
+        full_name: "",
+        role: "Doctor",
+        email: "",
+        status: "Active",
+        prcLicenseNumber: "",
+        tempPassword: generateTempPassword(),
+        requireChangePassword: true,
+        createdAt: "",
+      });
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [open, account]);
 
   const perms = useMemo(() => permissionsByRole(form?.role), [form?.role]);
@@ -66,52 +105,39 @@ export default function AccountDialog({ open, onClose, onSave, account }) {
     }
   };
 
-  const submit = () => {
-    if (!form.firstName.trim() || !form.lastName.trim())
-      return alert("Enter first and last name.");
-    if (!form.email.trim() && !form.username.trim())
-      return alert("Enter email or username.");
+  const submit = async () => {
+    if (!form.full_name.trim()) return alert("Enter full name.");
+    if (!form.email.trim()) return alert("Enter email.");
 
-    onSave({
+    await onSave({
       ...form,
-      firstName: form.firstName.trim(),
-      lastName: form.lastName.trim(),
+      full_name: form.full_name.trim(),
       email: form.email.trim(),
-      username: form.username.trim(),
       role: form.role,
-      status: form.status,
-      staffId: form.staffId.trim(),
+      prcLicenseNumber: asTrimmedString(form.prcLicenseNumber),
     });
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle className="flex items-center justify-between">
-        {account ? "Edit Account" : "New Account"}
-        <IconButton onClick={onClose}>
-          <CloseIcon />
-        </IconButton>
+      <DialogTitle sx={{ px: 2, py: 1.5 }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <Typography variant="h6">{account ? "Edit Account" : "New Account"}</Typography>
+          <IconButton onClick={onClose} size="small">
+            <CloseIcon />
+          </IconButton>
+        </Box>
       </DialogTitle>
 
-      <DialogContent dividers>
-        <Grid container spacing={2}>
+      <DialogContent dividers sx={{ px: 2, py: 1.5 }}>
+        <Grid container spacing={1}>
           <Grid item xs={12} sm={6}>
             <TextField
-              label="First Name"
+              label="Full Name"
               size="small"
               fullWidth
-              value={form.firstName}
-              onChange={(e) => setField("firstName", e.target.value)}
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Last Name"
-              size="small"
-              fullWidth
-              value={form.lastName}
-              onChange={(e) => setField("lastName", e.target.value)}
+              value={form.full_name}
+              onChange={(e) => setField("full_name", e.target.value)}
             />
           </Grid>
 
@@ -143,27 +169,18 @@ export default function AccountDialog({ open, onClose, onSave, account }) {
             />
           </Grid>
 
-          <Grid item xs={12} sm={4}>
-            <TextField
-              label="Username"
-              size="small"
-              fullWidth
-              value={form.username}
-              onChange={(e) => setField("username", e.target.value)}
-              placeholder="optional"
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={4}>
-            <TextField
-              label="Staff ID (optional)"
-              size="small"
-              fullWidth
-              value={form.staffId}
-              onChange={(e) => setField("staffId", e.target.value)}
-              placeholder="e.g., DR-0001"
-            />
-          </Grid>
+          {showPrcLicenseNumber && (
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="PRC License Number"
+                size="small"
+                fullWidth
+                value={form.prcLicenseNumber}
+                onChange={(e) => setField("prcLicenseNumber", e.target.value)}
+                placeholder="e.g., 1234567"
+              />
+            </Grid>
+          )}
 
           <Grid item xs={12} sm={4}>
             <TextField
@@ -179,45 +196,46 @@ export default function AccountDialog({ open, onClose, onSave, account }) {
             </TextField>
           </Grid>
 
-          <Grid item xs={12} sm={4}>
-            <TextField
-              label="Temp Password"
-              size="small"
-              fullWidth
-              value={form.tempPassword}
-              onChange={(e) => setField("tempPassword", e.target.value)}
-              InputProps={{
-                endAdornment: (
-                  <Box className="flex items-center gap-1">
-                    <IconButton
-                      size="small"
-                      onClick={() =>
-                        setField("tempPassword", generateTempPassword())
-                      }
-                      title="Generate"
-                    >
-                      <AutoFixHighIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton
-                      size="small"
-                      onClick={() => copy(form.tempPassword)}
-                      title="Copy"
-                    >
-                      <ContentCopyIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                ),
-              }}
-            />
-          </Grid>
+          {account ? (
+            <Grid item xs={12} sm={4}>
+              <TextField
+                label="Temp Password"
+                size="small"
+                fullWidth
+                value={form.tempPassword}
+                onChange={(e) => setField("tempPassword", e.target.value)}
+                InputProps={{
+                  endAdornment: (
+                    <Box className="flex items-center gap-1">
+                      <IconButton
+                        size="small"
+                        onClick={() =>
+                          setField("tempPassword", generateTempPassword())
+                        }
+                        title="Generate"
+                      >
+                        <AutoFixHighIcon fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => copy(form.tempPassword)}
+                        title="Copy"
+                      >
+                        <ContentCopyIcon fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  ),
+                }}
+              />
+            </Grid>
+          ) : null}
 
-          {/* Permissions preview */}
           <Grid item xs={12}>
-            <Divider sx={{ my: 1 }} />
-            <Typography variant="subtitle2" fontWeight={900} sx={{ mb: 1 }}>
+            <Divider sx={{ my: 0.5 }} />
+            <Typography variant="subtitle2" fontWeight={700} sx={{ mb: 0.5 }}>
               Permissions Preview (Role-based)
             </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
               {Object.entries(perms).map(([k, v]) => (
                 <Chip
                   key={k}
@@ -231,21 +249,27 @@ export default function AccountDialog({ open, onClose, onSave, account }) {
             <Typography
               variant="caption"
               color="text.secondary"
-              sx={{ display: "block", mt: 1 }}
+              sx={{ display: "block", mt: 0.5 }}
             >
-              *This is UI-only preview for now. Actual access control can be
-              implemented later.
+              *UI-only preview. Actual access control to be implemented later.
             </Typography>
           </Grid>
         </Grid>
       </DialogContent>
 
-      <DialogActions className="px-6 py-4">
+      <DialogActions sx={{ px: 2, py: 1 }}>
         <Button onClick={onClose} variant="outlined">
           Cancel
         </Button>
-        <Button onClick={submit} variant="contained">
-          Save
+        <Button onClick={submit} variant="contained" disabled={saving}>
+          {saving ? (
+            <>
+              <CircularProgress size={16} color="inherit" sx={{ mr: 1 }} />
+              Saving...
+            </>
+          ) : (
+            "Save"
+          )}
         </Button>
       </DialogActions>
     </Dialog>

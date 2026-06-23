@@ -14,6 +14,7 @@ import {
   IconButton,
   Chip,
   TablePagination,
+  CircularProgress,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -180,71 +181,85 @@ export default function Patients() {
             </TableHead>
 
             <TableBody>
-              {rows.map((patient) => {
-                const bill = patientBillingSummary(patient.id, mockInvoices);
-                const fullName =
-                  patient.first_name +
-                  " " +
-                  patient.middle_name.charAt(0) +
-                  ". " +
-                  patient.last_name;
-                const address = patient.address;
-
-                return (
-                  <TableRow key={patient.id} hover>
-                    <TableCell>{upperCaseFirstLetter(fullName)}</TableCell>
-                    <TableCell>{patient.gender}</TableCell>
-                    <TableCell>{patient.contact_number}</TableCell>
-                    <TableCell>{patient.birth_date}</TableCell>
-                    <TableCell>{upperCaseFirstLetter(address)}</TableCell>
-
-                    <TableCell>
-                      <Box className="flex items-center gap-2 flex-wrap">
-                        <Chip
-                          size="small"
-                          label={bill.label}
-                          color={bill.color}
-                        />
-                        {bill.label === "With Balance" && (
-                          <Typography variant="caption" color="text.secondary">
-                            {money(bill.balance)}
-                          </Typography>
-                        )}
-                      </Box>
-                    </TableCell>
-
-                    <TableCell align="right">
-                      <IconButton
-                        disabled={!patient?.id}
-                        onClick={() => navigate(`${patient.id}`)}
-                      >
-                        <OpenInNewIcon />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => {
-                          setSelectedPatient(patient);
-                          setOpenForm(true);
-                        }}
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => {
-                          setOpenDeleteDialog(true);
-                          setSelectedPatient(patient.id);
-                        }}
-                      >
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-
-              {rows.length === 0 && (
+              {loading && (
                 <TableRow>
-                  <TableCell colSpan={6} align="center">
+                  <TableCell colSpan={7} align="center">
+                    <Box className="flex items-center justify-center py-10">
+                      <CircularProgress />
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              )}
+
+              {!loading &&
+                rows.map((patient) => {
+                  const bill = patientBillingSummary(patient.id, mockInvoices);
+                  const fullName =
+                    patient.first_name +
+                    " " +
+                    patient.middle_name.charAt(0) +
+                    ". " +
+                    patient.last_name;
+                  const address = patient.address;
+
+                  return (
+                    <TableRow key={patient.id} hover>
+                      <TableCell>{upperCaseFirstLetter(fullName)}</TableCell>
+                      <TableCell>{patient.gender}</TableCell>
+                      <TableCell>{`${patient.contact_number || "N/A"} `}</TableCell>
+                      <TableCell>{patient.birth_date}</TableCell>
+                      <TableCell>{upperCaseFirstLetter(address)}</TableCell>
+
+                      <TableCell>
+                        <Box className="flex items-center gap-2 flex-wrap">
+                          <Chip
+                            size="small"
+                            label={bill.label}
+                            color={bill.color}
+                          />
+                          {bill.label === "With Balance" && (
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                            >
+                              {money(bill.balance)}
+                            </Typography>
+                          )}
+                        </Box>
+                      </TableCell>
+
+                      <TableCell align="right">
+                        <IconButton
+                          disabled={!patient?.id}
+                          onClick={() => navigate(`${patient.id}`)}
+                        >
+                          <OpenInNewIcon />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => {
+                            setSelectedPatient(patient);
+                            setOpenForm(true);
+                          }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                        <IconButton
+                          color="error"
+                          onClick={() => {
+                            setOpenDeleteDialog(true);
+                            setSelectedPatient(patient.id);
+                          }}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+
+              {!loading && rows.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} align="center">
                     No patients found
                   </TableCell>
                 </TableRow>

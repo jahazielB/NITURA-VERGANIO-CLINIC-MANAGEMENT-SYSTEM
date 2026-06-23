@@ -5,9 +5,9 @@ import { useSearchParams, useParams, data } from "react-router-dom";
 import PatientHeaderCard from "../components/PatientHeaderCard";
 import PatientTabs from "../components/PatientTabs";
 
-import { supabase } from "../lib/supabaseClient";
 import { fetchPatientProfile } from "../store/patientProfileSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { getAge } from "../components/helpers/dateHelper";
 
 export default function PatientProfilePage({}) {
   const [searchParams] = useSearchParams();
@@ -15,7 +15,6 @@ export default function PatientProfilePage({}) {
   const [tab, setTab] = useState(1); // Visits default
 
   const [selectedVisitId, setSelectedVisitId] = useState("");
-  const [fetchedPatient, setFetchedPatient] = useState(null);
   const tabParam = searchParams.get("tab");
   const dispatch = useDispatch();
   const { patientInfo } = useSelector((s) => s.patientProfile);
@@ -39,61 +38,40 @@ export default function PatientProfilePage({}) {
   useEffect(() => {
     console.log(patientInfo);
   }, [patientInfo]);
-  const vitalsByVisit = [
-    {
-      visitId: "V3",
-      visitDate: "2026-01-22T10:30",
-      temp: 37.8,
-      bpS: 120,
-      bpD: 80,
-      pulse: 86,
-      weight: 72,
-      spo2: 97,
-    },
-    {
-      visitId: "V2",
-      visitDate: "2026-01-10T09:00",
-      temp: 37.2,
-      bpS: 118,
-      bpD: 78,
-      pulse: 82,
-      weight: 72,
-      spo2: 98,
-    },
-    {
-      visitId: "V1",
-      visitDate: "2025-12-15T14:15",
-      temp: 36.9,
-      bpS: 125,
-      bpD: 85,
-      pulse: 90,
-      weight: 73,
-      spo2: 97,
-    },
-  ];
+  const vitalsByVisit = useMemo(
+    () =>
+      (patientInfo?.visits ?? []).map((visit) => ({
+        visitId: visit.id,
+        visitDate:
+          visit.created_at ?? visit.scheduled_for ?? visit.visit_date ?? "",
+        temp: visit.vitals?.[0]?.temp ?? "",
+        bpS: visit.vitals?.[0]?.bp_systolic ?? "",
+        bpD: visit.vitals?.[0]?.bp_diastolic ?? "",
+        pulse: visit.vitals?.[0]?.pulse_rate ?? "",
+        weight: visit.vitals?.[0]?.weight ?? "",
+        spo2: visit.vitals?.[0]?.spo2 ?? "",
+      })),
+    [patientInfo?.visits],
+  );
 
-  const patient = useMemo(
-    () => ({
-      name: "John Doe",
-      patientId: "PT00123",
-      age: 58,
-      gender: "Male",
-      contact: "555-123-4567",
-      address: "123 Main St, Springfield",
+  const patient = useMemo(() => {
+    if (!patientInfo) return null;
+
+    const firstName = patientInfo.first_name ?? "";
+    const middleName = patientInfo.middle_name ?? "";
+    const lastName = patientInfo.last_name ?? "";
+    const middleInitial = middleName ? `${middleName.charAt(0).toUpperCase()}.` : "";
+
+    return {
+      name: [firstName, middleInitial, lastName].filter(Boolean).join(" "),
+      patientId: patientInfo.id ?? "",
+      age: patientInfo.birth_date ? String(getAge(patientInfo.birth_date)) : "",
+      gender: patientInfo.gender ?? "",
+      contact: patientInfo.contact_number ?? "",
+      address: patientInfo.address ?? "",
       avatarUrl: "",
-    }),
-    [],
-  );
-
-  const latestSoap = useMemo(
-    () => ({
-      subjective: "Patient reports persistent cough and fatigue.",
-      objective: "Mild fever, congested lungs.",
-      assessment: "Viral infection.",
-      plan: "Increase fluids, rest, prescribed meds.",
-    }),
-    [],
-  );
+    };
+  }, [patientInfo]);
 
   return (
     <Box className="space-y-4 p-4">
@@ -103,6 +81,7 @@ export default function PatientProfilePage({}) {
         patient={patient}
         tab={tab}
         setTab={setTab}
+        visits={patientInfo?.visits ?? []}
         vitalsByVisit={vitalsByVisit}
         selectedVisitId={selectedVisitId}
         onSelectVisit={setSelectedVisitId}

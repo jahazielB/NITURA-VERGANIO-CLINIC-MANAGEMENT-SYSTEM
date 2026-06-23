@@ -88,7 +88,6 @@ function ResultsTemplateBody({
 }) {
   const [loading, setLoading] = useState(true);
   const [values, setValues] = useState({});
-  const [normalizedItems, setNormalizedItems] = useState([]);
   const [serviceItems, setServiceItems] = useState([]);
   const [saving, setSaving] = useState(false);
 
@@ -108,7 +107,6 @@ function ResultsTemplateBody({
         );
         if (cancelled) return;
 
-        setNormalizedItems(result.normalizedItems);
         setServiceItems(result.serviceItems);
         setValues(normalizedToTemplateValues(result.normalizedItems, serviceName));
       } catch (err) {
@@ -180,6 +178,9 @@ function ResultsTemplateBody({
           onClick={submit}
           variant="contained"
           disabled={saving || loading}
+          startIcon={
+            saving ? <CircularProgress size={16} color="inherit" /> : null
+          }
         >
           {saving ? "Saving..." : "Save Results (Ready)"}
         </Button>

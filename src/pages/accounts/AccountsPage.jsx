@@ -1,79 +1,62 @@
-import { Box, Button, Typography } from "@mui/material";
+import { Alert, Box, Button, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { supabase } from "../../lib/supabaseClient";
 import AccountsSummaryCards from "./AccountSummaryCards";
 import AccountsFilters from "./AccountsFilter";
 import AccountsTable from "./AccountsTable";
 import AccountDialog from "./AccountsDialog";
+import AccountDetailsDialog from "./AccountDetailsDialog";
 import ResetPasswordDialog from "./ResetPasswordDialog";
+import TemporaryPasswordDialog from "./TemporaryPasswordDialog";
+import CustomSnackbar from "../../components/modals/CustomSnackBar";
 
 import { fullName } from "./helper/accountHelpers";
 
+const readEdgeFunctionErrorMessage = async (error) => {
+  const fallback =
+    "Unable to update account status. Please contact the administrator.";
+
+  try {
+    const text = await error?.context?.text?.();
+    const body = text ? JSON.parse(text) : null;
+    return body?.error || fallback;
+  } catch (parseError) {
+    console.error("Failed to parse Edge Function error response:", parseError);
+    return fallback;
+  }
+};
+
+const normalizeRole = (role) => {
+  if (role === "MedTech") return "Med Tech";
+  return role || "";
+};
+
+const normalizeAccount = (row) => {
+  const rawStatus = row?.is_active;
+  const status =
+    rawStatus === true || rawStatus === "Active"
+      ? "Active"
+      : rawStatus === false || rawStatus === "Disabled"
+        ? "Disabled"
+        : String(rawStatus || "Active");
+
+  return {
+    id: row?.id,
+    full_name: row?.full_name ?? "",
+    role: normalizeRole(row?.role),
+    email: row?.email ?? "",
+    status,
+    createdAt: row?.created_at ?? "",
+    prcLicenseNumber: row?.lic ?? "",
+  };
+};
+
 export default function AccountsPage() {
-  // ✅ UI-only mock data
-  const [accounts, setAccounts] = useState([
-    {
-      id: 1,
-      firstName: "Kevin",
-      lastName: "Fines",
-      role: "Doctor",
-      email: "kevin@clinic.com",
-      username: "kevin",
-      status: "Active",
-      lastLogin: "02/01/2026 10:20",
-      staffId: "DR-0001",
-      avatarUrl: "",
-    },
-    {
-      id: 2,
-      firstName: "Maria",
-      lastName: "Santos",
-      role: "Admin",
-      email: "admin1@clinic.com",
-      username: "admin1",
-      status: "Active",
-      lastLogin: "02/01/2026 09:15",
-      staffId: "AD-0001",
-      avatarUrl: "",
-    },
-    {
-      id: 3,
-      firstName: "Pedro",
-      lastName: "Reyes",
-      role: "Med Tech",
-      email: "pedro@clinic.com",
-      username: "pedro",
-      status: "Active",
-      lastLogin: "01/31/2026 16:00",
-      staffId: "MT-0001",
-      avatarUrl: "",
-    },
-    {
-      id: 4,
-      firstName: "Ana",
-      lastName: "Lim",
-      role: "Nurse",
-      email: "ana@clinic.com",
-      username: "ana",
-      status: "Active",
-      lastLogin: "01/31/2026 08:45",
-      staffId: "NR-0001",
-      avatarUrl: "",
-    },
-    {
-      id: 5,
-      firstName: "Carlos",
-      lastName: "Gomez",
-      role: "Admin",
-      email: "admin2@clinic.com",
-      username: "admin2",
-      status: "Disabled",
-      lastLogin: "2 weeks ago",
-      staffId: "AD-0002",
-      avatarUrl: "",
-    },
-  ]);
+  const [accounts, setAccounts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [q, setQ] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -81,13 +64,60 @@ export default function AccountsPage() {
 
   const [openForm, setOpenForm] = useState(false);
   const [selected, setSelected] = useState(null);
+  const [savingAccount, setSavingAccount] = useState(false);
+
+  const [openDetails, setOpenDetails] = useState(false);
+  const [detailsTarget, setDetailsTarget] = useState(null);
+
+  const [tempPasswordAccount, setTempPasswordAccount] = useState(null);
 
   const [openReset, setOpenReset] = useState(false);
   const [resetTarget, setResetTarget] = useState(null);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   // pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  const loadAccounts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+
+    const { data, error: fetchError } = await supabase
+      .from("user_profiles")
+      .select("*");
+
+    if (fetchError) {
+      console.error("Failed to load accounts:", fetchError);
+      setAccounts([]);
+      setError(fetchError.message || "Failed to load accounts.");
+      setLoading(false);
+      return;
+    }
+
+    const normalized = (data || [])
+      .map(normalizeAccount)
+      .sort((a, b) => fullName(a).localeCompare(fullName(b)));
+
+    setAccounts(normalized);
+    setLoading(false);
+  }, []);
+
+  useEffect(() => {
+    loadAccounts();
+  }, [loadAccounts]);
+
+  const showSnackbar = (message, severity = "success") => {
+    setSnackbar({
+      open: true,
+      message,
+      severity,
+    });
+  };
 
   const filtered = useMemo(() => {
     const qq = q.trim().toLowerCase();
@@ -101,14 +131,12 @@ export default function AccountsPage() {
         return (
           fullName(a).toLowerCase().includes(qq) ||
           (a.email || "").toLowerCase().includes(qq) ||
-          (a.username || "").toLowerCase().includes(qq) ||
-          String(a.staffId || "")
+          String(a.role || "")
             .toLowerCase()
             .includes(qq)
         );
       });
 
-    // if filter changes, reset pagination
     return out;
   }, [accounts, q, roleFilter, statusFilter]);
 
@@ -129,33 +157,50 @@ export default function AccountsPage() {
     setOpenForm(true);
   };
 
-  const upsertAccount = (payload) => {
-    setAccounts((prev) => {
-      if (!payload.id) {
-        const id = Date.now();
-        return [{ ...payload, id }, ...prev];
-      }
-      return prev.map((x) => (x.id === payload.id ? payload : x));
-    });
-  };
-
-  const onDelete = (acc) => {
-    if (!confirm(`Delete account for ${fullName(acc)}?`)) return;
-    setAccounts((prev) => prev.filter((x) => x.id !== acc.id));
+  const openDetailsDialog = (acc) => {
+    setDetailsTarget(acc);
+    setOpenDetails(true);
   };
 
   const onToggleStatus = (acc) => {
     const nextStatus = acc.status === "Active" ? "Disabled" : "Active";
-    const msg =
-      nextStatus === "Disabled"
-        ? `Disable ${fullName(acc)}? They won't be able to login.`
-        : `Enable ${fullName(acc)}?`;
+    const nextIsActive = nextStatus === "Active";
 
-    if (!confirm(msg)) return;
+    return supabase.functions
+      .invoke("toggle-user-status", {
+        body: {
+          userId: acc.id,
+          isActive: nextIsActive,
+        },
+      })
+      .then(async ({ data, error }) => {
+        if (error) {
+          throw new Error(await readEdgeFunctionErrorMessage(error));
+        }
 
-    setAccounts((prev) =>
-      prev.map((x) => (x.id === acc.id ? { ...x, status: nextStatus } : x)),
-    );
+        if (!data?.success) {
+          throw new Error(
+            data?.error ||
+              "Unable to update account status. Please contact the administrator.",
+          );
+        }
+
+        await loadAccounts();
+        showSnackbar(
+          data?.isActive
+            ? "Account enabled successfully."
+            : "Account disabled successfully.",
+          "success",
+        );
+      })
+      .catch((err) => {
+        showSnackbar(
+          err instanceof Error
+            ? err.message
+            : "Unable to update account status. Please contact the administrator.",
+          "error",
+        );
+      });
   };
 
   const onResetPassword = (acc) => {
@@ -164,7 +209,6 @@ export default function AccountsPage() {
   };
 
   const confirmReset = (tempPassword) => {
-    // UI-only: store the latest temp password on the account (optional)
     setAccounts((prev) =>
       prev.map((x) => (x.id === resetTarget.id ? { ...x, tempPassword } : x)),
     );
@@ -172,6 +216,74 @@ export default function AccountsPage() {
     alert(
       `Temporary password generated for ${fullName(resetTarget)} (UI-only).`,
     );
+  };
+
+  const handleSaveAccount = async (payload) => {
+    if (selected) {
+      setAccounts((prev) =>
+        prev.map((x) => (x.id === payload.id ? payload : x)),
+      );
+      setOpenForm(false);
+      return;
+    }
+
+    try {
+      setSavingAccount(true);
+
+      const body = {
+        full_name: payload.full_name,
+        email: payload.email,
+        role: payload.role,
+        lic: payload.prcLicenseNumber || null,
+      };
+
+      const { data, error } = await supabase.functions.invoke("create-user", {
+        body,
+      });
+
+      if (error) {
+        let message =
+          "Unable to create account. Please contact the administrator.";
+
+        try {
+          const text = await error.context.text();
+          const body = JSON.parse(text);
+
+          if (body?.error) {
+            message = body.error;
+          }
+        } catch (parseError) {
+          console.error(
+            "Failed to parse Edge Function error response:",
+            parseError,
+          );
+        }
+
+        throw new Error(message);
+      }
+      if (!data?.success) {
+        throw new Error(data?.error || "Unable to create the account.");
+      }
+
+      await loadAccounts();
+      setTempPasswordAccount({
+        fullName: payload.full_name,
+        email: payload.email,
+        password: data.tempPassword || "",
+      });
+      setOpenForm(false);
+      showSnackbar(
+        `Account for ${payload.full_name} was created successfully.`,
+        "success",
+      );
+    } catch (err) {
+      showSnackbar(
+        err instanceof Error ? err.message : "Unable to create the account.",
+        "error",
+      );
+    } finally {
+      setSavingAccount(false);
+    }
   };
 
   // keep pagination sane when filters shrink list
@@ -225,20 +337,24 @@ export default function AccountsPage() {
         }}
       />
 
+      {error ? <Alert severity="error">{error}</Alert> : null}
+
       {/* Table */}
       <AccountsTable
         rows={filtered}
         page={page}
         rowsPerPage={rowsPerPage}
+        loading={loading}
+        error={error}
         onPageChange={setPage}
         onRowsPerPageChange={(n) => {
           setRowsPerPage(n);
           setPage(0);
         }}
+        onView={openDetailsDialog}
         onEdit={openEdit}
         onResetPassword={onResetPassword}
         onToggleStatus={onToggleStatus}
-        onDelete={onDelete}
       />
 
       {/* Dialogs */}
@@ -246,10 +362,22 @@ export default function AccountsPage() {
         open={openForm}
         onClose={() => setOpenForm(false)}
         account={selected}
-        onSave={(payload) => {
-          upsertAccount(payload);
-          setOpenForm(false);
-        }}
+        onSave={handleSaveAccount}
+        saving={!selected && savingAccount}
+      />
+
+      <AccountDetailsDialog
+        open={openDetails}
+        onClose={() => setOpenDetails(false)}
+        account={detailsTarget}
+      />
+
+      <TemporaryPasswordDialog
+        open={Boolean(tempPasswordAccount)}
+        onClose={() => setTempPasswordAccount(null)}
+        fullName={tempPasswordAccount?.fullName}
+        email={tempPasswordAccount?.email}
+        password={tempPasswordAccount?.password}
       />
 
       <ResetPasswordDialog
@@ -257,6 +385,13 @@ export default function AccountsPage() {
         onClose={() => setOpenReset(false)}
         account={resetTarget}
         onConfirm={confirmReset}
+      />
+
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        message={snackbar.message}
+        severity={snackbar.severity}
       />
     </Box>
   );

@@ -22,6 +22,9 @@ export default function SoapTab({ visits = [] }) {
   const [soapByVisit, setSoapByVisit] = useState({}); // { [visitId]: soapObj }
 
   const { patientInfo } = useSelector((s) => s.patientProfile);
+  const { role } = useSelector((s) => s.auth);
+  const canEditSoap = ["admin", "doctor"].includes(String(role || "").toLowerCase());
+  const roleLabel = role ? `${role} View` : "View";
 
   const visit = patientInfo?.visits;
 
@@ -59,11 +62,13 @@ export default function SoapTab({ visits = [] }) {
   };
 
   const handleSave = () => {
+    if (!canEditSoap) return;
     if (!selectedVisitId) return alert("Please select a visit first.");
     alert("SOAP saved (placeholder). Wire this to DB later.");
   };
 
   const handlePrint = () => {
+    if (!canEditSoap) return;
     alert("Print SOAP feature coming soon");
   };
 
@@ -113,7 +118,7 @@ export default function SoapTab({ visits = [] }) {
               variant="contained"
               startIcon={<SaveIcon />}
               onClick={handleSave}
-              disabled={!selectedVisitId}
+              disabled={!selectedVisitId || !canEditSoap}
             >
               Save
             </Button>
@@ -122,7 +127,7 @@ export default function SoapTab({ visits = [] }) {
               variant="outlined"
               startIcon={<PrintIcon />}
               onClick={handlePrint}
-              disabled={!selectedVisitId}
+              disabled={!selectedVisitId || !canEditSoap}
             >
               Print
             </Button>
@@ -174,7 +179,7 @@ export default function SoapTab({ visits = [] }) {
                 variant="caption"
                 className="bg-slate-100 px-2 py-1 rounded-md"
               >
-                Admin View
+                {roleLabel}
               </Typography>
             </Box>
 

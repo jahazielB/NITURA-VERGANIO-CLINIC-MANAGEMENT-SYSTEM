@@ -32,7 +32,7 @@ export default function AccountsFilters({
               label="Search"
               size="small"
               fullWidth
-              placeholder="Name, email, username..."
+              placeholder="Name, email..."
               value={q}
               onChange={(e) => setQ(e.target.value)}
             />

@@ -1,19 +1,22 @@
 import { Box, Button, TextField, Typography } from "@mui/material";
 
 import { useNavigate } from "react-router-dom";
-import { signIn } from "../../auth/auth";
-import { supabase } from "../../lib/supabaseClient";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { login } from "../../store/authSlice";
+import CustomSnackbar from "../modals/CustomSnackBar";
 export default function LoginForm() {
   const [loginCredentials, setLoginCredentials] = useState({
     Email: "",
     Password: "",
   });
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "error",
+  });
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { role } = useSelector((s) => s.auth);
   const handleLogin = async (e) => {
     try {
       e.preventDefault();
@@ -31,7 +34,16 @@ export default function LoginForm() {
 
       navigate(`/`);
     } catch (e) {
-      console.error(e.message);
+      const message =
+        typeof e === "string"
+          ? e
+          : e?.message || "Unable to sign in. Please contact an administrator.";
+      console.error(message);
+      setSnackbar({
+        open: true,
+        message,
+        severity: "error",
+      });
     }
   };
 
@@ -82,6 +94,13 @@ export default function LoginForm() {
       >
         Login
       </Button>
+
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
     </Box>
   );
 }

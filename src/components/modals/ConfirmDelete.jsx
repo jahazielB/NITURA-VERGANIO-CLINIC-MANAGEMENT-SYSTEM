@@ -7,29 +7,50 @@ import {
   Button,
   CircularProgress,
 } from "@mui/material";
-const ConfirmDeleteCancel = ({ open, cancel, handleDelete, loading }) => {
+const ConfirmDeleteCancel = ({
+  open,
+  cancel,
+  handleDelete,
+  loading,
+  title = "Confirm Delete",
+  description = "Are you sure you want to delete this record? This action cannot be undone.",
+  confirmLabel = "Delete",
+  confirmColor = "error",
+}) => {
   return (
     <div>
-      <Dialog open={open} onClose={cancel}>
-        <DialogTitle>{"Confirm Delete"}</DialogTitle>
+      <Dialog
+        open={open}
+        onClose={(_, reason) => {
+          if (loading) return;
+          if (reason === "backdropClick" || reason === "escapeKeyDown") {
+            cancel();
+          }
+        }}
+        disableEscapeKeyDown={loading}
+      >
+        <DialogTitle>{title}</DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this record? This action cannot be
-            undone.
-          </DialogContentText>
+          <DialogContentText>{description}</DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={cancel}>Cancel</Button>
+          <Button onClick={cancel} disabled={loading}>
+            Cancel
+          </Button>
           <Button
             disabled={loading}
-            color="error"
+            color={confirmColor}
             variant="contained"
             onClick={() => handleDelete()}
             startIcon={
               loading ? <CircularProgress size={20} color="inherit" /> : null
             }
           >
-            {loading ? "Deleting" : "Delete"}
+            {loading
+              ? confirmLabel === "Delete"
+                ? "Deleting"
+                : "Cancelling"
+              : confirmLabel}
           </Button>
         </DialogActions>
       </Dialog>

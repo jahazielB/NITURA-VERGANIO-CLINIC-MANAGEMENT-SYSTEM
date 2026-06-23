@@ -47,6 +47,7 @@ export default function VisitHistoryTable({}) {
 
   const params = useParams();
   const { patientInfo } = useSelector((s) => s.patientProfile);
+  const { role } = useSelector((s) => s.auth);
   const visits = patientInfo?.visits;
   const dispatch = useDispatch();
   const rowsPerPage = 4;
@@ -142,7 +143,9 @@ export default function VisitHistoryTable({}) {
                           size="small"
                           variant="outlined"
                           startIcon={<EditIcon />}
+                          disabled={role === "MedTech"}
                           onClick={() => {
+                            if (role === "MedTech") return;
                             handleViewButton(r);
                             setOpen(true);
                             setMode("edit");
@@ -154,7 +157,9 @@ export default function VisitHistoryTable({}) {
                           <IconButton
                             aria-label="delete"
                             color="error"
+                            disabled={role === "MedTech"}
                             onClick={() => {
+                              if (role === "MedTech") return;
                               setOpenDeleteDialog({
                                 ...openDeleteDialog,
                                 open: true,

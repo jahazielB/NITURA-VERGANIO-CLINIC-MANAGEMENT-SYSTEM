@@ -10,6 +10,7 @@ import {
   DialogTitle,
   Grid,
   IconButton,
+  CircularProgress,
   ListItemText,
   MenuItem,
   TextField,
@@ -69,6 +70,7 @@ export default function RequestLabDialog({
   const [doctors, setDoctors] = useState([]);
   const [labServices, setLabServices] = useState([]);
   const [loadingDoctors, setLoadingDoctors] = useState(false);
+  const [dispatching, setDispatching] = useState(false);
 
   const getDoctorName = (visit) =>
     visit?.doctor?.full_name || visit?.doctor || "";
@@ -162,7 +164,7 @@ export default function RequestLabDialog({
     }));
   };
 
-  const submit = () => {
+  const submit = async () => {
     const visitIdError = !form.visitId;
     const testTypeError = !form.testType.length;
 
@@ -171,7 +173,7 @@ export default function RequestLabDialog({
       return;
     }
 
-    onSave({
+    const payload = {
       id: Date.now(),
       visitId: form.visitId,
       testType: form.testType,
@@ -187,16 +189,30 @@ export default function RequestLabDialog({
       performedDate: "",
       releasedBy: "",
       releasedDate: "",
-    });
+    };
 
-    onClose();
-    console.log(form);
+    setDispatching(true);
+    try {
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+      await Promise.resolve(onSave(payload));
+      onClose();
+      console.log(form);
+    } catch (error) {
+      console.error("Failed to dispatch lab order.", error);
+    } finally {
+      setDispatching(false);
+    }
   };
 
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={(_, reason) => {
+        if (dispatching) return;
+        if (reason === "backdropClick" || reason === "escapeKeyDown") {
+          onClose();
+        }
+      }}
       fullWidth
       maxWidth="sm"
       TransitionProps={{ onEnter: resetForm }}
@@ -242,6 +258,7 @@ export default function RequestLabDialog({
         </Box>
         <IconButton
           onClick={onClose}
+          disabled={dispatching}
           size="small"
           sx={{
             color: "text.secondary",
@@ -558,6 +575,7 @@ export default function RequestLabDialog({
         <Button
           onClick={onClose}
           variant="text"
+          disabled={dispatching}
           sx={{
             textTransform: "none",
             fontSize: "14px",
@@ -573,6 +591,10 @@ export default function RequestLabDialog({
           onClick={submit}
           variant="contained"
           disableElevation
+          disabled={dispatching}
+          startIcon={
+            dispatching ? <CircularProgress size={16} color="inherit" /> : null
+          }
           sx={{
             textTransform: "none",
             fontSize: "14px",
@@ -583,7 +605,7 @@ export default function RequestLabDialog({
             "&:hover": { bgcolor: "#0369a1" },
           }}
         >
-          Dispatch Order
+          {dispatching ? "Dispatching Order" : "Dispatch Order"}
         </Button>
       </DialogActions>
     </Dialog>

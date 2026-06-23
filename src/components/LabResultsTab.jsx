@@ -57,6 +57,11 @@ const formatDisplayDate = (value) => {
   }).format(date);
 };
 
+const sortNewestFirst = (rows = []) =>
+  [...rows].sort(
+    (a, b) => new Date(b.requestedDate || 0) - new Date(a.requestedDate || 0),
+  );
+
 const formatDisplayTime = (value) => {
   if (!value) return "N/A";
 
@@ -70,11 +75,6 @@ const formatDisplayTime = (value) => {
     hour12: true,
   }).format(date);
 };
-
-const sortNewestFirst = (rows = []) =>
-  [...rows].sort(
-    (a, b) => new Date(b.requestedDate || 0) - new Date(a.requestedDate || 0),
-  );
 
 const formatTemplateDate = (value) => {
   if (!value) return "";
@@ -91,6 +91,8 @@ const formatTemplateDate = (value) => {
 };
 
 export default function LabResultsTab({ visits = [], role }) {
+  const normalizedRole = String(role || "").toLowerCase();
+  const canRequestLab = normalizedRole !== "medtech" && normalizedRole !== "nurse";
   const PAGE_SIZE = 5;
   const dispatch = useDispatch();
   const { id } = useParams();
@@ -206,7 +208,7 @@ export default function LabResultsTab({ visits = [], role }) {
       ? payload.testType
       : [payload.testType];
 
-    Promise.all(
+    return Promise.all(
       services.map((service) =>
         createLabRequest({
           ...payload,
@@ -301,14 +303,16 @@ export default function LabResultsTab({ visits = [], role }) {
           </Typography>
         </Box>
 
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => setOpenRequest(true)}
-          disabled={!visitsData.length}
-        >
-          Request Lab Test
-        </Button>
+        {canRequestLab && (
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenRequest(true)}
+            disabled={!visitsData.length}
+          >
+            Request Lab Test
+          </Button>
+        )}
       </Box>
 
       {!visitsData.length ? (
@@ -405,20 +409,20 @@ export default function LabResultsTab({ visits = [], role }) {
                               View
                             </Button>
 
-                            {role === "admin" ||
-                              (role === "MedTech" && (
-                                <Button
-                                  size="small"
-                                  variant="outlined"
-                                  startIcon={<EditNoteIcon />}
-                                  onClick={() => {
-                                    setSelected(x);
-                                    setOpenEnter(true);
-                                  }}
-                                >
-                                  Enter Results
-                                </Button>
-                              ))}
+                            {(normalizedRole === "admin" ||
+                              normalizedRole === "medtech") && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                startIcon={<EditNoteIcon />}
+                                onClick={() => {
+                                  setSelected(x);
+                                  setOpenEnter(true);
+                                }}
+                              >
+                                Enter Results
+                              </Button>
+                            )}
 
                             {x.status === "Ready" && (
                               <Button

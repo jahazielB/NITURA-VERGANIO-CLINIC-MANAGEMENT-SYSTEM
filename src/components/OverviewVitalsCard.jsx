@@ -241,7 +241,9 @@ export default function OverviewVitalsCard({}) {
               variant="contained"
               startIcon={<AddIcon />}
               size="small"
+              disabled={role === "MedTech"}
               onClick={() => {
+                if (role === "MedTech") return;
                 if (visits.length === 0)
                   return setSnackbar({
                     open: true,

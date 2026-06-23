@@ -89,6 +89,19 @@ function toTimestampWithCurrentTime(dateValue) {
   return `${baseDate}T${hh}:${mm}:${ss}`;
 }
 
+function getLocalDayRange(date = new Date()) {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(date);
+  end.setHours(23, 59, 59, 999);
+
+  return {
+    start: start.toISOString(),
+    end: end.toISOString(),
+  };
+}
+
 async function resolveProfileId(value) {
   const key = trimOrNull(value);
   if (!key) return null;
@@ -160,7 +173,7 @@ export function mapLabRequestRow(row) {
     priority: row.priority ?? "Routine",
     notes: row.notes ?? "",
     requestedBy: row.requested_by_profile?.full_name ?? "",
-    requestedDate: row.created_at ?? "",
+    requestedDate: row.requested_at ?? row.created_at ?? "",
     status: row.status ?? "Pending",
     performedBy: row.entered_by_profile?.full_name ?? "",
     releasedBy: row.released_by_profile?.full_name ?? "",
@@ -204,7 +217,7 @@ function mapSidebarLabRequestRow(row) {
     testType: row.lab_services?.name ?? "",
     priority: row.priority ?? "Routine",
     requestedBy: row.requested_by_profile?.full_name ?? "",
-    requestedDate: row.created_at ?? "",
+    requestedDate: row.requested_at ?? row.created_at ?? "",
     status: row.status ?? "Pending",
     lab_result_items: row.lab_result_items ?? [],
   };
@@ -303,6 +316,30 @@ export async function getLabRequests({
 
   assertNoError(error, "Failed to fetch lab requests");
   console.log(data);
+  return {
+    rows: (data ?? []).map(mapSidebarLabRequestRow),
+    total: count ?? 0,
+  };
+}
+
+export async function getTodayLabRequests({ status } = {}) {
+  const { start, end } = getLocalDayRange();
+
+  let query = supabase
+    .from("lab_requests")
+    .select(LAB_REQUEST_SIDEBAR, { count: "exact" })
+    .gte("requested_at", start)
+    .lte("requested_at", end)
+    .order("requested_at", { ascending: false })
+    .range(0, 100);
+
+  if (status && status !== "All") {
+    query = query.eq("status", status);
+  }
+
+  const { data, count, error } = await query;
+  assertNoError(error, "Failed to fetch today's lab requests");
+
   return {
     rows: (data ?? []).map(mapSidebarLabRequestRow),
     total: count ?? 0,

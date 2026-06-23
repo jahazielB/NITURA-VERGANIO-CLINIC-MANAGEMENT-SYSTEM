@@ -70,6 +70,7 @@ export default function PrescriptionsTab({
   const dispatch = useDispatch();
   const { patientInfo } = useSelector((s) => s.patientProfile);
   const { userName, role, user } = useSelector((u) => u.auth);
+  const isAdmin = role === "Admin";
   const patientVisits = patientInfo?.visits;
   const prescriptionOrders = patientVisits?.flatMap(
     (p) => p.prescription_orders,
@@ -183,7 +184,9 @@ export default function PrescriptionsTab({
         <Button
           variant="contained"
           startIcon={<AddIcon />}
+          disabled={!isAdmin}
           onClick={() => {
+            if (!isAdmin) return;
             if (patientVisits?.length === 0)
               return setSnackbar({
                 open: true,
@@ -309,7 +312,9 @@ export default function PrescriptionsTab({
                             size="small"
                             variant="outlined"
                             startIcon={<EditIcon />}
+                            disabled={!isAdmin}
                             onClick={() => {
+                              if (!isAdmin) return;
                               setOpenView(true);
                               setEditMode(true);
                               setViewItem(p);
@@ -334,6 +339,7 @@ export default function PrescriptionsTab({
                               color="error"
                               variant="outlined"
                               startIcon={<BlockIcon />}
+                              disabled={!isAdmin}
                               onClick={() => handleStop(p.id)}
                             >
                               Stop
@@ -342,7 +348,9 @@ export default function PrescriptionsTab({
                           <IconButton
                             aria-label="delete"
                             color="error"
+                            disabled={!isAdmin}
                             onClick={() => {
+                              if (!isAdmin) return;
                               setOpenDeleteDialog({
                                 ...openDeleteDialog,
                                 open: true,

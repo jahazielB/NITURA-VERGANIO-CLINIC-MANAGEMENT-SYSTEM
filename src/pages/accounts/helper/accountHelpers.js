@@ -16,15 +16,19 @@ export const statusColor = (status) => {
 };
 
 export const fullName = (u) =>
-  `${u?.firstName || ""} ${u?.lastName || ""}`.trim();
+  String(u?.full_name || "").trim();
 
-export const fmtLastLogin = (v) => v || "—";
+export const fmtCreatedAt = (v) => {
+  if (!v) return "—";
+  const date = new Date(v);
+  if (Number.isNaN(date.getTime())) return "—";
+  return date.toLocaleDateString("en-US");
+};
 
 export const generateTempPassword = (len = 10) => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$";
   let out = "";
-  for (let i = 0; i < len; i++)
-    out += chars[Math.floor(Math.random() * chars.length)];
+  for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
   return out;
 };
 
