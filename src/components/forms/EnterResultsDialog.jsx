@@ -90,6 +90,12 @@ function ResultsTemplateBody({
   const [values, setValues] = useState({});
   const [serviceItems, setServiceItems] = useState([]);
   const [saving, setSaving] = useState(false);
+  const staff = {
+    medTechName: item?.performedBy || "",
+    medTechLic: item?.performedByLic || "",
+    pathologistName: item?.releasedBy || "",
+    pathologistLic: item?.releasedByLic || "",
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -160,6 +166,7 @@ function ResultsTemplateBody({
             onChange={setValues}
             readOnly={saving}
             patient={patient}
+            staff={staff}
           />
         ) : (
           <Box sx={{ py: 4 }}>

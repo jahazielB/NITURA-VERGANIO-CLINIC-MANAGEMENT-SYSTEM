@@ -208,22 +208,89 @@ export default function AccountsPage() {
     setOpenReset(true);
   };
 
-  const confirmReset = (tempPassword) => {
-    setAccounts((prev) =>
-      prev.map((x) => (x.id === resetTarget.id ? { ...x, tempPassword } : x)),
-    );
-    setOpenReset(false);
-    alert(
-      `Temporary password generated for ${fullName(resetTarget)} (UI-only).`,
-    );
+  const confirmReset = async () => {
+    const acc = resetTarget;
+    if (!acc) return;
+
+    try {
+      const { data, error } = await supabase.functions.invoke(
+        "reset-password",
+        {
+          body: { userId: acc.id },
+        },
+      );
+
+      if (error) {
+        throw new Error(await readEdgeFunctionErrorMessage(error));
+      }
+      if (!data?.success) {
+        throw new Error(
+          data?.error ||
+            "Unable to reset password. Please contact the administrator.",
+        );
+      }
+
+      setOpenReset(false);
+      setTempPasswordAccount({
+        fullName: fullName(acc),
+        email: acc.email,
+        password: data.tempPassword || "",
+      });
+      showSnackbar("Password reset successfully.", "success");
+    } catch (err) {
+      console.error("Reset Password Error", err);
+      showSnackbar(
+        err instanceof Error
+          ? err.message
+          : "Unable to reset password. Please contact the administrator.",
+        "error",
+      );
+    }
   };
 
   const handleSaveAccount = async (payload) => {
     if (selected) {
-      setAccounts((prev) =>
-        prev.map((x) => (x.id === payload.id ? payload : x)),
-      );
-      setOpenForm(false);
+      try {
+        setSavingAccount(true);
+
+        const { data, error } = await supabase.functions.invoke(
+          "update-user",
+          {
+            body: {
+              userId: payload.id,
+              full_name: payload.full_name,
+              email: payload.email,
+              role: payload.role,
+              lic: payload.prcLicenseNumber || null,
+            },
+          },
+        );
+
+        if (error) {
+          throw new Error(await readEdgeFunctionErrorMessage(error));
+        }
+        if (!data?.success) {
+          throw new Error(
+            data?.error ||
+              "Unable to update account. Please contact the administrator.",
+          );
+        }
+
+        await loadAccounts();
+        setOpenForm(false);
+        showSnackbar("Account updated successfully.", "success");
+      } catch (err) {
+        console.error("Update User Error", err);
+        showSnackbar(
+          err instanceof Error
+            ? err.message
+            : "Unable to update account. Please contact the administrator.",
+          "error",
+        );
+      } finally {
+        setSavingAccount(false);
+      }
+
       return;
     }
 
@@ -363,7 +430,7 @@ export default function AccountsPage() {
         onClose={() => setOpenForm(false)}
         account={selected}
         onSave={handleSaveAccount}
-        saving={!selected && savingAccount}
+        saving={savingAccount}
       />
 
       <AccountDetailsDialog

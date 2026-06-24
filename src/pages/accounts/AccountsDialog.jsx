@@ -15,8 +15,6 @@ import {
   CircularProgress,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import AutoFixHighIcon from "@mui/icons-material/AutoFixHigh";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -28,6 +26,11 @@ import {
 const normalizeRole = (role) => {
   if (role === "MedTech") return "Med Tech";
   return ROLES.includes(role) ? role : "Doctor";
+};
+
+const denormalizeRole = (role) => {
+  if (role === "Med Tech") return "MedTech";
+  return role;
 };
 
 const asTrimmedString = (value) =>
@@ -61,7 +64,6 @@ export default function AccountDialog({
         setForm({
           id: null,
           status: "Active",
-          tempPassword: generateTempPassword(),
           requireChangePassword: true,
           createdAt: "",
           ...JSON.parse(JSON.stringify(account)),
@@ -113,7 +115,7 @@ export default function AccountDialog({
       ...form,
       full_name: form.full_name.trim(),
       email: form.email.trim(),
-      role: form.role,
+      role: denormalizeRole(form.role),
       prcLicenseNumber: asTrimmedString(form.prcLicenseNumber),
     });
   };
@@ -121,8 +123,16 @@ export default function AccountDialog({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ px: 2, py: 1.5 }}>
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <Typography variant="h6">{account ? "Edit Account" : "New Account"}</Typography>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <Typography variant="h6">
+            {account ? "Edit Account" : "New Account"}
+          </Typography>
           <IconButton onClick={onClose} size="small">
             <CloseIcon />
           </IconButton>
@@ -131,7 +141,7 @@ export default function AccountDialog({
 
       <DialogContent dividers sx={{ px: 2, py: 1.5 }}>
         <Grid container spacing={1}>
-          <Grid item xs={12} sm={6}>
+          <Grid item xs={12} sm={4}>
             <TextField
               label="Full Name"
               size="small"
@@ -182,51 +192,19 @@ export default function AccountDialog({
             </Grid>
           )}
 
-          <Grid item xs={12} sm={4}>
-            <TextField
-              select
-              label="Status"
-              size="small"
-              fullWidth
-              value={form.status}
-              onChange={(e) => setField("status", e.target.value)}
-            >
-              <MenuItem value="Active">Active</MenuItem>
-              <MenuItem value="Disabled">Disabled</MenuItem>
-            </TextField>
-          </Grid>
-
-          {account ? (
+          {!account ? (
             <Grid item xs={12} sm={4}>
               <TextField
-                label="Temp Password"
+                select
+                label="Status"
                 size="small"
                 fullWidth
-                value={form.tempPassword}
-                onChange={(e) => setField("tempPassword", e.target.value)}
-                InputProps={{
-                  endAdornment: (
-                    <Box className="flex items-center gap-1">
-                      <IconButton
-                        size="small"
-                        onClick={() =>
-                          setField("tempPassword", generateTempPassword())
-                        }
-                        title="Generate"
-                      >
-                        <AutoFixHighIcon fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => copy(form.tempPassword)}
-                        title="Copy"
-                      >
-                        <ContentCopyIcon fontSize="small" />
-                      </IconButton>
-                    </Box>
-                  ),
-                }}
-              />
+                value={form.status}
+                onChange={(e) => setField("status", e.target.value)}
+              >
+                <MenuItem value="Active">Active</MenuItem>
+                <MenuItem value="Disabled">Disabled</MenuItem>
+              </TextField>
             </Grid>
           ) : null}
 

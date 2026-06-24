@@ -1,8 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-type ToggleUserStatusBody = {
+type ResetPasswordBody = {
   userId?: string;
-  isActive?: boolean;
 };
 
 const corsHeaders = {
@@ -22,14 +21,24 @@ function json(body: Record<string, unknown>, status = 200): Response {
   });
 }
 
+function generateSecureTempPassword(length = 20): string {
+  // Generate a cryptographically secure password from a mixed character set.
+  const alphabet =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()-_=+";
+  const bytes = new Uint8Array(length);
+  crypto.getRandomValues(bytes);
+
+  return Array.from(bytes, (byte) => alphabet[byte % alphabet.length]).join("");
+}
+
 function friendlyError(message: string, status = 400): Response {
   return json({ success: false, error: message }, status);
 }
 
 function logAndReturnGenericError(error: unknown, status = 500): Response {
-  console.error("Toggle User Status Error", error);
+  console.error("Reset Password Error", error);
   return friendlyError(
-    "Unable to update account status. Please contact the administrator.",
+    "Unable to reset password. Please contact the administrator.",
     status,
   );
 }
@@ -45,14 +54,10 @@ export default {
     }
 
     try {
-      const body = (await request.json()) as ToggleUserStatusBody;
+      const body = (await request.json()) as ResetPasswordBody;
       const userId = String(body.userId ?? "").trim();
-      const isActive = body.isActive;
 
       if (!userId) return friendlyError("Please provide userId.");
-      if (typeof isActive !== "boolean") {
-        return friendlyError("Please provide isActive.");
-      }
 
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
       const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -64,6 +69,7 @@ export default {
         );
       }
 
+      // Use the service-role client for privileged operations that bypass RLS.
       const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
         auth: {
           persistSession: false,
@@ -71,9 +77,11 @@ export default {
         },
       });
 
+      // Admin authorization:
+      // 1. Validate the caller's JWT using the anon-key client.
+      // 2. Load the caller's profile from user_profiles.
+      // 3. Only allow if role === "Admin".
       const authHeader = request.headers.get("Authorization") ?? "";
-      // Validate the caller's JWT using the anon-key client so we can trust
-      // the authenticated user id before checking authorization.
       const supabaseJwtClient = createClient(supabaseUrl, anonKey, {
         auth: {
           persistSession: false,
@@ -91,11 +99,8 @@ export default {
         error: callerError,
       } = await supabaseJwtClient.auth.getUser();
 
-      if (callerError) {
-        return logAndReturnGenericError(callerError);
-      }
-
-      if (!caller?.id) {
+      if (callerError || !caller?.id) {
+        // Expired or invalid JWTs should not produce a generic server error.
         return friendlyError("Authentication required.", 401);
       }
 
@@ -110,43 +115,70 @@ export default {
         return logAndReturnGenericError(callerProfileError);
       }
 
-      // Only Admin users can toggle other accounts' status.
       if (callerProfile?.role !== "Admin") {
         return friendlyError("Unauthorized.", 403);
       }
 
-      // Block self-disable so a user cannot immediately lock themselves out
-      // before they can hand off administrative control.
-      if (caller?.id === userId && isActive === false) {
-        return friendlyError("You cannot disable your own account.", 400);
+      // Prevent admins from accidentally resetting their own password
+      // through the staff management screen.
+      if (caller.id === userId) {
+        return friendlyError(
+          "Use the normal password change process for your own account.",
+          400,
+        );
       }
 
-      const updatePayload = isActive
-        ? {
-            is_active: true,
-          }
-        : {
-            is_active: false,
-            is_logged_in: false,
-            session_id: null,
-            disabled_at: new Date().toISOString(),
-        };
+      // Verify the target user exists before generating a password.
+      const { data: targetUser, error: targetUserError } =
+        await supabaseAdmin
+          .from("user_profiles")
+          .select("id, full_name, email")
+          .eq("id", userId)
+          .maybeSingle();
 
-      // Keep the service-role client for the update so the function can write
-      // the account state regardless of row-level security policies.
-      const { error } = await supabaseAdmin
+      if (targetUserError) {
+        return logAndReturnGenericError(targetUserError);
+      }
+
+      if (!targetUser) {
+        return friendlyError("Account not found.", 404);
+      }
+
+      // Password generation: create a secure temporary password.
+      const tempPassword = generateSecureTempPassword();
+
+      // Password reset: update the target user's password via the Admin Auth API.
+      const { error: updateError } =
+        await supabaseAdmin.auth.admin.updateUserById(
+          userId,
+          { password: tempPassword },
+        );
+
+      if (updateError) {
+        return logAndReturnGenericError(updateError);
+      }
+
+      // Best-effort session cleanup: mark the user offline so stale login
+      // tracking is cleared immediately. The password reset is the primary
+      // operation, so a failure here still returns success to the frontend.
+      const { error: sessionError } = await supabaseAdmin
         .from("user_profiles")
-        .update(updatePayload)
+        .update({
+          is_logged_in: false,
+          session_id: null,
+          last_activity_at: new Date().toISOString(),
+          password_reset_at: new Date().toISOString(),
+        })
         .eq("id", userId);
 
-      if (error) {
-        return logAndReturnGenericError(error);
+      if (sessionError) {
+        console.error("Reset Password Session Cleanup Error", sessionError);
       }
 
       return json({
         success: true,
         userId,
-        isActive,
+        tempPassword,
       });
     } catch (error) {
       return logAndReturnGenericError(error);

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   AppBar,
   Toolbar,
@@ -10,13 +11,21 @@ import {
   ListItemIcon,
   ListItemText,
   Drawer,
+  Menu,
+  MenuItem,
+  Divider,
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import NotificationsIcon from "@mui/icons-material/Notifications";
+import PersonIcon from "@mui/icons-material/Person";
+import LockIcon from "@mui/icons-material/Lock";
+import LogoutIcon from "@mui/icons-material/Logout";
 
 import Logo from "./Logo";
+import ProfileDialog from "../pages/accounts/ProfileDialog";
+import ChangePasswordDialog from "../pages/accounts/ChangePasswordDialog";
 
 import { useNavigate, useLocation } from "react-router-dom";
 
@@ -153,9 +162,35 @@ export const SidebarMobile = ({ open, onClose }) => (
 );
 
 export const TopBar = ({ onMenuClick }) => {
-  const { role } = useSelector((s) => s.auth);
+  const { role, userName } = useSelector((s) => s.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const meta = ROLE_TOPBAR[role];
-  const color = meta.color;
+
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [profileDialogOpen, setProfileDialogOpen] = useState(false);
+  const [changePasswordDialogOpen, setChangePasswordDialogOpen] =
+    useState(false);
+
+  const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
+  const handleMenuClose = () => setAnchorEl(null);
+
+  const handleLogout = async () => {
+    handleMenuClose();
+    await dispatch(logout()).unwrap();
+    navigate("/");
+  };
+
+  const handleProfile = () => {
+    handleMenuClose();
+    setProfileDialogOpen(true);
+  };
+
+  const handleChangePassword = () => {
+    handleMenuClose();
+    setChangePasswordDialogOpen(true);
+  };
+
   return (
     <AppBar
       position="static"
@@ -163,8 +198,8 @@ export const TopBar = ({ onMenuClick }) => {
       elevation={0}
       sx={{ backgroundColor: meta.color }}
     >
-      <Toolbar className={`flex justify-between  py-5`}>
-        <Box className="flex items-center gap-2 ">
+      <Toolbar className="flex justify-between py-5">
+        <Box className="flex items-center gap-2">
           {/* Hamburger only on small screens */}
           <IconButton
             onClick={onMenuClick}
@@ -185,9 +220,52 @@ export const TopBar = ({ onMenuClick }) => {
           <IconButton>
             <NotificationsIcon />
           </IconButton>
-          <Avatar>{meta.avatar}</Avatar>
+
+          {/* Desktop: user info */}
+          <Box className="hidden md:block text-right">
+            <Typography variant="body2" fontWeight={600}>
+              {userName}
+            </Typography>
+            <Typography variant="caption" sx={{ color: "#757575" }}>
+              {role}
+            </Typography>
+          </Box>
+
+          {/* Avatar that opens menu */}
+          <IconButton onClick={handleMenuOpen} size="small">
+            <Avatar>{meta.avatar}</Avatar>
+          </IconButton>
+
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+          >
+            <MenuItem onClick={handleProfile}>
+              <PersonIcon sx={{ mr: 1.5 }} fontSize="small" />
+              My Profile
+            </MenuItem>
+            <MenuItem onClick={handleChangePassword}>
+              <LockIcon sx={{ mr: 1.5 }} fontSize="small" />
+              Change Password
+            </MenuItem>
+            <Divider />
+            <MenuItem onClick={handleLogout}>
+              <LogoutIcon sx={{ mr: 1.5 }} fontSize="small" />
+              Logout
+            </MenuItem>
+          </Menu>
         </Box>
       </Toolbar>
+
+      <ProfileDialog
+        open={profileDialogOpen}
+        onClose={() => setProfileDialogOpen(false)}
+      />
+      <ChangePasswordDialog
+        open={changePasswordDialogOpen}
+        onClose={() => setChangePasswordDialogOpen(false)}
+      />
     </AppBar>
   );
 };

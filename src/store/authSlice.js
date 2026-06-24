@@ -13,10 +13,11 @@ export const initializeAuth = createAsyncThunk(
     try {
       const { data: sessRes, error: sessError } =
         await supabase.auth.getSession();
-      if (sessError) throw sessError;
+      if (sessError || !sessRes?.session?.user) {
+        return { user: null, role: null, userName: null };
+      }
 
-      const user = sessRes?.session.user ?? null;
-      if (!user) return { user: null, role: null };
+      const user = sessRes.session.user;
 
       const { data: prof, error: profErr } = await supabase
         .from("user_profiles")
@@ -24,11 +25,13 @@ export const initializeAuth = createAsyncThunk(
         .eq("id", user.id)
         .maybeSingle();
 
-      if (profErr) throw profErr;
+      if (profErr || !prof) {
+        return { user: null, role: null, userName: null };
+      }
 
       return { user, role: prof?.role ?? null, userName: prof.full_name };
     } catch (e) {
-      return rejectWithValue(e.message);
+      return { user: null, role: null, userName: null };
     }
   },
 );
@@ -78,10 +81,11 @@ export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      // Clear the profile session marker before signing out so the account
-      // information reflects the logout immediately.
-      const { data: userRes } = await supabase.auth.getUser();
-      const userId = userRes?.user?.id;
+      // Best-effort session tracking cleanup before sign out.
+      // If getUser() fails (invalid/expired JWT), skip cleanup and proceed.
+      const { data: userRes, error: userErr } =
+        await supabase.auth.getUser();
+      const userId = !userErr ? userRes?.user?.id : null;
       if (userId) {
         await markUserLoggedOut(userId);
       }

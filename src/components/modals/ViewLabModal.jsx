@@ -60,6 +60,12 @@ export default function ViewLabModal({
   visitLabel = "",
   patient,
 }) {
+  const staff = {
+    medTechName: item?.performedBy || "",
+    medTechLic: item?.performedByLic || "",
+    pathologistName: item?.releasedBy || "",
+    pathologistLic: item?.releasedByLic || "",
+  };
   const [loading, setLoading] = useState(false);
   const [templateValues, setTemplateValues] = useState({});
 
@@ -243,6 +249,7 @@ export default function ViewLabModal({
                 value={templateValues}
                 readOnly
                 patient={patient}
+                staff={staff}
               />
             ) : (
               <Box sx={{ py: 4 }}>

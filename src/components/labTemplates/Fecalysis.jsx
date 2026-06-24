@@ -37,6 +37,7 @@ export default function Fecalysis({
   onChange,
   readOnly = false,
   patient,
+  staff,
 }) {
   const data = useMemo(() => ({ ...DEFAULTS, ...(value || {}) }), [value]);
 
@@ -226,7 +227,7 @@ export default function Fecalysis({
       >
         <Box width="45%">
           <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            &nbsp;
+            {staff?.medTechName || "\u00a0"}
           </Typography>
           <Typography
             variant="body2"
@@ -234,27 +235,33 @@ export default function Fecalysis({
           >
             &nbsp;
           </Typography>
-          <Typography variant="caption">PRC LIC NO.: &nbsp;</Typography>
+          <Typography variant="caption">
+            PRC LIC NO.: {staff?.medTechLic || "____________________"}
+          </Typography>
           <Typography variant="caption" display="block">
             MEDICAL TECHNOLOGIST
           </Typography>
         </Box>
 
-        <Box width="45%" textAlign="right">
-          <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            &nbsp;
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ borderTop: "1px solid", width: "85%", ml: "auto" }}
-          >
-            &nbsp;
-          </Typography>
-          <Typography variant="caption">PRC LIC NO.: &nbsp;</Typography>
-          <Typography variant="caption" display="block">
-            PATHOLOGIST
-          </Typography>
-        </Box>
+          <Box width="45%" textAlign="right">
+            <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
+              {staff?.pathologistName && staff?.pathologistName !== staff?.medTechName
+  ? staff?.pathologistName
+  : "\u00a0"}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ borderTop: "1px solid", width: "85%", ml: "auto" }}
+            >
+              &nbsp;
+            </Typography>
+            <Typography variant="caption">
+              PRC LIC NO.: {staff?.pathologistLic || "____________________"}
+            </Typography>
+            <Typography variant="caption" display="block">
+              PATHOLOGIST
+            </Typography>
+          </Box>
       </Box>
     </Box>
   );

@@ -15,11 +15,13 @@ const LAB_REQUEST_SELECT = `
   ),
   entered_by_profile:user_profiles!entered_by (
     id,
-    full_name
+    full_name,
+    lic
   ),
   released_by_profile:user_profiles!released_by (
     id,
-    full_name
+    full_name,
+    lic
   ),
   lab_result_items(*)
 `;
@@ -50,11 +52,13 @@ const LAB_REQUEST_SIDEBAR = `
   ),
   entered_by_profile:user_profiles!entered_by (
     id,
-    full_name
+    full_name,
+    lic
   ),
   released_by_profile:user_profiles!released_by (
     id,
-    full_name
+    full_name,
+    lic
   ),
   lab_result_items(*)
 `;
@@ -176,7 +180,9 @@ export function mapLabRequestRow(row) {
     requestedDate: row.requested_at ?? row.created_at ?? "",
     status: row.status ?? "Pending",
     performedBy: row.entered_by_profile?.full_name ?? "",
+    performedByLic: row.entered_by_profile?.lic ?? "",
     releasedBy: row.released_by_profile?.full_name ?? "",
+    releasedByLic: row.released_by_profile?.lic ?? "",
     lab_result_items: row.lab_result_items ?? [],
   };
 }
@@ -219,6 +225,10 @@ function mapSidebarLabRequestRow(row) {
     requestedBy: row.requested_by_profile?.full_name ?? "",
     requestedDate: row.requested_at ?? row.created_at ?? "",
     status: row.status ?? "Pending",
+    performedBy: row.entered_by_profile?.full_name ?? "",
+    performedByLic: row.entered_by_profile?.lic ?? "",
+    releasedBy: row.released_by_profile?.full_name ?? "",
+    releasedByLic: row.released_by_profile?.lic ?? "",
     lab_result_items: row.lab_result_items ?? [],
   };
 }
