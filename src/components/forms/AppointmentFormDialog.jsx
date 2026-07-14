@@ -332,8 +332,8 @@ export default function AppointmentFormDialog({
                     .filter(Boolean)
                     .join(" ")
             }
-            renderOption={(props, option) => (
-              <li key={props.key} {...props}>
+            renderOption={({ key, ...props }, option) => (
+              <li key={key} {...props}>
                 <Box>
                   <Typography variant="body2">
                     {[

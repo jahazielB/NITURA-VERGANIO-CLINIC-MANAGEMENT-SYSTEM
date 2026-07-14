@@ -216,6 +216,7 @@ function mapSidebarLabRequestRow(row) {
       row.visit_id ??
       "",
     labServiceId: row.lab_services?.id ?? "",
+    patientId: patient.id ?? "",
     patientName,
     birthDate: patient.birth_date ?? null,
     gender: patient.gender ?? null,
@@ -224,6 +225,7 @@ function mapSidebarLabRequestRow(row) {
     priority: row.priority ?? "Routine",
     requestedBy: row.requested_by_profile?.full_name ?? "",
     requestedDate: row.requested_at ?? row.created_at ?? "",
+    releasedDate: row.released_at ?? "",
     status: row.status ?? "Pending",
     performedBy: row.entered_by_profile?.full_name ?? "",
     performedByLic: row.entered_by_profile?.lic ?? "",

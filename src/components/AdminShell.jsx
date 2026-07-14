@@ -48,6 +48,15 @@ export const SidebarContent = ({ onItemClick, basePath }) => {
 
   const menuItems = NAV_BY_ROLE[role];
 
+  const isActive = (itemPath) => {
+    const current = location.pathname.toLowerCase().replace(/\/+$/, "");
+    const pattern = `/${role.toLowerCase()}/${itemPath.toLowerCase()}`;
+    if (current === pattern) return true;
+    if (current.startsWith(pattern + "/")) return true;
+    if (itemPath.toLowerCase() === "dashboard" && current === `/${role.toLowerCase()}`) return true;
+    return false;
+  };
+
   const handleLogout = async () => {
     await dispatch(logout()).unwrap();
     navigate("/");
@@ -61,9 +70,7 @@ export const SidebarContent = ({ onItemClick, basePath }) => {
 
       <List className="flex-1 text-gray-200 cursor-pointer px-2">
         {menuItems.map((item) => {
-          const isActive = location.pathname.startsWith(
-            `/${role}/${item.path}`,
-          );
+          const active = isActive(item.path);
 
           return (
             <ListItem
@@ -76,7 +83,7 @@ export const SidebarContent = ({ onItemClick, basePath }) => {
               sx={{
                 borderRadius: 2,
                 mb: 0.5,
-                backgroundColor: isActive ? "#1e293b" : "transparent",
+                backgroundColor: active ? "#1e293b" : "transparent",
                 "&:hover": {
                   backgroundColor: "#3c495e",
                 },
@@ -95,7 +102,7 @@ export const SidebarContent = ({ onItemClick, basePath }) => {
                 primary={item.text}
                 sx={{
                   "& .MuiTypography-root": {
-                    fontWeight: isActive ? 600 : 400,
+                    fontWeight: active ? 600 : 400,
                     color: "#ffffff",
                   },
                 }}
@@ -130,6 +137,7 @@ export const SidebarPermanent = () => (
         backgroundColor: "#338bd4",
         color: "#fff",
         overflowX: "hidden",
+        boxShadow: "4px 0 12px rgba(0,0,0,0.15)",
       },
     }}
     open
@@ -153,6 +161,7 @@ export const SidebarMobile = ({ open, onClose }) => (
         backgroundColor: "#334155",
         color: "#fff",
         overflowX: "hidden",
+        boxShadow: "4px 0 12px rgba(0,0,0,0.15)",
       },
     }}
   >
@@ -195,7 +204,7 @@ export const TopBar = ({ onMenuClick }) => {
     <AppBar
       position="static"
       color="inherit"
-      elevation={0}
+      elevation={1}
       sx={{ backgroundColor: meta.color }}
     >
       <Toolbar className="flex justify-between py-5">

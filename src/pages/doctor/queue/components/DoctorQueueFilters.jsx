@@ -1,16 +1,11 @@
-import {
-  Card,
-  CardContent,
-  TextField,
-  Box,
-  Chip,
-  Tab,
-  Tabs,
-} from "@mui/material";
+import { Card, CardContent, TextField, Tab, Tabs } from "@mui/material";
 
 const STATUS = ["All", "Waiting", "In Consult", "Done"];
 
 export default function DoctorQueueFilters({ q, setQ, status, setStatus }) {
+  const tabIndex = STATUS.indexOf(status);
+  const handleChange = (_, idx) => setStatus(STATUS[idx]);
+
   return (
     <Card className="rounded-2xl shadow">
       <CardContent className="space-y-3 flex ">
@@ -23,11 +18,16 @@ export default function DoctorQueueFilters({ q, setQ, status, setStatus }) {
           onChange={(e) => setQ(e.target.value)}
         />
 
-        <Tabs variant="scrollable" scrollButtons="auto" sx={{ minHeight: 44 }}>
-          <Tab label="Queue (Today)" />
-          <Tab label="Upcoming" />
-          <Tab label="Completed" />
-          <Tab label="Cancelled / No-show" />
+        <Tabs
+          value={tabIndex === -1 ? 0 : tabIndex}
+          onChange={handleChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          sx={{ minHeight: 44 }}
+        >
+          {STATUS.map((s) => (
+            <Tab key={s} label={s} />
+          ))}
         </Tabs>
       </CardContent>
     </Card>

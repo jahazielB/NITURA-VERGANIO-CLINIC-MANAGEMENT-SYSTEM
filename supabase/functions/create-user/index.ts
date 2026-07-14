@@ -183,6 +183,17 @@ export default {
         return logAndReturnGenericError(profileError);
       }
 
+      try {
+        await supabaseAdmin.rpc("log_activity", {
+          p_user_id: null,
+          p_action: "account_created",
+          p_description: `Created account for ${fullName} (${role})`,
+          p_severity: "success",
+        });
+      } catch (logErr) {
+        console.error("Activity Log Error", JSON.stringify(logErr));
+      }
+
       return json({
         success: true,
         userId,

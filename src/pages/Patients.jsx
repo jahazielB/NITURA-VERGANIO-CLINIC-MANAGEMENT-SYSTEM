@@ -11,59 +11,22 @@ import {
   TableRow,
   TableCell,
   TableBody,
-  IconButton,
-  Chip,
   TablePagination,
   CircularProgress,
 } from "@mui/material";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import ConfirmDeleteCancel from "../components/modals/ConfirmDelete";
 import CustomSnackbar from "../components/modals/CustomSnackBar";
 
-import { useMemo, useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-
-import { deletePatient, fetchPatients } from "../store/patientSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { deletePatient, fetchPatients } from "../store/patientSlice";
 
 import useDebounce from "../hooks/useDebounce";
 import { upperCaseFirstLetter } from "../components/helpers/nameHelper";
-
-const money = (n) =>
-  new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(
-    Number(n || 0),
-  );
-
-const computeInvoiceTotals = (inv) => {
-  const subtotal = (inv?.items || []).reduce(
-    (a, it) => a + Number(it.qty || 0) * Number(it.price || 0),
-    0,
-  );
-  const total = Math.max(0, subtotal - Number(inv?.discount || 0));
-  const paid = Number(inv?.paid || 0);
-  const balance = Math.max(0, total - paid);
-  return { subtotal, total, paid, balance };
-};
-
-const patientBillingSummary = (patientId, invoices = []) => {
-  const invs = invoices.filter(
-    (x) => x.patientId === patientId && x.status !== "Voided",
-  );
-
-  if (invs.length === 0) {
-    return { label: "No Invoice", color: "default", balance: 0 };
-  }
-
-  const balance = invs.reduce(
-    (sum, inv) => sum + computeInvoiceTotals(inv).balance,
-    0,
-  );
-
-  if (balance > 0) return { label: "With Balance", color: "warning", balance };
-  return { label: "Clear", color: "success", balance: 0 };
-};
 
 export default function Patients() {
   const [search, setSearch] = useState("");
@@ -93,33 +56,6 @@ export default function Patients() {
     dispatch(fetchPatients({ page, rowsPerPage, search: debouncedSearch }));
     setPage(0);
   };
-  // ✅ UI-only mock invoices (ties to patient.id)
-  const [mockInvoices] = useState([
-    {
-      id: 1001,
-      patientId: 1,
-      status: "Partial",
-      discount: 0,
-      paid: 300,
-      items: [
-        { id: 1, desc: "Consultation", qty: 1, price: 500 },
-        { id: 2, desc: "CBC", qty: 1, price: 250 },
-      ],
-    },
-    {
-      id: 1002,
-      patientId: 2,
-      status: "Paid",
-      discount: 0,
-      paid: 500,
-      items: [{ id: 1, desc: "Consultation", qty: 1, price: 500 }],
-    },
-    // Try adding no invoice for a patient to see "No Invoice"
-  ]);
-
-  const filteredPatients = useMemo(() => {
-    const s = search.toLowerCase();
-  }, [search]);
 
   const handleDelete = async () => {
     try {
@@ -175,7 +111,6 @@ export default function Patients() {
                 <TableCell>Contact</TableCell>
                 <TableCell>Birthday</TableCell>
                 <TableCell>Address</TableCell>
-                <TableCell>Billing</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -183,7 +118,7 @@ export default function Patients() {
             <TableBody>
               {loading && (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={6} align="center">
                     <Box className="flex items-center justify-center py-10">
                       <CircularProgress />
                     </Box>
@@ -193,7 +128,6 @@ export default function Patients() {
 
               {!loading &&
                 rows.map((patient) => {
-                  const bill = patientBillingSummary(patient.id, mockInvoices);
                   const fullName =
                     patient.first_name +
                     " " +
@@ -210,48 +144,41 @@ export default function Patients() {
                       <TableCell>{patient.birth_date}</TableCell>
                       <TableCell>{upperCaseFirstLetter(address)}</TableCell>
 
-                      <TableCell>
-                        <Box className="flex items-center gap-2 flex-wrap">
-                          <Chip
-                            size="small"
-                            label={bill.label}
-                            color={bill.color}
-                          />
-                          {bill.label === "With Balance" && (
-                            <Typography
-                              variant="caption"
-                              color="text.secondary"
-                            >
-                              {money(bill.balance)}
-                            </Typography>
-                          )}
-                        </Box>
-                      </TableCell>
-
                       <TableCell align="right">
-                        <IconButton
-                          disabled={!patient?.id}
-                          onClick={() => navigate(`${patient.id}`)}
-                        >
-                          <OpenInNewIcon />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => {
-                            setSelectedPatient(patient);
-                            setOpenForm(true);
-                          }}
-                        >
-                          <EditIcon />
-                        </IconButton>
-                        <IconButton
-                          color="error"
-                          onClick={() => {
-                            setOpenDeleteDialog(true);
-                            setSelectedPatient(patient.id);
-                          }}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
+                        <Box className="flex justify-end gap-1 flex-wrap">
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<VisibilityIcon />}
+                            disabled={!patient?.id}
+                            onClick={() => navigate(`${patient.id}`)}
+                          >
+                            Open Chart
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<EditIcon />}
+                            onClick={() => {
+                              setSelectedPatient(patient);
+                              setOpenForm(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            color="error"
+                            startIcon={<DeleteIcon />}
+                            onClick={() => {
+                              setOpenDeleteDialog(true);
+                              setSelectedPatient(patient.id);
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </Box>
                       </TableCell>
                     </TableRow>
                   );
@@ -259,7 +186,7 @@ export default function Patients() {
 
               {!loading && rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} align="center">
+                  <TableCell colSpan={6} align="center">
                     No patients found
                   </TableCell>
                 </TableRow>

@@ -121,6 +121,14 @@ export default {
         return friendlyError("You cannot disable your own account.", 400);
       }
 
+      // Fetch the target user's name before updating so the activity log
+      // has a human-readable description regardless of the update outcome.
+      const { data: targetUser } = await supabaseAdmin
+        .from("user_profiles")
+        .select("full_name")
+        .eq("id", userId)
+        .maybeSingle();
+
       const updatePayload = isActive
         ? {
             is_active: true,
@@ -141,6 +149,24 @@ export default {
 
       if (error) {
         return logAndReturnGenericError(error);
+      }
+
+      const targetName = targetUser?.full_name || "Unknown";
+      const action = isActive ? "account_enabled" : "account_disabled";
+      const description = isActive
+        ? `Enabled account for ${targetName}`
+        : `Disabled account for ${targetName}`;
+      const severity = isActive ? "success" : "warning";
+
+      try {
+        await supabaseAdmin.rpc("log_activity", {
+          p_user_id: caller.id,
+          p_action: action,
+          p_description: description,
+          p_severity: severity,
+        });
+      } catch (logErr) {
+        console.error("Activity Log Error", JSON.stringify(logErr));
       }
 
       return json({

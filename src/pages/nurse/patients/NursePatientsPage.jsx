@@ -1,33 +1,5 @@
-export const nursePatientsMock = [
-  {
-    id: "PT001",
-    firstName: "Juan",
-    lastName: "Dela Cruz",
-    age: 33,
-    gender: "Male",
-    lastVisit: "2026-02-05",
-  },
-  {
-    id: "PT002",
-    firstName: "Maria",
-    lastName: "Santos",
-    age: 28,
-    gender: "Female",
-    lastVisit: "2026-02-04",
-  },
-  {
-    id: "PT003",
-    firstName: "Pedro",
-    lastName: "Reyes",
-    age: 41,
-    gender: "Male",
-    lastVisit: "2026-02-03",
-  },
-];
-
-/* =========================
-   src/pages/nurse/patients/NursePatientsPage.jsx
-========================= */
+import PatientFormDialog from "../../../components/forms/PatientFormDialog";
+import CustomSnackbar from "../../../components/modals/CustomSnackBar";
 import {
   Box,
   Typography,
@@ -42,38 +14,54 @@ import {
   TableBody,
   Button,
   TableContainer,
+  TablePagination,
+  CircularProgress,
 } from "@mui/material";
-import { useMemo, useState } from "react";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import EditIcon from "@mui/icons-material/Edit";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchPatients } from "../../../store/patientSlice";
+import useDebounce from "../../../hooks/useDebounce";
+import { upperCaseFirstLetter } from "../../../components/helpers/nameHelper";
 
 export default function NursePatientsPage() {
   const navigate = useNavigate();
-  const [q, setQ] = useState("");
-  const [patients] = useState(nursePatientsMock);
+  const dispatch = useDispatch();
+  const { rows, loading, total } = useSelector((s) => s.patients);
 
-  const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
-    return patients
-      .filter((p) => {
-        if (!qq) return true;
-        const name = `${p.lastName} ${p.firstName}`.toLowerCase();
-        return (
-          name.includes(qq) ||
-          String(p.id || "")
-            .toLowerCase()
-            .includes(qq) ||
-          String(p.lastVisit || "")
-            .toLowerCase()
-            .includes(qq)
-        );
-      })
-      .sort((a, b) => String(b.lastVisit).localeCompare(String(a.lastVisit)));
-  }, [patients, q]);
+  const [search, setSearch] = useState("");
+  const [openForm, setOpenForm] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState(null);
+  const [page, setPage] = useState(0);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    severity: "",
+    message: "",
+  });
 
-  const openChart = (p, tab = "overview") => {
-    // ✅ nurse patient chart + auto-open tab
-    // tabs supported for nurse: overview | visits | lab
-    navigate(`/nurse/patients/${p.id}?tab=${encodeURIComponent(tab)}`);
+  const rowsPerPage = 10;
+  const debouncedSearch = useDebounce(search, 500);
+
+  useEffect(() => {
+    dispatch(fetchPatients({ page, rowsPerPage, search: debouncedSearch }));
+  }, [dispatch, page, debouncedSearch]);
+
+  const refetchPatients = () => {
+    dispatch(fetchPatients({ page, rowsPerPage, search: debouncedSearch }));
+    setPage(0);
+  };
+
+  const openChart = (p) => {
+    navigate(`/nurse/patients/${p.id}?tab=overview`);
+  };
+
+  const fullName = (p) => {
+    const first = p.first_name || "";
+    const middle = p.middle_name ? p.middle_name.charAt(0) + ". " : "";
+    const last = p.last_name || "";
+    return upperCaseFirstLetter(`${first} ${middle}${last}`.trim());
   };
 
   return (
@@ -96,18 +84,29 @@ export default function NursePatientsPage() {
                 size="small"
                 fullWidth
                 placeholder="Name, Patient ID, last visit..."
-                value={q}
-                onChange={(e) => setQ(e.target.value)}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
             </Grid>
             <Grid item xs={12} md={6}>
-              <TextField
-                label="Note"
-                size="small"
-                fullWidth
-                value="Nurse view is limited: no SOAP, no prescriptions, no billing."
-                disabled
-              />
+              <Box className="flex justify-end gap-2">
+                <TextField
+                  label="Note"
+                  size="small"
+                  value="Nurse view is limited: no SOAP, no prescriptions, no billing."
+                  disabled
+                  sx={{ minWidth: 300 }}
+                />
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    setSelectedPatient(null);
+                    setOpenForm(true);
+                  }}
+                >
+                  Add Patient
+                </Button>
+              </Box>
             </Grid>
           </Grid>
         </CardContent>
@@ -116,50 +115,68 @@ export default function NursePatientsPage() {
       <Card className="rounded-2xl shadow">
         <CardContent>
           <TableContainer sx={{ overflowX: "auto" }}>
-            <Table size="small" sx={{ minWidth: 950 }}>
+            <Table size="small" sx={{ minWidth: 1050 }}>
               <TableHead>
                 <TableRow className="bg-slate-100">
                   <TableCell>Patient</TableCell>
-                  <TableCell>Patient ID</TableCell>
-                  <TableCell>Age</TableCell>
                   <TableCell>Gender</TableCell>
-                  <TableCell>Last Visit</TableCell>
+                  <TableCell>Contact</TableCell>
+                  <TableCell>Birthday</TableCell>
+                  <TableCell>Address</TableCell>
                   <TableCell align="right">Actions</TableCell>
                 </TableRow>
               </TableHead>
 
               <TableBody>
-                {filtered.map((p) => (
-                  <TableRow key={p.id} hover>
-                    <TableCell className="font-semibold">
-                      {p.lastName}, {p.firstName}
-                    </TableCell>
-                    <TableCell>{p.id}</TableCell>
-                    <TableCell>{p.age}</TableCell>
-                    <TableCell>{p.gender}</TableCell>
-                    <TableCell>{p.lastVisit}</TableCell>
-                    <TableCell align="right">
-                      <Box className="flex justify-end gap-1 flex-wrap">
-                        <Button
-                          size="small"
-                          variant="contained"
-                          onClick={() => openChart(p, "overview")}
-                        >
-                          Open Chart
-                        </Button>
-                        <Button
-                          size="small"
-                          variant="outlined"
-                          onClick={() => openChart(p, "lab")}
-                        >
-                          Lab Results
-                        </Button>
+                {loading && (
+                  <TableRow>
+                    <TableCell colSpan={6} align="center">
+                      <Box className="flex items-center justify-center py-10">
+                        <CircularProgress />
                       </Box>
                     </TableCell>
                   </TableRow>
-                ))}
+                )}
 
-                {filtered.length === 0 && (
+                {!loading &&
+                  rows.map((p) => (
+                    <TableRow key={p.id} hover>
+                      <TableCell className="font-semibold">
+                        {fullName(p)}
+                      </TableCell>
+                      <TableCell>{p.gender || "—"}</TableCell>
+                      <TableCell>{p.contact_number || "—"}</TableCell>
+                      <TableCell>{p.birth_date || "—"}</TableCell>
+                      <TableCell>
+                        {upperCaseFirstLetter(p.address || "") || "—"}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Box className="flex justify-end gap-1 flex-wrap">
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<VisibilityIcon />}
+                            onClick={() => openChart(p)}
+                          >
+                            Open Chart
+                          </Button>
+                          <Button
+                            size="small"
+                            variant="outlined"
+                            startIcon={<EditIcon />}
+                            onClick={() => {
+                              setSelectedPatient(p);
+                              setOpenForm(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+
+                {!loading && rows.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={6} align="center">
                       No patients found
@@ -169,8 +186,34 @@ export default function NursePatientsPage() {
               </TableBody>
             </Table>
           </TableContainer>
+
+          <TablePagination
+            component="div"
+            count={total}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            rowsPerPageOptions={[]}
+          />
         </CardContent>
       </Card>
+
+      <PatientFormDialog
+        open={openForm}
+        onClose={() => {
+          setOpenForm(false);
+          setSelectedPatient(null);
+        }}
+        patient={selectedPatient}
+        onSaved={refetchPatients}
+      />
+
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
     </Box>
   );
 }

@@ -68,9 +68,21 @@ export default function VisitHistoryTable({}) {
   const handleDeleteVisit = async (id) => {
     try {
       setOpenDeleteDialog({ ...openDeleteDialog, loading: true });
-      const { error } = await supabase.from("visits").delete().eq("id", id);
+      const { data, error } = await supabase.functions.invoke(
+        "delete-visit",
+        { body: { visitId: id } },
+      );
 
-      if (error) throw error;
+      if (error) {
+        const text = await error.context?.text?.();
+        const body = text ? JSON.parse(text) : null;
+        throw new Error(body?.error || "Delete Visit Failed");
+      }
+
+      if (!data?.success) {
+        throw new Error(data?.error || "Delete Visit Failed");
+      }
+
       setSnackbar({
         ...snackbar,
         open: true,
@@ -85,7 +97,7 @@ export default function VisitHistoryTable({}) {
         ...snackbar,
         open: true,
         severity: "error",
-        message: "Delete Visit Failed",
+        message: err.message || "Delete Visit Failed",
       });
       setOpenDeleteDialog({ ...openDeleteDialog, loading: false, open: false });
     }
@@ -157,9 +169,9 @@ export default function VisitHistoryTable({}) {
                           <IconButton
                             aria-label="delete"
                             color="error"
-                            disabled={role === "MedTech"}
+                            disabled={role === "MedTech" || role === "Doctor"}
                             onClick={() => {
-                              if (role === "MedTech") return;
+                              if (role === "MedTech" || role === "Doctor") return;
                               setOpenDeleteDialog({
                                 ...openDeleteDialog,
                                 open: true,

@@ -152,7 +152,7 @@ export default {
       const { data: targetUser, error: targetUserError } =
         await supabaseAdmin
           .from("user_profiles")
-          .select("id, email")
+          .select("id, email, full_name")
           .eq("id", userId)
           .maybeSingle();
 
@@ -209,6 +209,18 @@ export default {
         }
 
         return logAndReturnGenericError(profileError);
+      }
+
+      const targetName = targetUser?.full_name || fullName;
+      try {
+        await supabaseAdmin.rpc("log_activity", {
+          p_user_id: caller.id,
+          p_action: "account_updated",
+          p_description: `Updated account for ${targetName}`,
+          p_severity: "info",
+        });
+      } catch (logErr) {
+        console.error("Activity Log Error", JSON.stringify(logErr));
       }
 
       return json({

@@ -1,77 +1,81 @@
-import { Box, Typography } from "@mui/material";
-import { useMemo, useState } from "react";
+import { Box, TablePagination, TextField, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import LabReviewFilters from "./components/LabReviewFilters";
+import { getLabRequests } from "../../../services/labRequestService";
+import { getAge } from "../../../components/helpers/dateHelper";
+import { fullName } from "../../../components/helpers/nameHelper";
 import LabReviewTable from "./components/LabReviewTable";
 import ViewLabModal from "../../../components/modals/ViewLabModal";
-
-import { labReviewMock } from "./components/labReviewMock";
-import { todayISO } from "../../../components/helpers/billingHelpers";
-
-const isThisWeek = (iso) => {
-  const d = new Date(String(iso).slice(0, 10));
-  const now = new Date();
-  const start = new Date(now);
-  start.setDate(now.getDate() - now.getDay());
-  start.setHours(0, 0, 0, 0);
-  return d >= start && d <= now;
-};
 
 export default function DoctorLabReviewPage() {
   const navigate = useNavigate();
 
-  const [rows, setRows] = useState(labReviewMock);
+  const [rows, setRows] = useState([]);
+  const [totalCount, setTotalCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage] = useState(10);
+  const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState("Ready"); // doctor focus
-  const [quickDate, setQuickDate] = useState("today");
 
   const [openView, setOpenView] = useState(false);
   const [selected, setSelected] = useState(null);
 
-  const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
+  const templatePatient = useMemo(() => ({
+    name: fullName(selected?.patientName || ""),
+    age: selected?.birthDate ? String(getAge(selected.birthDate)) : "",
+    sex: selected?.gender || "",
+    date: selected?.releasedDate
+      ? new Date(selected.releasedDate).toLocaleDateString("en-US", {
+          month: "2-digit",
+          day: "2-digit",
+          year: "numeric",
+        })
+      : "",
+    address: selected?.address || "",
+    requestingPhysician: selected?.requestedBy || "",
+  }), [selected]);
 
-    return rows
-      .filter((r) => (status === "All" ? true : r.status === status))
-      .filter((r) => {
-        if (quickDate === "all") return true;
-        const d = String(r.dateReleased).slice(0, 10);
-        if (quickDate === "today") return d === todayISO();
-        if (quickDate === "thisWeek") return isThisWeek(d);
-        return true;
-      })
-      .filter((r) => {
-        if (!qq) return true;
-        return (
-          (r.id || "").toLowerCase().includes(qq) ||
-          (r.patientName || "").toLowerCase().includes(qq) ||
-          (r.visitId || "").toLowerCase().includes(qq) ||
-          (r.testType || "").toLowerCase().includes(qq)
-        );
-      })
-      .sort((a, b) =>
-        String(b.dateReleased).localeCompare(String(a.dateReleased)),
-      );
-  }, [rows, q, status, quickDate]);
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { rows: data, total } = await getLabRequests({
+        page: page + 1,
+        limit: rowsPerPage,
+        search: q,
+        status: "Released",
+      });
+
+      setRows(data || []);
+      setTotalCount(total);
+    } catch (e) {
+      console.error("Failed to load lab results:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [page, rowsPerPage, q]);
+
+  useEffect(() => {
+    setPage(0);
+  }, [q]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const onView = (r) => {
     setSelected(r);
     setOpenView(true);
-    console.log("clicked");
   };
 
   const onOpenChart = (r) => {
-    // Optional: jump to lab results tab later
     navigate(
       `/doctor/patients/${r.patientId}?tab=lab&visit=${encodeURIComponent(r.visitId)}`,
     );
   };
 
-  const onMarkReviewed = (r) => {
-    setRows((prev) =>
-      prev.map((x) => (x.id === r.id ? { ...x, status: "Reviewed" } : x)),
-    );
+  const onPageChange = (_e, newPage) => {
+    setPage(newPage);
   };
 
   return (
@@ -85,20 +89,24 @@ export default function DoctorLabReviewPage() {
         </Typography>
       </Box>
 
-      <LabReviewFilters
-        q={q}
-        setQ={setQ}
-        status={status}
-        setStatus={setStatus}
-        quickDate={quickDate}
-        setQuickDate={setQuickDate}
+      <TextField
+        label="Search"
+        size="small"
+        fullWidth
+        placeholder="Patient, test type..."
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
       />
 
       <LabReviewTable
-        rows={filtered}
+        rows={rows}
+        loading={loading}
+        totalCount={totalCount}
+        page={page}
+        rowsPerPage={rowsPerPage}
+        onPageChange={onPageChange}
         onOpenChart={onOpenChart}
         onView={onView}
-        onMarkReviewed={onMarkReviewed}
       />
 
       <ViewLabModal
@@ -106,6 +114,7 @@ export default function DoctorLabReviewPage() {
         onClose={() => setOpenView(false)}
         visitLabel=""
         item={selected}
+        patient={templatePatient}
       />
     </Box>
   );

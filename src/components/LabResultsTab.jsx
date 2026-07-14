@@ -129,6 +129,15 @@ export default function LabResultsTab({ visits = [], role }) {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
+  const displayItems = useMemo(
+    () =>
+      normalizedRole === "doctor"
+        ? items.filter((x) => x.status === "Released")
+        : items,
+    [items, normalizedRole],
+  );
+  const displayTotal = normalizedRole === "doctor" ? displayItems.length : totalItems;
+
   const [openRequest, setOpenRequest] = useState(false);
   const [openEnter, setOpenEnter] = useState(false);
   const [openView, setOpenView] = useState(false);
@@ -359,7 +368,7 @@ export default function LabResultsTab({ visits = [], role }) {
                   </TableHead>
 
                   <TableBody>
-                    {items.map((x) => (
+                    {displayItems.map((x) => (
                       <TableRow key={x.id} hover>
                         <TableCell>
                           {formatDisplayDate(x.requestedDate)}
@@ -424,7 +433,7 @@ export default function LabResultsTab({ visits = [], role }) {
                               </Button>
                             )}
 
-                            {x.status === "Ready" && (
+                            {x.status === "Ready" && normalizedRole !== "doctor" && (
                               <Button
                                 size="small"
                                 variant="outlined"
@@ -448,20 +457,22 @@ export default function LabResultsTab({ visits = [], role }) {
                               Print
                             </Button>
 
-                            <Button
-                              size="small"
-                              variant="outlined"
-                              color="error"
-                              onClick={() => handleDeleteClick(x)}
-                            >
-                              Delete
-                            </Button>
+                            {normalizedRole !== "doctor" && (
+                              <Button
+                                size="small"
+                                variant="outlined"
+                                color="error"
+                                onClick={() => handleDeleteClick(x)}
+                              >
+                                Delete
+                              </Button>
+                            )}
                           </Box>
                         </TableCell>
                       </TableRow>
                     ))}
 
-                    {!loading && items.length === 0 && (
+                    {!loading && displayItems.length === 0 && (
                       <TableRow>
                         <TableCell colSpan={7} align="center">
                           No lab requests found
@@ -473,10 +484,10 @@ export default function LabResultsTab({ visits = [], role }) {
               </TableContainer>
             </Box>
           </CardContent>
-          {totalItems > PAGE_SIZE && (
+          {displayTotal > PAGE_SIZE && (
             <Box className="flex justify-end px-6 pb-4">
               <Pagination
-                count={Math.ceil(totalItems / PAGE_SIZE)}
+                count={Math.ceil(displayTotal / PAGE_SIZE)}
                 page={page}
                 onChange={(_, value) => setPage(value)}
                 color="primary"

@@ -52,6 +52,8 @@ export default function PrescriptionCreateModal({
   const { id } = useParams();
   const dispatch = useDispatch();
   const { patientInfo } = useSelector((s) => s.patientProfile);
+  const { role: currentRole, user: currentUser } = useSelector((s) => s.auth);
+  const isDoctor = currentRole === "Doctor";
   const visits = patientInfo?.visits;
   const prescriptionOrder = visits?.flatMap((v) => v.prescription_orders);
   useEffect(() => {
@@ -69,8 +71,9 @@ export default function PrescriptionCreateModal({
     setOrderForm((prev) => ({
       ...prev,
       visitId: latestVisit,
+      doctorId: isDoctor && currentUser?.id ? currentUser.id : prev.doctorId,
     }));
-  }, []);
+  }, [isDoctor, currentUser?.id]);
   useEffect(() => {
     // console.log(prescriptionOrder);
     console.log(
@@ -217,7 +220,7 @@ export default function PrescriptionCreateModal({
 
           <Box className="flex gap-3">
             <FormControl fullWidth size="small" required sx={{ minWidth: 150 }}>
-              <InputLabel>Select Doctor</InputLabel>
+              <InputLabel>Doctor</InputLabel>
               <Select
                 name="doctorId"
                 value={orderForm.doctorId || ""}
@@ -228,7 +231,8 @@ export default function PrescriptionCreateModal({
                     [name]: value,
                   }));
                 }}
-                label="Select Doctor"
+                label="Doctor"
+                disabled={isDoctor}
               >
                 {doctors?.map((d) => (
                   <MenuItem key={d.id} value={d.id}>

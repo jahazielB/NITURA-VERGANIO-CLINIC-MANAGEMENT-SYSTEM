@@ -175,6 +175,17 @@ export default {
         console.error("Reset Password Session Cleanup Error", sessionError);
       }
 
+      try {
+        await supabaseAdmin.rpc("log_activity", {
+          p_user_id: caller.id,
+          p_action: "password_reset",
+          p_description: `Reset password for ${targetUser.full_name}`,
+          p_severity: "warning",
+        });
+      } catch (logErr) {
+        console.error("Activity Log Error", JSON.stringify(logErr));
+      }
+
       return json({
         success: true,
         userId,

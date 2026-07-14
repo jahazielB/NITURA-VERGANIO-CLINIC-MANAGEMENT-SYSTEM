@@ -1,6 +1,5 @@
 import { Card, CardContent, Grid, TextField, MenuItem } from "@mui/material";
 
-const STATUS = ["All", "Ready", "Reviewed"];
 const QUICK_DATE = [
   { value: "all", label: "All" },
   { value: "today", label: "Today" },
@@ -10,8 +9,6 @@ const QUICK_DATE = [
 export default function LabReviewFilters({
   q,
   setQ,
-  status,
-  setStatus,
   quickDate,
   setQuickDate,
 }) {
@@ -19,7 +16,7 @@ export default function LabReviewFilters({
     <Card className="rounded-2xl shadow">
       <CardContent>
         <Grid container spacing={2} alignItems="flex-start">
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={7}>
             <TextField
               label="Search"
               size="small"
@@ -30,24 +27,7 @@ export default function LabReviewFilters({
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
-            <TextField
-              select
-              label="Status"
-              size="small"
-              fullWidth
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              {STATUS.map((s) => (
-                <MenuItem key={s} value={s}>
-                  {s}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={5}>
             <TextField
               select
               label="Date Filter"
