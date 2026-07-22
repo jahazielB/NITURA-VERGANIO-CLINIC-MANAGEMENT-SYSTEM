@@ -1,6 +1,6 @@
 import Login from "./pages/Login";
 import DashboardPage from "./pages/Dashboard";
-import Patients from "./pages/patients";
+import Patients from "./pages/Patients";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "./layout/AdminLayout";
 import PatientProfilePage from "./pages/PatientProfilePage";
