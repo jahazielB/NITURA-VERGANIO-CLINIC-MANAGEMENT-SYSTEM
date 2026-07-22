@@ -93,7 +93,9 @@ function ResultsTemplateBody({
   const staff = {
     medTechName: item?.performedBy || "",
     medTechLic: item?.performedByLic || "",
-    pathologistName: item?.releasedBy || "",
+    pathologistName: (item?.releasedByRole === "Doctor" || item?.releasedByRole === "Admin")
+      ? (item?.releasedBy || "")
+      : "",
     pathologistLic: item?.releasedByLic || "",
   };
 

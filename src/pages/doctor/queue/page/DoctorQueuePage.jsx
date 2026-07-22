@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { supabase } from "../../../../lib/supabaseClient";
 import { subscribeToQueueChanges, updateQueueEntry } from "../../../../services/queueService";
+import { todayISO } from "../../../../components/helpers/labHelpers";
 import DoctorQueueTable from "../../components/DoctorQueueTable";
 import DoctorQueueFilters from "../components/DoctorQueueFilters";
 
@@ -56,6 +57,7 @@ export default function DoctorQueuePage() {
         .from("queue_entries")
         .select(QUEUE_SELECT)
         .eq("doctor", user.id)
+        .eq("queue_date", todayISO())
         .in("status", ["Waiting", "In Consult", "Done"])
         .order("queue_number", { ascending: true, nullsFirst: false })
         .order("queued_at", { ascending: true });

@@ -34,6 +34,7 @@ import {
   createQueueEntry,
   deleteQueueEntry,
   getTodayQueue,
+  getUpcomingQueue,
   subscribeToQueueChanges,
   updateQueueEntry,
 } from "../../services/queueService";
@@ -70,8 +71,11 @@ export default function AppointmentsPage() {
     setLoading(true);
     setError(null);
     try {
-      const data = await getTodayQueue();
-      setRows(data.map(mapQueueEntryToRow));
+      const [todayData, upcomingData] = await Promise.all([
+        getTodayQueue(),
+        getUpcomingQueue(),
+      ]);
+      setRows([...todayData.map(mapQueueEntryToRow), ...upcomingData.map(mapQueueEntryToRow)]);
     } catch (e) {
       const message = e.message || "Failed to load today's queue";
       setError(message);

@@ -29,6 +29,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import PrescriptionFormDialog from "./forms/PrescriptionFormDialog";
 import PrescriptionViewModal from "./modals/PrescriptionViewModal";
 import PrescriptionCreateModal from "./modals/PrescriptionCreateModal";
+import PrescriptionPrintPreview from "./modals/PrescriptionPrintPreview";
 import CustomSnackbar from "./modals/CustomSnackBar";
 import ConfirmDeleteCancel from "./modals/ConfirmDelete";
 
@@ -53,6 +54,7 @@ export default function PrescriptionsTab({
   const [editMode, setEditMode] = useState(false);
   const [openView, setOpenView] = useState(false);
   const [viewItem, setViewItem] = useState(null);
+  const [printItem, setPrintItem] = useState(null);
   const [saving, setSaving] = useState(false);
   const [snackbar, setSnackbar] = useState({
     open: false,
@@ -326,9 +328,7 @@ export default function PrescriptionsTab({
                             size="small"
                             variant="outlined"
                             startIcon={<PrintIcon />}
-                            onClick={() =>
-                              alert("Print prescription feature coming soon")
-                            }
+                            onClick={() => setPrintItem(p)}
                           >
                             Print
                           </Button>
@@ -420,6 +420,13 @@ export default function PrescriptionsTab({
         setSnack={setSnackbar}
         saving={saving}
       />
+      {printItem && (
+        <PrescriptionPrintPreview
+          item={printItem}
+          patient={patientInfo}
+          onClose={() => setPrintItem(null)}
+        />
+      )}
       <CustomSnackbar
         open={snackbar.open}
         onClose={() => setSnackbar({ ...snackbar, open: false })}

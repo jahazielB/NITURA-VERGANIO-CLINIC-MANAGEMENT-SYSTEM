@@ -12,6 +12,7 @@ import {
   Box,
   IconButton,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import {
   Close as CloseIcon,
@@ -32,6 +33,7 @@ export default function AppointmentFormDialog({
   initialValues,
 }) {
   const isEdit = mode === "edit";
+  const [saving, setSaving] = useState(false);
   const [patientOptions, setPatientOptions] = useState([]);
   const [patientLoading, setPatientLoading] = useState(false);
   const [patientSearch, setPatientSearch] = useState("");
@@ -211,7 +213,9 @@ export default function AppointmentFormDialog({
   };
 
   const submit = async () => {
+    if (saving) return;
     try {
+      setSaving(true);
       const patientFirstName = form.patientFirstName.trim();
       const patientMiddleName = form.patientMiddleName.trim();
       const patientLastName = form.patientLastName.trim();
@@ -223,13 +227,14 @@ export default function AppointmentFormDialog({
         .filter(Boolean)
         .join(" ");
 
-      if (!patientFirstName || !patientMiddleName || !patientLastName) {
-        return alert("First name, middle name, and last name are required.");
+      if (!patientFirstName || !patientLastName) {
+        setSaving(false);
+        return alert("First name and last name are required.");
       }
-      if (!form.date) return alert("Date is required.");
-      if (!form.time) return alert("Time is required.");
+      if (!form.date) { setSaving(false); return alert("Date is required."); }
+      if (!form.time) { setSaving(false); return alert("Time is required."); }
 
-      onSave({
+      await onSave({
         ...form,
         patientName,
         display_name: patientName,
@@ -241,6 +246,8 @@ export default function AppointmentFormDialog({
       });
     } catch (error) {
       alert(error?.message || "Failed to save appointment.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -254,7 +261,7 @@ export default function AppointmentFormDialog({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={saving ? undefined : onClose}
       fullWidth
       maxWidth="sm"
       PaperProps={{
@@ -293,7 +300,7 @@ export default function AppointmentFormDialog({
         </Box>
         <IconButton
           aria-label="close"
-          onClick={onClose}
+          onClick={saving ? undefined : onClose}
           sx={{ color: "text.secondary", p: 0.5 }}
         >
           <CloseIcon size="small" />
@@ -547,6 +554,7 @@ export default function AppointmentFormDialog({
         <Button
           variant="text"
           onClick={onClose}
+          disabled={saving}
           sx={{ color: "text.secondary", fontWeight: 500, px: 2.5 }}
         >
           Cancel
@@ -555,6 +563,7 @@ export default function AppointmentFormDialog({
           variant="contained"
           onClick={submit}
           disableElevation
+          disabled={saving}
           sx={{
             fontWeight: 600,
             px: 3.5,
@@ -562,7 +571,8 @@ export default function AppointmentFormDialog({
             textTransform: "none",
           }}
         >
-          Save Details
+          {saving ? <CircularProgress size={20} sx={{ color: "inherit", mr: 1 }} /> : null}
+          {saving ? "Saving..." : "Save Details"}
         </Button>
       </DialogActions>
     </Dialog>

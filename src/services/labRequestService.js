@@ -21,7 +21,8 @@ const LAB_REQUEST_SELECT = `
   released_by_profile:user_profiles!released_by (
     id,
     full_name,
-    lic
+    lic,
+    role
   ),
   lab_result_items(*)
 `;
@@ -58,7 +59,8 @@ const LAB_REQUEST_SIDEBAR = `
   released_by_profile:user_profiles!released_by (
     id,
     full_name,
-    lic
+    lic,
+    role
   ),
   lab_result_items(*)
 `;
@@ -183,6 +185,7 @@ export function mapLabRequestRow(row) {
     performedByLic: row.entered_by_profile?.lic ?? "",
     releasedBy: row.released_by_profile?.full_name ?? "",
     releasedByLic: row.released_by_profile?.lic ?? "",
+    releasedByRole: row.released_by_profile?.role ?? "",
     lab_result_items: row.lab_result_items ?? [],
   };
 }
@@ -231,6 +234,7 @@ function mapSidebarLabRequestRow(row) {
     performedByLic: row.entered_by_profile?.lic ?? "",
     releasedBy: row.released_by_profile?.full_name ?? "",
     releasedByLic: row.released_by_profile?.lic ?? "",
+    releasedByRole: row.released_by_profile?.role ?? "",
     lab_result_items: row.lab_result_items ?? [],
   };
 }

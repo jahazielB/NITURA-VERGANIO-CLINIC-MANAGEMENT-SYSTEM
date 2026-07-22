@@ -39,6 +39,7 @@ export default function RxTable({
   onPageChange,
   onOpenChart,
   onView,
+  onPrint,
 }) {
   const [filter, setFilter] = useState(1);
 
@@ -149,11 +150,7 @@ export default function RxTable({
                             size="small"
                             variant="outlined"
                             startIcon={<PrintIcon />}
-                            onClick={() =>
-                              alert(
-                                "Print prescription feature coming soon",
-                              )
-                            }
+                            onClick={() => onPrint?.(r)}
                           >
                             Print
                           </Button>

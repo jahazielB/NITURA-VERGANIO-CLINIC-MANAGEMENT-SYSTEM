@@ -16,11 +16,7 @@ const activityIcons = {
   password_reset: <LockIcon fontSize="small" color="warning" />,
 };
 
-const formatTime = (iso) => {
-  if (!iso) return "";
-  const d = new Date(iso);
-  return d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
-};
+import { formatActivityTime } from "../../components/helpers/activityHelpers";
 
 export default function RecentActivityCard() {
   const [activities, setActivities] = useState([]);
@@ -89,7 +85,7 @@ export default function RecentActivityCard() {
                     <ListItemText
                       primary={
                         <Typography variant="body2">
-                          <span className="font-medium text-gray-500">{formatTime(item.created_at)}</span>
+                          <span className="font-medium text-gray-500">{formatActivityTime(item.created_at)}</span>
                           {" "}{item.description}
                           {name ? <span className="text-gray-400"> — {name}</span> : null}
                         </Typography>

@@ -140,8 +140,43 @@ export default function SoapTab({ visits = [] }) {
 
   useEffect(() => {
     if (printReq) {
-      const timer = setTimeout(() => { window.print(); setPrintReq(0); }, 100);
-      return () => clearTimeout(timer);
+      const printArea = document.querySelector(".soap-tab-print-area");
+      if (!printArea) { setPrintReq(0); return; }
+
+      const styles = document.querySelectorAll("style, link[rel='stylesheet']");
+      let stylesHtml = "";
+      styles.forEach((s) => (stylesHtml += s.outerHTML));
+
+      const clone = printArea.cloneNode(true);
+      clone.querySelectorAll("img").forEach((img) => {
+        if (img.src && !img.src.startsWith("http")) {
+          img.src = new URL(img.src, window.location.origin).href;
+        }
+      });
+
+      const win = window.open("", "_blank");
+      if (!win) { setPrintReq(0); return; }
+
+      win.document.write(`
+        <html>
+          <head>
+            ${stylesHtml}
+            <style>
+              @page { size: A4 portrait; margin: 15mm; }
+              html, body { margin: 0; padding: 0; background: #fff; width: 100%; }
+              * { color: #000 !important; }
+              .MuiCard-root { box-shadow: none !important; border: 1px solid #000 !important; padding: 7mm !important; }
+              .MuiTypography-root { font-size: 12px !important; }
+              img { max-height: 70px !important; object-fit: contain; }
+            </style>
+          </head>
+          <body>${clone.innerHTML}</body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      setTimeout(() => win.print(), 300);
+      setPrintReq(0);
     }
   }, [printReq]);
 
@@ -283,17 +318,10 @@ export default function SoapTab({ visits = [] }) {
       <GlobalStyles
         styles={{
           "@page": { size: "A4", margin: "12mm" },
-          "@media print": {
-            "html, body": { background: "#fff !important", margin: 0, padding: 0, color: "#000 !important" },
-            "body *": { visibility: "hidden" },
-            ".soap-tab-print-area, .soap-tab-print-area *": { visibility: "visible" },
-            ".soap-tab-print-area": { position: "absolute", left: 0, top: 0, width: "100%" },
-            ".soap-tab-print-area .MuiCard-root": { boxShadow: "none !important", border: "1px solid #000 !important", backgroundColor: "#fff !important" },
-          },
         }}
       />
 
-      <Box className="soap-tab-print-area" sx={{ display: "none", "@media print": { display: "block !important" } }}>
+      <Box className="soap-tab-print-area" sx={{ display: "none" }}>
         <Card sx={{ p: 3, mb: 2 }}>
           <Box textAlign="center" mb={2}>
             <img src={clinicHeaderLogo} alt="Clinic Header" style={{ maxWidth: "100%", height: "auto" }} />

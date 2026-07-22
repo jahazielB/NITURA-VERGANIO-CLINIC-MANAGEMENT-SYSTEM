@@ -14,10 +14,15 @@ import {
   Menu,
   MenuItem,
   Divider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  CircularProgress,
 } from "@mui/material";
 
 import MenuIcon from "@mui/icons-material/Menu";
-import DashboardIcon from "@mui/icons-material/Dashboard";
 import NotificationsIcon from "@mui/icons-material/Notifications";
 import PersonIcon from "@mui/icons-material/Person";
 import LockIcon from "@mui/icons-material/Lock";
@@ -43,7 +48,6 @@ export const drawerWidth = 250;
 export const SidebarContent = ({ onItemClick, basePath }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
   const { role } = useSelector((s) => s.auth);
 
   const menuItems = NAV_BY_ROLE[role];
@@ -55,11 +59,6 @@ export const SidebarContent = ({ onItemClick, basePath }) => {
     if (current.startsWith(pattern + "/")) return true;
     if (itemPath.toLowerCase() === "dashboard" && current === `/${role.toLowerCase()}`) return true;
     return false;
-  };
-
-  const handleLogout = async () => {
-    await dispatch(logout()).unwrap();
-    navigate("/");
   };
 
   return (
@@ -111,15 +110,6 @@ export const SidebarContent = ({ onItemClick, basePath }) => {
           );
         })}
       </List>
-
-      <Box className="p-4 border-t border-slate-600 cursor-pointer">
-        <ListItem button onClick={() => handleLogout()}>
-          <ListItemIcon sx={{ color: "#cbd5e1" }}>
-            <DashboardIcon />
-          </ListItemIcon>
-          <ListItemText primary="Logout" />
-        </ListItem>
-      </Box>
     </Box>
   );
 };
@@ -175,19 +165,34 @@ export const TopBar = ({ onMenuClick }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const meta = ROLE_TOPBAR[role];
+  const firstName = userName?.split(" ")[0] ?? "";
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good Morning" : hour < 18 ? "Good Afternoon" : "Good Evening";
 
   const [anchorEl, setAnchorEl] = useState(null);
   const [profileDialogOpen, setProfileDialogOpen] = useState(false);
   const [changePasswordDialogOpen, setChangePasswordDialogOpen] =
     useState(false);
+  const [logoutDialogOpen, setLogoutDialogOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleMenuOpen = (e) => setAnchorEl(e.currentTarget);
   const handleMenuClose = () => setAnchorEl(null);
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
     handleMenuClose();
+    setLogoutDialogOpen(true);
+  };
+
+  const handleLogoutConfirm = async () => {
+    setLoggingOut(true);
     await dispatch(logout()).unwrap();
     navigate("/");
+  };
+
+  const handleLogoutCancel = () => {
+    if (loggingOut) return;
+    setLogoutDialogOpen(false);
   };
 
   const handleProfile = () => {
@@ -218,9 +223,9 @@ export const TopBar = ({ onMenuClick }) => {
           </IconButton>
 
           <Box>
-            <Typography variant="h6">{meta.title}</Typography>
-            <Typography variant="body2" sx={{ color: "#757575" }}>
-              {meta.subtitle}
+            <Typography variant="body1" sx={{ fontWeight: 600 }}>
+              <span style={{ color: "#000000" }}>{greeting},</span>{" "}
+              <span style={{ color: "#1565c0" }}>{role} {firstName}</span>
             </Typography>
           </Box>
         </Box>
@@ -259,13 +264,29 @@ export const TopBar = ({ onMenuClick }) => {
               Change Password
             </MenuItem>
             <Divider />
-            <MenuItem onClick={handleLogout}>
+            <MenuItem onClick={handleLogoutClick}>
               <LogoutIcon sx={{ mr: 1.5 }} fontSize="small" />
               Logout
             </MenuItem>
           </Menu>
         </Box>
       </Toolbar>
+
+      <Dialog open={logoutDialogOpen} onClose={handleLogoutCancel}>
+        <DialogTitle>Confirm Logout</DialogTitle>
+        <DialogContent>
+          <Typography>Are you sure you want to log out?</Typography>
+        </DialogContent>
+        <DialogActions className="px-6 py-4">
+          <Button onClick={handleLogoutCancel} variant="outlined" disabled={loggingOut}>
+            Cancel
+          </Button>
+          <Button onClick={handleLogoutConfirm} variant="contained" color="error" disabled={loggingOut}>
+            {loggingOut ? <CircularProgress size={20} sx={{ mr: 1, color: "inherit" }} /> : null}
+            {loggingOut ? "Logging out..." : "Logout"}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <ProfileDialog
         open={profileDialogOpen}

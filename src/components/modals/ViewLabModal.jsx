@@ -63,7 +63,9 @@ export default function ViewLabModal({
   const staff = {
     medTechName: item?.performedBy || "",
     medTechLic: item?.performedByLic || "",
-    pathologistName: item?.releasedBy || "",
+    pathologistName: (item?.releasedByRole === "Doctor" || item?.releasedByRole === "Admin")
+      ? (item?.releasedBy || "")
+      : "",
     pathologistLic: item?.releasedByLic || "",
   };
   const [loading, setLoading] = useState(false);
@@ -109,7 +111,94 @@ export default function ViewLabModal({
   if (!item) return null;
 
   const handlePrint = () => {
-    window.setTimeout(() => window.print(), 0);
+    const printArea = document.querySelector(".lab-print-area");
+    if (!printArea) return;
+
+    const styles = document.querySelectorAll("style, link[rel='stylesheet']");
+    let stylesHtml = "";
+    styles.forEach((s) => (stylesHtml += s.outerHTML));
+
+    const clone = printArea.cloneNode(true);
+    clone.querySelectorAll("img").forEach((img) => {
+      if (img.src && !img.src.startsWith("http")) {
+        img.src = new URL(img.src, window.location.origin).href;
+      }
+    });
+
+    const spacious = `
+      @page { size: A4 portrait; margin: 15mm; }
+      html, body { margin: 0; padding: 0; background: #fff; width: 100%; }
+      * { color: #000 !important; }
+      .no-print, .MuiDialog-root, .MuiDialogActions-root, .MuiDialogTitle-root { display: none !important; }
+      .MuiPaper-root { box-shadow: none !important; border: 1px solid #000 !important; padding: 7mm !important; }
+      .MuiGrid-grid-md-6 { flex: 0 0 50% !important; max-width: 50% !important; }
+      .MuiTypography-root { font-size: 12px !important; }
+      .MuiTypography-root[style*="font-weight: 900"] { font-size: 13px !important; }
+      .MuiInputBase-input { font-size: 12px !important; }
+      img { max-height: 70px !important; object-fit: contain; }
+      input, textarea { border-color: #000 !important; }
+    `;
+
+    const compact = `
+      @page { size: A4 portrait; margin: 12mm; }
+      html, body { margin: 0; padding: 0; background: #fff; width: 100%; }
+      * { color: #000 !important; }
+      .no-print, .MuiDialog-root, .MuiDialogActions-root, .MuiDialogTitle-root { display: none !important; }
+      .MuiPaper-root { box-shadow: none !important; border: 1px solid #000 !important; padding: 4mm !important; }
+      .MuiBox-root { margin: 0 !important; padding: 0 !important; }
+      .MuiGrid-root { margin: 0 !important; }
+      .MuiGrid-root > .MuiGrid-item { padding: 1px !important; }
+      .MuiGrid-grid-md-6 { flex: 0 0 50% !important; max-width: 50% !important; }
+      .MuiTypography-root { font-size: 12px !important; }
+      .MuiInputBase-input { font-size: 12px !important; }
+      [style*="margin-bottom"] { margin-bottom: 2px !important; }
+      [style*="margin-top"] { margin-top: 2px !important; }
+      img { max-height: 60px !important; object-fit: contain; }
+      input, textarea { border-color: #000 !important; }
+    `;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+
+    win.document.write(`
+      <html>
+        <head>
+          ${stylesHtml}
+          <style id="print-layout">${spacious}</style>
+        </head>
+        <body>${clone.innerHTML}</body>
+      </html>
+    `);
+    win.document.close();
+
+    const checkFit = () => {
+      const body = win.document.body;
+      if (!body) return true;
+      const ow = body.style.width;
+      const om = body.style.maxHeight;
+      const oo = body.style.overflow;
+      body.style.width = "680px";
+      body.style.maxHeight = "1010px";
+      body.style.overflow = "hidden";
+      const fits = body.scrollHeight - body.clientHeight <= 15;
+      body.style.width = ow;
+      body.style.maxHeight = om;
+      body.style.overflow = oo;
+      return fits;
+    };
+
+    const doPrint = () => {
+      win.focus();
+      setTimeout(() => win.print(), 200);
+    };
+
+    setTimeout(() => {
+      if (!checkFit()) {
+        const el = win.document.getElementById("print-layout");
+        if (el) el.textContent = compact;
+      }
+      doPrint();
+    }, 300);
   };
 
   return (
@@ -119,48 +208,6 @@ export default function ViewLabModal({
           "@page": {
             size: "A4",
             margin: "12mm",
-          },
-          "@media print": {
-            "html, body": {
-              background: "#fff !important",
-              margin: 0,
-              padding: 0,
-              color: "#000 !important",
-            },
-            "body *": {
-              visibility: "hidden",
-            },
-            ".lab-print-area, .lab-print-area *": {
-              visibility: "visible",
-              color: "#000 !important",
-            },
-            ".lab-print-area": {
-              position: "absolute",
-              left: 0,
-              top: 0,
-              width: "100%",
-              maxWidth: "186mm",
-              margin: "0 auto",
-            },
-            ".lab-print-area .MuiPaper-root": {
-              boxShadow: "none !important",
-              border: "1px solid #000 !important",
-              backgroundColor: "#fff !important",
-            },
-            ".lab-print-area .no-print": {
-              display: "none !important",
-            },
-            ".MuiDialog-root, .MuiDialog-container, .MuiBackdrop-root": {
-              position: "static !important",
-              display: "block !important",
-              background: "transparent !important",
-            },
-            ".MuiDialog-paper": {
-              maxWidth: "none !important",
-              width: "100% !important",
-              margin: "0 !important",
-              overflow: "visible !important",
-            },
           },
         }}
       />

@@ -127,10 +127,11 @@ export default function DashboardPage() {
         { data: doctors },
       ] = await Promise.all([
         supabase
-          .from("queue_entries")
+          .from("visits")
           .select("*", { count: "exact", head: true })
-          .gte("created_at", todayStart.toISOString())
-          .lt("created_at", todayEnd.toISOString()),
+          .eq("visit_type", "Appointment")
+          .gte("scheduled_for", todayStart.toISOString())
+          .lt("scheduled_for", todayEnd.toISOString()),
         supabase
           .from("queue_entries")
           .select("*", { count: "exact", head: true })

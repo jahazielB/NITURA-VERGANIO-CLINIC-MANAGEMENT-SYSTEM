@@ -133,7 +133,7 @@ export default function DoctorSoapPage() {
   const onPrint = (r) => { setPrintMode(true); setViewRow(r); };
 
   const onNewSoap = () => {
-    alert("New SOAP (mock) — wire to Queue / select patient later");
+    navigate("/doctor/patients");
   };
 
   if (loading) {

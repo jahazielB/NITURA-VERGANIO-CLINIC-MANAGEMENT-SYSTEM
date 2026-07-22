@@ -6,6 +6,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { supabase } from "../../../lib/supabaseClient";
 import { fetchPatientProfile } from "../../../store/patientProfileSlice";
 import PrescriptionViewModal from "../../../components/modals/PrescriptionViewModal";
+import PrescriptionPrintPreview from "../../../components/modals/PrescriptionPrintPreview";
 import RxFilters from "./components/RxFilters";
 import RxTable from "./components/RxTable";
 
@@ -23,6 +24,7 @@ export default function DoctorPrescriptionsPage() {
   const [quickDate, setQuickDate] = useState("all");
   const [viewItem, setViewItem] = useState(null);
   const [openView, setOpenView] = useState(false);
+  const [printItem, setPrintItem] = useState(null);
 
   const fetchData = useCallback(async () => {
     if (!currentUser?.id) return;
@@ -199,6 +201,10 @@ export default function DoctorPrescriptionsPage() {
     setOpenView(true);
   };
 
+  const onPrint = (r) => {
+    setPrintItem(r);
+  };
+
   return (
     <Box className="space-y-4 p-5.5">
       <Box>
@@ -225,7 +231,15 @@ export default function DoctorPrescriptionsPage() {
         onPageChange={onPageChange}
         onOpenChart={onOpenChart}
         onView={onView}
+        onPrint={onPrint}
       />
+
+      {printItem && (
+        <PrescriptionPrintPreview
+          item={printItem}
+          onClose={() => setPrintItem(null)}
+        />
+      )}
 
       <PrescriptionViewModal
         open={openView}

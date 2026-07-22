@@ -60,9 +60,11 @@ export default function NurseDashboardPage() {
           .eq("queue_date", isoDate)
           .eq("status", "Waiting"),
         supabase
-          .from("queue_entries")
+          .from("visits")
           .select("id", { count: "exact", head: true })
-          .eq("queue_date", isoDate),
+          .eq("visit_type", "Appointment")
+          .gte("scheduled_for", today.toISOString())
+          .lt("scheduled_for", new Date(today.getTime() + 86400000).toISOString()),
         supabase
           .from("patients")
           .select("id", { count: "exact", head: true })

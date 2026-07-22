@@ -63,6 +63,18 @@ export async function getTodayQueue() {
   return data ?? [];
 }
 
+export async function getUpcomingQueue() {
+  const { data, error } = await supabase
+    .from("queue_entries")
+    .select(QUEUE_SELECT)
+    .gt("queue_date", todayISO())
+    .order("queue_date", { ascending: true })
+    .order("queued_at", { ascending: true });
+
+  assertNoError(error, "Failed to fetch upcoming queue");
+  return data ?? [];
+}
+
 export function subscribeToQueueChanges(callback) {
   return supabase
     .channel("queue_entries_changes")

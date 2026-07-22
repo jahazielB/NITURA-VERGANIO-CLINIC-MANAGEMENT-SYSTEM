@@ -145,9 +145,87 @@ export default function InvoicePrintPreviewDialog({
   const billing = payload.billing || {};
   const handlePrint = () => {
     setPrintedAt(new Date());
-    window.setTimeout(() => {
-      window.print();
-    }, 0);
+    const printArea = document.querySelector(".invoice-print-area");
+    if (!printArea) return;
+
+    const styles = document.querySelectorAll("style, link[rel='stylesheet']");
+    let stylesHtml = "";
+    styles.forEach((s) => (stylesHtml += s.outerHTML));
+
+    const clone = printArea.cloneNode(true);
+    clone.querySelectorAll("img").forEach((img) => {
+      if (img.src && !img.src.startsWith("http")) {
+        img.src = new URL(img.src, window.location.origin).href;
+      }
+    });
+
+    const spacious = `
+      @page { size: A4 portrait; margin: 15mm; }
+      html, body { margin: 0; padding: 0; background: #fff; }
+      * { color: #000 !important; }
+      .no-print, .MuiDialogActions-root, .MuiDialogTitle-root { display: none !important; }
+      .MuiPaper-root { box-shadow: none !important; border: 1px solid #000 !important; padding: 7mm !important; }
+      .MuiTypography-root, .MuiTableCell-root { font-size: 12px !important; }
+      img { max-height: 70px !important; object-fit: contain; }
+    `;
+
+    const compact = `
+      @page { size: A4 portrait; margin: 12mm; }
+      html, body { margin: 0; padding: 0; background: #fff; }
+      * { color: #000 !important; }
+      .no-print, .MuiDialogActions-root, .MuiDialogTitle-root { display: none !important; }
+      .MuiPaper-root { box-shadow: none !important; border: 1px solid #000 !important; padding: 4mm !important; }
+      .MuiBox-root { margin: 0 !important; padding: 0 !important; }
+      .MuiGrid-root { margin: 0 !important; }
+      .MuiGrid-root > .MuiGrid-item { padding: 1px !important; }
+      .MuiTypography-root, .MuiTableCell-root { font-size: 12px !important; }
+      [style*="margin-bottom"] { margin-bottom: 2px !important; }
+      [style*="margin-top"] { margin-top: 2px !important; }
+      img { max-height: 60px !important; object-fit: contain; }
+    `;
+
+    const win = window.open("", "_blank");
+    if (!win) return;
+
+    win.document.write(`
+      <html>
+        <head>
+          ${stylesHtml}
+          <style id="print-layout">${spacious}</style>
+        </head>
+        <body>${clone.innerHTML}</body>
+      </html>
+    `);
+    win.document.close();
+
+    const checkFit = () => {
+      const body = win.document.body;
+      if (!body) return true;
+      const ow = body.style.width;
+      const om = body.style.maxHeight;
+      const oo = body.style.overflow;
+      body.style.width = "680px";
+      body.style.maxHeight = "1010px";
+      body.style.overflow = "hidden";
+      const fits = body.scrollHeight - body.clientHeight <= 15;
+      body.style.width = ow;
+      body.style.maxHeight = om;
+      body.style.overflow = oo;
+      return fits;
+    };
+
+    const doPrint = () => {
+      win.focus();
+      setTimeout(() => win.print(), 200);
+    };
+
+    setTimeout(() => {
+      if (!checkFit()) {
+        const el = win.document.getElementById("print-layout");
+        if (el) el.textContent = compact;
+      }
+      doPrint();
+    }, 300);
   };
 
   return (
@@ -157,69 +235,6 @@ export default function InvoicePrintPreviewDialog({
           "@page": {
             size: "A4",
             margin: "12mm",
-          },
-          "@media print": {
-            "html, body": {
-              background: "#fff !important",
-              margin: 0,
-              padding: 0,
-              color: "#000 !important",
-            },
-            "body *": {
-              visibility: "hidden",
-            },
-            ".invoice-print-area, .invoice-print-area *": {
-              visibility: "visible",
-              color: "#000 !important",
-            },
-            ".invoice-print-area": {
-              position: "absolute",
-              left: 0,
-              top: 0,
-              width: "100%",
-              maxWidth: "186mm",
-              margin: "0 auto",
-            },
-            ".invoice-print-area .MuiPaper-root": {
-              boxShadow: "none !important",
-              border: "1px solid #000 !important",
-              padding: "8mm !important",
-              margin: "0 auto !important",
-              backgroundColor: "#fff !important",
-            },
-            ".invoice-print-area .MuiTypography-root": {
-              color: "#000 !important",
-            },
-            ".invoice-print-area .MuiChip-root": {
-              border: "1px solid #000",
-            },
-            ".invoice-print-area table": {
-              pageBreakInside: "auto",
-              borderCollapse: "collapse",
-            },
-            ".invoice-print-area thead": {
-              display: "table-header-group",
-            },
-            ".invoice-print-area tr, .invoice-print-area td, .invoice-print-area th":
-              {
-                pageBreakInside: "avoid",
-                breakInside: "avoid",
-                borderColor: "#000 !important",
-              },
-            ".invoice-print-area .no-print": {
-              display: "none !important",
-            },
-            ".MuiDialog-root, .MuiDialog-container, .MuiBackdrop-root": {
-              position: "static !important",
-              display: "block !important",
-              background: "transparent !important",
-            },
-            ".MuiDialog-paper": {
-              maxWidth: "none !important",
-              width: "100% !important",
-              margin: "0 !important",
-              overflow: "visible !important",
-            },
           },
         }}
       />

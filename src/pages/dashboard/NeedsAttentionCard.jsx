@@ -4,6 +4,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 import WarningIcon from "@mui/icons-material/Warning";
 import InfoIcon from "@mui/icons-material/Info";
 import { supabase } from "../../lib/supabaseClient";
+import { todayISO } from "../../components/helpers/labHelpers";
 
 const severityConfig = {
   critical: { icon: <ErrorIcon />, color: "text-red-600", bg: "bg-red-50" },
@@ -18,9 +19,6 @@ export default function NeedsAttentionCard() {
     let cancelled = false;
 
     const fetchCounts = async () => {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
       const [
         { count: pendingLab },
         { count: unpaid },
@@ -38,7 +36,7 @@ export default function NeedsAttentionCard() {
           .from("queue_entries")
           .select("*", { count: "exact", head: true })
           .eq("status", "Waiting")
-          .gte("created_at", today.toISOString()),
+          .eq("queue_date", todayISO()),
       ]);
 
       if (!cancelled) {
