@@ -30,7 +30,6 @@ const DEFAULTS = {
   eosinophils: "",
   monocytes: "",
   basophils: "",
-  total: "",
 
   // times + blood type
   clottingTime: "",
@@ -43,17 +42,37 @@ export default function HematologyTemplate({
   onChange,
   readOnly = false,
   patient,
+  staff,
 }) {
   const data = useMemo(() => ({ ...DEFAULTS, ...(value || {}) }), [value]);
 
-  const p = patient || {
-    name: "DOE, JUAN",
-    age: "25",
-    sex: "M",
-    date: "01/29/26",
-    address: "SANTO TOMAS, LA UNION",
-    requestingPhysician: "DRA. VERGANIO",
-  };
+  const p = patient || {};
+  const computedTotal = useMemo(() => {
+    const fields = [
+      data.segmenters,
+      data.lymphocytes,
+      data.eosinophils,
+      data.monocytes,
+      data.basophils,
+    ]
+      .map((v) => {
+        const trimmed = String(v ?? "").trim();
+        if (!trimmed) return null;
+        const parsed = Number.parseFloat(trimmed);
+        return Number.isFinite(parsed) ? parsed : null;
+      })
+      .filter((v) => v !== null);
+
+    if (!fields.length) return "";
+
+    return fields.reduce((sum, v) => sum + v, 0).toFixed(2);
+  }, [
+    data.segmenters,
+    data.lymphocytes,
+    data.eosinophils,
+    data.monocytes,
+    data.basophils,
+  ]);
 
   const setField = (key, val) => {
     if (!onChange) return;
@@ -234,7 +253,7 @@ export default function HematologyTemplate({
               borderBottom="1px solid black"
               sx={{ minHeight: 20, fontSize: 13, px: 1 }}
             >
-              {data.total || ""}
+              {computedTotal}
             </Box>
           </Box>
         </Grid>
@@ -262,7 +281,7 @@ export default function HematologyTemplate({
       >
         <Box width="45%">
           <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            JENINA A. MACADAEG, RMT
+            {staff?.medTechName || "\u00a0"}
           </Typography>
           <Typography
             variant="body2"
@@ -270,27 +289,33 @@ export default function HematologyTemplate({
           >
             &nbsp;
           </Typography>
-          <Typography variant="caption">PRC LIC NO. 0089605</Typography>
+          <Typography variant="caption">
+            PRC LIC NO.: {staff?.medTechLic || "____________________"}
+          </Typography>
           <Typography variant="caption" display="block">
             MEDICAL TECHNOLOGIST
           </Typography>
         </Box>
 
-        <Box width="45%" textAlign="right">
-          <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            MICHAEL L. MOSTALES, MD, DPSP
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ borderTop: "1px solid", width: "85%", ml: "auto" }}
-          >
-            &nbsp;
-          </Typography>
-          <Typography variant="caption">PRC LIC NO.: 102433</Typography>
-          <Typography variant="caption" display="block">
-            PATHOLOGIST
-          </Typography>
-        </Box>
+          <Box width="45%" textAlign="right">
+            <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
+              {staff?.pathologistName && staff?.pathologistName !== staff?.medTechName
+  ? staff?.pathologistName
+  : "\u00a0"}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ borderTop: "1px solid", width: "85%", ml: "auto" }}
+            >
+              &nbsp;
+            </Typography>
+            <Typography variant="caption">
+              PRC LIC NO.: {staff?.pathologistLic || "____________________"}
+            </Typography>
+            <Typography variant="caption" display="block">
+              PATHOLOGIST
+            </Typography>
+          </Box>
       </Box>
     </Box>
   );

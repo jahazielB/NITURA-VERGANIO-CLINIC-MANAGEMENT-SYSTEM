@@ -29,7 +29,8 @@ export default function ReadyToReleaseCard({ rows, onRelease }) {
                   {r.patientName}
                 </Typography>
                 <Typography variant="caption" color="text.secondary">
-                  {r.testType} • {r.id}
+                  {r.testType} •{" "}
+                  {new Date(r.requestedDate).toLocaleDateString("en-US")}
                 </Typography>
               </Box>
 

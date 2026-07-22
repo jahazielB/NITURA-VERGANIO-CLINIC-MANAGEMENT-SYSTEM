@@ -1,5 +1,14 @@
-import { useMemo, useState } from "react";
-import { Box, Card, CardContent, Typography } from "@mui/material";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  Pagination,
+  Typography,
+  Button,
+} from "@mui/material";
+import { supabase } from "../lib/supabaseClient";
 
 import LabFilters from "../components/LabSidebar/Labfilters";
 import LabWorklistTable from "../components/LabSidebar/LabWorklistTable";
@@ -8,19 +17,42 @@ import { enrichLabItems } from "../components/helpers/labWorklistMapper";
 
 // Reuse your existing dialogs (move them to features/labs/dialogs or adjust path)
 import EnterResultsDialog from "../components/forms/EnterResultsDialog";
+import ViewLabModal from "../components/modals/ViewLabModal";
+import CustomSnackbar from "../components/modals/CustomSnackBar";
 
 // Reuse helper
 import { todayISO } from "../components/helpers/labHelpers";
-
+import { getAge } from "../components/helpers/dateHelper";
+import {
+  getLabRequests,
+  updateLabRequest,
+  deleteLabRequest,
+  subscribeToLabRequestChanges,
+} from "../services/labRequestService";
+import useDebounce from "../hooks/useDebounce";
+import seedLabData from "../services/labDataSeeder";
 export default function LaboratorySidebarPage({
   visits = [],
   patients = [],
   labItems = [],
 }) {
+  const PAGE_SIZE = 10;
   const [items, setItems] = useState(labItems.length ? labItems : []);
+  const [totalItems, setTotalItems] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const [statusFilter, setStatusFilter] = useState("All");
   const [q, setQ] = useState("");
+  const debouncedQ = useDebounce(q, 400);
+
+  const [snack, setSnack] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
+  const notify = (message, severity = "success") =>
+    setSnack({ open: true, message, severity });
 
   const [openEnter, setOpenEnter] = useState(false);
   const [openView, setOpenView] = useState(false);
@@ -31,52 +63,100 @@ export default function LaboratorySidebarPage({
     [items, visits, patients],
   );
 
+  const fetchRequests = useCallback(async () => {
+    try {
+      setLoading(true);
+      const { rows, total } = await getLabRequests({
+        page,
+        limit: PAGE_SIZE,
+        search: debouncedQ,
+        status: statusFilter,
+      });
+      setItems(rows);
+      setTotalItems(total);
+    } catch (error) {
+      notify("Failed to fetch lab requests.", "error");
+    } finally {
+      setLoading(false);
+    }
+  }, [page, debouncedQ, statusFilter]);
+
+  useEffect(() => {
+    fetchRequests();
+  }, [fetchRequests]);
+
+  const fetchRequestsRef = useRef(fetchRequests);
+  fetchRequestsRef.current = fetchRequests;
+
+  useEffect(() => {
+    const channel = subscribeToLabRequestChanges(() =>
+      fetchRequestsRef.current(),
+    );
+    return () => channel.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedQ, statusFilter]);
   const filtered = useMemo(() => {
-    const qq = q.trim().toLowerCase();
-    return enriched
-      .filter((x) =>
-        statusFilter === "All" ? true : x.status === statusFilter,
-      )
-      .filter((x) => {
-        if (!qq) return true;
-        return (
-          (x.patientName || "").toLowerCase().includes(qq) ||
-          (x.testType || "").toLowerCase().includes(qq) ||
-          (x.requestedBy || "").toLowerCase().includes(qq) ||
-          (x.requestedDate || "").includes(qq)
-        );
-      })
-      .sort((a, b) =>
+    return enriched.sort((a, b) =>
         String(b.requestedDate || "").localeCompare(
           String(a.requestedDate || ""),
         ),
       );
-  }, [enriched, statusFilter, q]);
+  }, [enriched]);
 
   const updateItem = (updated) => {
     setItems((prev) => prev.map((x) => (x.id === updated.id ? updated : x)));
   };
 
   const markProcessing = (id) => {
-    setItems((prev) =>
-      prev.map((x) => (x.id === id ? { ...x, status: "Processing" } : x)),
-    );
+    updateLabRequest(id, { status: "Processing" })
+      .then(() => {
+        notify("Status updated to Processing.");
+        setItems((prev) =>
+          prev.map((x) => (x.id === id ? { ...x, status: "Processing" } : x)),
+        );
+      })
+      .catch(() => notify("Failed to update status.", "error"));
   };
 
-  const release = (id) => {
+  const release = async (id) => {
     if (!confirm("Release this result?")) return;
-    setItems((prev) =>
-      prev.map((x) =>
-        x.id === id
-          ? {
-              ...x,
-              status: "Released",
-              releasedBy: "Doctor",
-              releasedDate: todayISO(),
-            }
-          : x,
-      ),
-    );
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      const authUserId = userData?.user?.id;
+      let profileId = null;
+      if (authUserId) {
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("id")
+          .eq("id", authUserId)
+          .maybeSingle();
+        profileId = profile?.id ?? null;
+      }
+      await updateLabRequest(id, {
+        status: "Released",
+        releasedBy: profileId,
+        releasedDate: todayISO(),
+      });
+      notify("Result released.");
+      setItems((prev) =>
+        prev.map((x) => (x.id === id ? { ...x, status: "Released" } : x)),
+      );
+    } catch {
+      notify("Failed to release result.", "error");
+    }
+  };
+
+  const handleDelete = (id) => {
+    deleteLabRequest(id)
+      .then(() => {
+        notify("Lab request deleted.");
+        if (items.length === 1 && page > 1) setPage(page - 1);
+        setItems((prev) => prev.filter((x) => x.id !== id));
+      })
+      .catch(() => notify("Failed to delete lab request.", "error"));
   };
 
   return (
@@ -98,27 +178,87 @@ export default function LaboratorySidebarPage({
         </CardContent>
       </Card>
 
-      <LabWorklistTable
-        rows={filtered}
-        showPatientColumn
-        onView={(row) => {
-          setSelected(row);
-          setOpenView(true);
-        }}
-        onEnter={(row) => {
-          setSelected(row);
-          setOpenEnter(true);
-        }}
-        onMarkProcessing={markProcessing}
-        onRelease={release}
-        onPrint={() => alert("Print lab result coming soon")}
-      />
+      {loading ? (
+        <Box className="flex justify-center py-10">
+          <CircularProgress />
+        </Box>
+      ) : (
+        <LabWorklistTable
+          rows={filtered}
+          showPatientColumn
+          onView={(row) => {
+            setSelected(row);
+            setOpenView(true);
+          }}
+          onEnter={(row) => {
+            setSelected(row);
+            setOpenEnter(true);
+          }}
+          onMarkProcessing={markProcessing}
+          onRelease={release}
+          onDelete={handleDelete}
+        />
+      )}
+
+      {totalItems > PAGE_SIZE && (
+        <Box className="flex justify-end">
+          <Pagination
+            count={Math.ceil(totalItems / PAGE_SIZE)}
+            page={page}
+            onChange={(_, value) => setPage(value)}
+            color="primary"
+          />
+        </Box>
+      )}
 
       <EnterResultsDialog
         open={openEnter}
         onClose={() => setOpenEnter(false)}
         item={selected}
         onSave={(updated) => updateItem(updated)}
+        onNotify={notify}
+        patient={{
+          name: selected?.patientName || "",
+          age: selected?.birthDate ? String(getAge(selected.birthDate)) : "",
+          sex: selected?.gender || "",
+          date: selected?.requestedDate
+            ? new Intl.DateTimeFormat("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              }).format(new Date(selected.requestedDate))
+            : "",
+          address: selected?.address || "",
+          requestingPhysician: selected?.requestedBy || "",
+        }}
+      />
+
+      <ViewLabModal
+        open={openView}
+        onClose={() => setOpenView(false)}
+        item={selected}
+        visitLabel={selected?.visitLabel || selected?.visitId || ""}
+        patient={{
+          name: selected?.patientName || "",
+          age: selected?.birthDate ? String(getAge(selected.birthDate)) : "",
+          sex: selected?.gender || "",
+          date: selected?.requestedDate
+            ? new Intl.DateTimeFormat("en-US", {
+                month: "2-digit",
+                day: "2-digit",
+                year: "numeric",
+              }).format(new Date(selected.requestedDate))
+            : "",
+          address: selected?.address || "",
+          requestingPhysician: selected?.requestedBy || "",
+        }}
+      />
+
+      <CustomSnackbar
+        open={snack.open}
+        onClose={() => setSnack((prev) => ({ ...prev, open: false }))}
+        message={snack.message}
+        severity={snack.severity}
       />
     </Box>
   );

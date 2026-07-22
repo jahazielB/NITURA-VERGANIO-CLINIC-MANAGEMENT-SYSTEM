@@ -9,6 +9,7 @@ import InvoicesTable from "../components/BillingInvoicesTable";
 import InvoiceDialog from "../components/modals/InvoiceDialog";
 import PaymentDialog from "../components/modals/PaymentDialog";
 import DailySalesReportDialog from "../components/modals/DailySalesReportDialog";
+import InvoicePrintPreviewDialog from "../components/modals/InvoicePrintPreviewDialog";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import {
@@ -34,6 +35,7 @@ export default function BillingPage({ patients: patientsProp }) {
   const [quickDate, setQuickDate] = useState("all"); // all | today | thisWee
   const [openForm, setOpenForm] = useState(false);
   const [openPay, setOpenPay] = useState(false);
+  const [openPrintPreview, setOpenPrintPreview] = useState(false);
   const [openReport, setOpenReport] = useState(false);
   const [selected, setSelected] = useState(null);
   const [searchInput, setSearchInput] = useState("");
@@ -232,7 +234,8 @@ export default function BillingPage({ patients: patientsProp }) {
   };
 
   const printInvoice = (inv) => {
-    alert(`Print invoice/receipt coming soon (Invoice #${inv.id})`);
+    setSelected(inv);
+    setOpenPrintPreview(true);
   };
 
   const sampleFetch = async () => {
@@ -315,6 +318,11 @@ export default function BillingPage({ patients: patientsProp }) {
         onClose={() => setOpenPay(false)}
         invoice={selected}
         onSave={handlePayment}
+      />
+      <InvoicePrintPreviewDialog
+        open={openPrintPreview}
+        onClose={() => setOpenPrintPreview(false)}
+        invoiceId={selected?.id}
       />
       <CustomSnackbar
         open={snackbar.open}

@@ -115,8 +115,8 @@ export default function BillingTab({ patient }) {
         amount: Number(amount),
         method,
         received_by: receivedBy,
-        paid_at: defaultVisitDateTime,
-        created_at: defaultVisitDateTime,
+        paid_at: defaultVisitDateTime(),
+        created_at: defaultVisitDateTime(),
       });
 
       if (insertError) throw insertError;
@@ -130,7 +130,6 @@ export default function BillingTab({ patient }) {
 
       if (recomputeError) throw recomputeError;
       setSnackbar({
-        ...snackbar,
         open: true,
         severity: "success",
         message: "Payment Saved!",
@@ -138,7 +137,6 @@ export default function BillingTab({ patient }) {
       dispatch(fetchPatientProfile(id));
     } catch (e) {
       setSnackbar({
-        ...snackbar,
         open: true,
         severity: "error",
         message: "Error Saving payment",

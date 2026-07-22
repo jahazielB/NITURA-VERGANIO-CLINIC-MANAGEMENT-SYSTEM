@@ -1,6 +1,6 @@
 import { Box, Chip, Stack, TextField } from "@mui/material";
 
-const STATUSES = ["All", "Pending", "Processing", "Ready", "Released"];
+const STATUSES = ["All", "Pending", "Processing", "Ready", "Released", "Cancelled"];
 
 export default function LabFilters({ q, onQChange, status, onStatusChange }) {
   return (
@@ -13,8 +13,8 @@ export default function LabFilters({ q, onQChange, status, onStatusChange }) {
         <TextField
           size="small"
           fullWidth
-          label="Search"
-          placeholder="Patient name, test type, doctor, date..."
+          label="Search Patient Name, Lab test"
+          placeholder="Search patient name"
           value={q}
           onChange={(e) => onQChange(e.target.value)}
         />

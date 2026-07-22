@@ -75,9 +75,12 @@ export default function BloodChemTemplate({
   value,
   onChange,
   readOnly = false,
+  patient,
+  staff,
 }) {
   const defaults = useMemo(() => buildDefaults(), []);
   const data = { ...defaults, ...(value || {}) };
+  const p = patient || {};
 
   const setVal = (test, field, val) => {
     if (!onChange) return;
@@ -128,22 +131,25 @@ export default function BloodChemTemplate({
       {/* Patient info lines (visual only, real values come from main dialog) */}
       <Grid container spacing={2} mb={3}>
         <Grid item xs={6}>
-          <Line label="NAME" value="PANIT, TERESITA" />
+          <Line label="NAME" value={p.name} />
         </Grid>
         <Grid item xs={2}>
-          <Line label="AGE" value="68" />
+          <Line label="AGE" value={p.age} />
         </Grid>
         <Grid item xs={2}>
-          <Line label="SEX" value="F" />
+          <Line label="SEX" value={p.sex} />
         </Grid>
         <Grid item xs={2}>
-          <Line label="DATE" value="07-29-22" />
+          <Line label="DATE" value={p.date} />
         </Grid>
         <Grid item xs={6}>
-          <Line label="ADDRESS" value="DAMORTIS, SANTO TOMAS, LA UNION" />
+          <Line label="ADDRESS" value={p.address} />
         </Grid>
         <Grid item xs={6}>
-          <Line label="REQUESTING PHYSICIAN" value="DRA. VERGANIO" />
+          <Line
+            label="REQUESTING PHYSICIAN"
+            value={p.requestingPhysician}
+          />
         </Grid>
       </Grid>
 
@@ -256,25 +262,43 @@ export default function BloodChemTemplate({
       >
         {/* LEFT SIGNATURE */}
         <Box width="45%">
+          <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
+            {staff?.medTechName || "\u00a0"}
+          </Typography>
           <Typography
             variant="body2"
             sx={{ borderTop: "1px solid", width: "70%" }}
           >
             &nbsp;
           </Typography>
-          <Typography variant="caption">MEDICAL TECHNOLOGIST</Typography>
+          <Typography variant="caption">
+            PRC LIC NO.: {staff?.medTechLic || "____________________"}
+          </Typography>
+          <Typography variant="caption" display="block">
+            MEDICAL TECHNOLOGIST
+          </Typography>
         </Box>
 
-        {/* RIGHT SIGNATURE */}
-        <Box width="45%" textAlign="right">
-          <Typography
-            variant="body2"
-            sx={{ borderTop: "1px solid", width: "70%", ml: "auto" }}
-          >
-            &nbsp;
-          </Typography>
-          <Typography variant="caption">PATHOLOGIST</Typography>
-        </Box>
+          {/* RIGHT SIGNATURE */}
+          <Box width="45%" textAlign="right">
+            <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
+              {staff?.pathologistName && staff?.pathologistName !== staff?.medTechName
+  ? staff?.pathologistName
+  : "\u00a0"}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ borderTop: "1px solid", width: "70%", ml: "auto" }}
+            >
+              &nbsp;
+            </Typography>
+            <Typography variant="caption">
+              PRC LIC NO.: {staff?.pathologistLic || "____________________"}
+            </Typography>
+            <Typography variant="caption" display="block">
+              PATHOLOGIST
+            </Typography>
+          </Box>
       </Box>
     </Box>
   );

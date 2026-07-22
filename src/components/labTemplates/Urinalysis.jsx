@@ -44,17 +44,11 @@ export default function UrinalysisTemplate({
   onChange,
   readOnly = false,
   patient,
+  staff,
 }) {
   const data = useMemo(() => ({ ...DEFAULTS, ...(value || {}) }), [value]);
 
-  const p = patient || {
-    name: "ABON, YLIZAH BETTINA",
-    age: "4",
-    sex: "F",
-    date: "10/28/23",
-    address: "NAMONITAN, SANTO TOMAS, LA UNION",
-    requestingPhysician: "DRA. VERGANIO",
-  };
+  const p = patient || {};
 
   const setField = (key, val) => {
     if (!onChange) return;
@@ -229,7 +223,7 @@ export default function UrinalysisTemplate({
       >
         <Box width="45%">
           <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            JENINA A MACADAEG, RMT
+            {staff?.medTechName || "\u00a0"}
           </Typography>
           <Typography
             variant="body2"
@@ -237,27 +231,33 @@ export default function UrinalysisTemplate({
           >
             &nbsp;
           </Typography>
-          <Typography variant="caption">PRC LIC NO. 89605</Typography>
+          <Typography variant="caption">
+            PRC LIC NO.: {staff?.medTechLic || "____________________"}
+          </Typography>
           <Typography variant="caption" display="block">
             MEDICAL TECHNOLOGIST
           </Typography>
         </Box>
 
-        <Box width="45%" textAlign="right">
-          <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
-            MICHAEL L. MOSTALES, MD, DPSP
-          </Typography>
-          <Typography
-            variant="body2"
-            sx={{ borderTop: "1px solid", width: "85%", ml: "auto" }}
-          >
-            &nbsp;
-          </Typography>
-          <Typography variant="caption">PRC LIC NO.: 102433</Typography>
-          <Typography variant="caption" display="block">
-            PATHOLOGIST
-          </Typography>
-        </Box>
+          <Box width="45%" textAlign="right">
+            <Typography sx={{ fontWeight: 800, fontSize: 12 }}>
+              {staff?.pathologistName && staff?.pathologistName !== staff?.medTechName
+  ? staff?.pathologistName
+  : "\u00a0"}
+            </Typography>
+            <Typography
+              variant="body2"
+              sx={{ borderTop: "1px solid", width: "85%", ml: "auto" }}
+            >
+              &nbsp;
+            </Typography>
+            <Typography variant="caption">
+              PRC LIC NO.: {staff?.pathologistLic || "____________________"}
+            </Typography>
+            <Typography variant="caption" display="block">
+              PATHOLOGIST
+            </Typography>
+          </Box>
       </Box>
     </Box>
   );

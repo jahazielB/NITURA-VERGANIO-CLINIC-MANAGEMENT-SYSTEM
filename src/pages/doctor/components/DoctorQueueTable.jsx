@@ -1,4 +1,5 @@
 import {
+  Button,
   Card,
   CardContent,
   Typography,
@@ -9,11 +10,7 @@ import {
   TableBody,
   Chip,
   Box,
-  Button,
-  TablePagination,
 } from "@mui/material";
-
-import { useLocation } from "react-router-dom";
 
 const statusColor = (s) => {
   if (s === "Waiting") return "warning";
@@ -22,24 +19,12 @@ const statusColor = (s) => {
   return "default";
 };
 
-export default function DoctorQueueTable({
-  rows,
-  onStart,
-  onOpenChart,
-  onDone,
-}) {
-  const location = useLocation();
+export default function DoctorQueueTable({ rows, onStart, onDone, onOpenChart }) {
   return (
     <Card className="p-2 h-full rounded-2xl shadow-2xl">
       <CardContent>
         <Box className="flex justify-between items-center mb-2">
           <Typography className="font-extrabold">My Queue Today</Typography>
-          <Typography
-            className="cursor-pointer underline"
-            onClick={() => alert("See all queue (mock)")}
-          >
-            See all
-          </Typography>
         </Box>
 
         <Table size="small">
@@ -49,7 +34,7 @@ export default function DoctorQueueTable({
               <TableCell>Time</TableCell>
               <TableCell>Reason</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
 
@@ -66,34 +51,37 @@ export default function DoctorQueueTable({
                     color={statusColor(row.status)}
                   />
                 </TableCell>
-                <TableCell align="right">
-                  <Box className="flex justify-end gap-1 flex-wrap">
-                    {/* <Button
-                      size="small"
-                      variant="outlined"
-                      onClick={() => onOpenChart(row)}
-                    >
-                      Open Chart
-                    </Button> */}
-
+                <TableCell>
+                  {row.status === "Waiting" && onStart && (
                     <Button
                       size="small"
                       variant="contained"
-                      disabled={row.status !== "Waiting"}
+                      color="primary"
                       onClick={() => onStart(row)}
                     >
-                      Start
+                      Start Consult
                     </Button>
-
+                  )}
+                  {row.status === "In Consult" && onDone && (
+                    <Button
+                      size="small"
+                      variant="contained"
+                      color="success"
+                      onClick={() => onDone(row)}
+                    >
+                      Mark Done
+                    </Button>
+                  )}
+                  {onOpenChart && (
                     <Button
                       size="small"
                       variant="outlined"
-                      disabled={row.status === "Done"}
-                      onClick={() => onDone(row)}
+                      onClick={() => onOpenChart(row)}
+                      sx={{ ml: row.status !== "Done" ? 1 : 0 }}
                     >
-                      Done
+                      Chart
                     </Button>
-                  </Box>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -108,16 +96,6 @@ export default function DoctorQueueTable({
           </TableBody>
         </Table>
       </CardContent>
-      {location.pathname === "/doctor/queue" && (
-        <TablePagination
-          component="div"
-          count={rows.length}
-          page={0}
-          rowsPerPage={10}
-          onPageChange={() => {}}
-          onRowsPerPageChange={() => {}}
-        />
-      )}
     </Card>
   );
 }

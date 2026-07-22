@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   CardContent,
+  GlobalStyles,
   MenuItem,
   TextField,
   Typography,
@@ -12,7 +13,10 @@ import SaveIcon from "@mui/icons-material/Save";
 import PrintIcon from "@mui/icons-material/Print";
 import SoapForm from "./forms/SoapForm";
 import { upperCaseFirstLetter } from "./helpers/nameHelper";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
+import { supabase } from "../lib/supabase";
+import CustomSnackbar from "./modals/CustomSnackBar";
+import clinicHeaderLogo from "../assets/HEADER-CLINIC.png";
 
 // expects visits like:
 // [{ id, date, doctor, reason, vitals: {...} }]
@@ -22,20 +26,25 @@ export default function SoapTab({ visits = [] }) {
   const [soapByVisit, setSoapByVisit] = useState({}); // { [visitId]: soapObj }
 
   const { patientInfo } = useSelector((s) => s.patientProfile);
+  const { role } = useSelector((s) => s.auth);
+  const canEditSoap = String(role || "").toLowerCase() === "doctor";
+  const roleLabel = role ? `${role} View` : "View";
 
   const visit = patientInfo?.visits;
 
   useEffect(() => {
-    if (!visit.length) return;
+    if (!visit?.length) return;
     setSelectedVisitId(visit[0]?.id);
   }, [visit]);
 
   const selectedVisit = useMemo(
-    () => visit.find((v) => v.id === selectedVisitId) || null,
+    () => visit?.find((v) => v.id === selectedVisitId) || null,
     [visit, selectedVisitId],
   );
 
   const soap = useMemo(() => {
+    const local = soapByVisit[selectedVisitId];
+    if (local) return local;
     const soapNote = selectedVisit?.soap_notes;
     return (
       soapNote?.find((s) => selectedVisitId === s.visit_id) || {
@@ -45,7 +54,7 @@ export default function SoapTab({ visits = [] }) {
         plan: "",
       }
     );
-  }, [visit, selectedVisitId]);
+  }, [visit, selectedVisitId, soapByVisit]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -58,14 +67,127 @@ export default function SoapTab({ visits = [] }) {
     }));
   };
 
-  const handleSave = () => {
-    if (!selectedVisitId) return alert("Please select a visit first.");
-    alert("SOAP saved (placeholder). Wire this to DB later.");
+  const [saving, setSaving] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, severity: "info", message: "" });
+  const [printReq, setPrintReq] = useState(0);
+
+  const showSnackbar = (severity, message) => setSnackbar({ open: true, severity, message });
+
+  const handleSave = async () => {
+    if (!canEditSoap || saving) return;
+    if (!selectedVisitId) return showSnackbar("warning", "Please select a visit first.");
+
+    const soapData = soapByVisit[selectedVisitId] || soap;
+    if (!soapData) return showSnackbar("warning", "Nothing to save.");
+
+    setSaving(true);
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        showSnackbar("error", "Unable to save SOAP.");
+        return;
+      }
+
+      const { data: existing } = await supabase
+        .from("soap_notes")
+        .select("id")
+        .eq("visit_id", selectedVisitId)
+        .maybeSingle();
+
+      let result;
+      if (existing) {
+        result = await supabase
+          .from("soap_notes")
+          .update({
+            subjective: soapData.subjective,
+            objective: soapData.objective,
+            assessment: soapData.assessment,
+            plan: soapData.plan,
+            updated_by: user.id,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", existing.id)
+          .select()
+          .single();
+      } else {
+        result = await supabase
+          .from("soap_notes")
+          .insert({
+            visit_id: selectedVisitId,
+            subjective: soapData.subjective,
+            objective: soapData.objective,
+            assessment: soapData.assessment,
+            plan: soapData.plan,
+            created_by: user.id,
+            updated_by: user.id,
+          })
+          .select()
+          .single();
+      }
+
+      if (result.error) throw result.error;
+      setSoapByVisit((prev) => ({ ...prev, [selectedVisitId]: result.data }));
+      showSnackbar("success", "SOAP notes saved successfully.");
+    } catch (err) {
+      console.error("Failed to save SOAP:", err);
+      showSnackbar("error", "Unable to save SOAP.");
+    } finally {
+      setSaving(false);
+    }
   };
 
+  useEffect(() => {
+    if (printReq) {
+      const printArea = document.querySelector(".soap-tab-print-area");
+      if (!printArea) { setPrintReq(0); return; }
+
+      const styles = document.querySelectorAll("style, link[rel='stylesheet']");
+      let stylesHtml = "";
+      styles.forEach((s) => (stylesHtml += s.outerHTML));
+
+      const clone = printArea.cloneNode(true);
+      clone.querySelectorAll("img").forEach((img) => {
+        if (img.src && !img.src.startsWith("http")) {
+          img.src = new URL(img.src, window.location.origin).href;
+        }
+      });
+
+      const win = window.open("", "_blank");
+      if (!win) { setPrintReq(0); return; }
+
+      win.document.write(`
+        <html>
+          <head>
+            ${stylesHtml}
+            <style>
+              @page { size: A4 portrait; margin: 15mm; }
+              html, body { margin: 0; padding: 0; background: #fff; width: 100%; }
+              * { color: #000 !important; }
+              .MuiCard-root { box-shadow: none !important; border: 1px solid #000 !important; padding: 7mm !important; }
+              .MuiTypography-root { font-size: 12px !important; }
+              img { max-height: 70px !important; object-fit: contain; }
+            </style>
+          </head>
+          <body>${clone.innerHTML}</body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+      setTimeout(() => win.print(), 300);
+      setPrintReq(0);
+    }
+  }, [printReq]);
+
   const handlePrint = () => {
-    alert("Print SOAP feature coming soon");
+    if (!selectedVisitId) return;
+    setPrintReq((p) => p + 1);
   };
+
+  const patientName = patientInfo
+    ? [patientInfo.first_name, patientInfo.middle_name, patientInfo.last_name].filter(Boolean).join(" ")
+    : "";
 
   return (
     <Box className="space-y-4">
@@ -113,9 +235,9 @@ export default function SoapTab({ visits = [] }) {
               variant="contained"
               startIcon={<SaveIcon />}
               onClick={handleSave}
-              disabled={!selectedVisitId}
+              disabled={!selectedVisitId || !canEditSoap || saving}
             >
-              Save
+              {saving ? "Saving..." : "Save"}
             </Button>
 
             <Button
@@ -174,18 +296,72 @@ export default function SoapTab({ visits = [] }) {
                 variant="caption"
                 className="bg-slate-100 px-2 py-1 rounded-md"
               >
-                Admin View
+                {roleLabel}
               </Typography>
             </Box>
 
             <SoapForm
               soap={soap}
               onChange={handleChange}
-              readOnly={true} // 🔥 admin mode
+              readOnly={!canEditSoap}
             />
           </CardContent>
         </Card>
       )}
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
+
+      <GlobalStyles
+        styles={{
+          "@page": { size: "A4", margin: "12mm" },
+        }}
+      />
+
+      <Box className="soap-tab-print-area" sx={{ display: "none" }}>
+        <Card sx={{ p: 3, mb: 2 }}>
+          <Box textAlign="center" mb={2}>
+            <img src={clinicHeaderLogo} alt="Clinic Header" style={{ maxWidth: "100%", height: "auto" }} />
+          </Box>
+          <Box mb={2}>
+            <PrintLine label="PATIENT" value={patientName} />
+            <PrintLine label="DATE" value={selectedVisit?.created_at ? new Date(selectedVisit.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : ""} />
+            <PrintLine label="DOCTOR" value={selectedVisit?.doctor?.full_name || ""} />
+            <PrintLine label="CHIEF COMPLAINT" value={selectedVisit?.chief_complaint || ""} />
+          </Box>
+          {soap && (soap.subjective || soap.objective || soap.assessment || soap.plan) && (
+            <Box>
+              <PrintSection title="S — Subjective" content={soap.subjective} />
+              <PrintSection title="O — Objective" content={soap.objective} />
+              <PrintSection title="A — Assessment" content={soap.assessment} />
+              <PrintSection title="P — Plan" content={soap.plan} />
+            </Box>
+          )}
+        </Card>
+      </Box>
+    </Box>
+  );
+}
+
+function PrintLine({ label, value }) {
+  return (
+    <Box display="flex" gap={1} alignItems="flex-end" mb={0.5}>
+      <Typography sx={{ fontWeight: 700, fontSize: 13, minWidth: 160 }}>{label}:</Typography>
+      <Box flex={1} borderBottom="1px solid black" sx={{ fontSize: 13, px: 0.5, minHeight: 18 }}>{value || ""}</Box>
+    </Box>
+  );
+}
+
+function PrintSection({ title, content }) {
+  return (
+    <Box mb={2}>
+      <Typography sx={{ fontWeight: 700, fontSize: 14, color: "text.primary" }} gutterBottom>{title}</Typography>
+      <Box sx={{ whiteSpace: "pre-wrap", fontSize: 14, lineHeight: 1.6, p: 1.5, border: "1px solid #ccc", borderRadius: 1 }}>
+        {content || "—"}
+      </Box>
     </Box>
   );
 }

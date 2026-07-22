@@ -1,6 +1,6 @@
 import Login from "../pages/Login";
 import DashboardPage from "../pages/Dashboard";
-import Patients from "../pages/patients";
+import Patients from "../pages/Patients";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import AdminLayout from "../layout/AdminLayout";
 import PatientProfilePage from "../pages/PatientProfilePage";
@@ -74,7 +74,7 @@ export default function Router() {
         <Route element={<ProtectedRoute allowRoles={["Nurse"]} />}>
           <Route path="/Nurse" element={<AdminLayout />}>
             <Route path="dashboard" element={<NurseDashboardPage />} />
-            <Route path="queue" element={<NurseQueuePage />} />
+            <Route path="queue" element={<AppointmentsPage />} />
             <Route path="patients" element={<NursePatientsPage />} />
             <Route path="patients/:id" element={<PatientProfilePage />} />
           </Route>

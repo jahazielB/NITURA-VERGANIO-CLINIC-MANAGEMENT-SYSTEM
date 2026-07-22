@@ -1,4 +1,4 @@
-import { Card, CardContent, Typography, Box } from "@mui/material";
+import { Card, CardContent, Typography, Box, CircularProgress } from "@mui/material";
 
 export default function MedTechStatCard({
   title,
@@ -6,6 +6,7 @@ export default function MedTechStatCard({
   icon,
   iconBg = "bg-blue-100",
   iconColor = "text-blue-700",
+  loading = false,
 }) {
   return (
     <Card className="w-full">
@@ -15,9 +16,13 @@ export default function MedTechStatCard({
           <Typography variant="body2" color="textSecondary">
             {title}
           </Typography>
-          <Typography variant="h5" className="font-bold">
-            {value}
-          </Typography>
+          {loading ? (
+            <CircularProgress size={20} sx={{ mt: 0.5 }} />
+          ) : (
+            <Typography variant="h5" className="font-bold">
+              {value}
+            </Typography>
+          )}
         </Box>
       </CardContent>
     </Card>

@@ -24,8 +24,7 @@ export const fetchPatientProfile = createAsyncThunk(
             soap_notes(*),
             lab_requests(
               *,
-              lab_result_items(*),
-              lab_services(*)
+              lab_result_items(*)
             ),
             prescription_orders(
               *, doctor:user_profiles (

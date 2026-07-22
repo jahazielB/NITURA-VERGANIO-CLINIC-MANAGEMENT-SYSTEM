@@ -1,37 +1,51 @@
-import { Box, Button, TextField, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, TextField, Typography } from "@mui/material";
 
 import { useNavigate } from "react-router-dom";
-import { signIn } from "../../auth/auth";
-import { supabase } from "../../lib/supabaseClient";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
 import { login } from "../../store/authSlice";
+import { store } from "../../store/store";
+import CustomSnackbar from "../modals/CustomSnackBar";
 export default function LoginForm() {
   const [loginCredentials, setLoginCredentials] = useState({
     Email: "",
     Password: "",
   });
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "error",
+  });
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { role } = useSelector((s) => s.auth);
   const handleLogin = async (e) => {
     try {
       e.preventDefault();
+      if (loading) return;
+      setLoading(true);
       await dispatch(
         login({
           email: loginCredentials.Email,
           password: loginCredentials.Password,
         }),
       ).unwrap();
-      // const { data: sessRes, error: sessError } =
-      //   await supabase.auth.getSession();
-      // if (sessError) throw sessError;
 
-      // const user = sessRes?.data.user ?? null;
-
-      navigate(`/`);
+      const { role } = store.getState().auth;
+      navigate(`/${role}/dashboard`);
     } catch (e) {
-      console.error(e.message);
+      const message =
+        typeof e === "string"
+          ? e
+          : e?.message || "Unable to sign in. Please contact an administrator.";
+      console.error(message);
+      setSnackbar({
+        open: true,
+        message,
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -51,6 +65,7 @@ export default function LoginForm() {
         fullWidth
         required
         margin="normal"
+        disabled={loading}
         onChange={(e) =>
           setLoginCredentials((prev) => ({
             ...prev,
@@ -65,6 +80,7 @@ export default function LoginForm() {
         fullWidth
         required
         margin="normal"
+        disabled={loading}
         onChange={(e) =>
           setLoginCredentials((prev) => ({
             ...prev,
@@ -78,10 +94,19 @@ export default function LoginForm() {
         variant="contained"
         fullWidth
         size="large"
+        disabled={loading}
         sx={{ mt: 3, py: 1.3 }}
       >
-        Login
+        {loading ? <CircularProgress size={22} color="inherit" sx={{ mr: 1 }} /> : null}
+        {loading ? "Logging in..." : "Login"}
       </Button>
+
+      <CustomSnackbar
+        open={snackbar.open}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        message={snackbar.message}
+        severity={snackbar.severity}
+      />
     </Box>
   );
 }

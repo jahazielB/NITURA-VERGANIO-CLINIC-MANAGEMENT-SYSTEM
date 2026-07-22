@@ -1,5 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { supabase } from "../lib/supabaseClient";
+import {
+  markUserLoggedIn,
+  markUserLoggedOut,
+  signIn,
+  signOut,
+} from "../auth/auth";
 
 export const initializeAuth = createAsyncThunk(
   "auth/init",
@@ -7,10 +13,11 @@ export const initializeAuth = createAsyncThunk(
     try {
       const { data: sessRes, error: sessError } =
         await supabase.auth.getSession();
-      if (sessError) throw sessError;
+      if (sessError || !sessRes?.session?.user) {
+        return { user: null, role: null, userName: null };
+      }
 
-      const user = sessRes?.session.user ?? null;
-      if (!user) return { user: null, role: null };
+      const user = sessRes.session.user;
 
       const { data: prof, error: profErr } = await supabase
         .from("user_profiles")
@@ -18,11 +25,13 @@ export const initializeAuth = createAsyncThunk(
         .eq("id", user.id)
         .maybeSingle();
 
-      if (profErr) throw profErr;
+      if (profErr || !prof) {
+        return { user: null, role: null, userName: null };
+      }
 
       return { user, role: prof?.role ?? null, userName: prof.full_name };
     } catch (e) {
-      return rejectWithValue(e.message);
+      return { user: null, role: null, userName: null };
     }
   },
 );
@@ -30,11 +39,35 @@ export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }, { dispatch, rejectWithValue }) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
+      const data = await signIn(email, password);
+      const userId = data?.user?.id ?? data?.session?.user?.id;
+
+      const { data: profile, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("is_active, full_name")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (profileError) throw profileError;
+
+      if (profile?.is_active === false) {
+        // Disabled users are signed out immediately so they cannot continue
+        // into the app with a valid Supabase session.
+        await supabase.auth.signOut();
+        dispatch(clearAuthState());
+        throw new Error(
+          "This account has been disabled. Please contact an administrator.",
+        );
+      }
+
+      // Track this login session after auth succeeds without changing the
+      // existing sign-in flow or blocking the user if profile tracking fails.
+      const sessionId =
+        globalThis.crypto?.randomUUID?.() ??
+        `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+      if (userId) {
+        await markUserLoggedIn(userId, sessionId);
+      }
 
       // After login, load session + role into Redux
       await dispatch(initializeAuth()).unwrap();
@@ -48,8 +81,16 @@ export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // Best-effort session tracking cleanup before sign out.
+      // If getUser() fails (invalid/expired JWT), skip cleanup and proceed.
+      const { data: userRes, error: userErr } =
+        await supabase.auth.getUser();
+      const userId = !userErr ? userRes?.user?.id : null;
+      if (userId) {
+        await markUserLoggedOut(userId);
+      }
+
+      await signOut();
       return true;
     } catch (e) {
       return rejectWithValue(e.message);
@@ -67,8 +108,13 @@ const authSlice = createSlice({
     error: true,
   },
   reducers: {
-    // setUser: (state, action) => {},
-    // logOut: (state, action) => {},
+    clearAuthState: (state) => {
+      state.user = null;
+      state.role = null;
+      state.userName = null;
+      state.loading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -109,5 +155,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setUser, logOut } = authSlice.actions;
+export const { clearAuthState } = authSlice.actions;
 export default authSlice.reducer;

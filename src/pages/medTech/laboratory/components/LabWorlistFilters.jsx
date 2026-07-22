@@ -7,7 +7,7 @@ import {
   Box,
   Chip,
 } from "@mui/material";
-import { LAB_STATUS, LAB_PRIORITY, todayISO } from "./LabWorklistHelpers";
+import { LAB_STATUS, LAB_PRIORITY } from "./LabWorklistHelpers";
 
 export default function LabWorklistFilters({
   q,
@@ -16,14 +16,12 @@ export default function LabWorklistFilters({
   setStatus,
   priority,
   setPriority,
-  quickDate,
-  setQuickDate,
 }) {
   return (
     <Card className="rounded-2xl shadow">
       <CardContent>
         <Grid container spacing={2} alignItems="flex-start">
-          <Grid item xs={12} md={6}>
+          <Grid item xs={12} md={8}>
             <TextField
               label="Search"
               size="small"
@@ -34,25 +32,7 @@ export default function LabWorklistFilters({
             />
           </Grid>
 
-          <Grid item xs={12} md={3}>
-            <TextField
-              select
-              label="Status"
-              size="small"
-              fullWidth
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-            >
-              <MenuItem value="All">All</MenuItem>
-              {LAB_STATUS.map((s) => (
-                <MenuItem key={s} value={s}>
-                  {s}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} md={3}>
+          <Grid item xs={12} md={4}>
             <TextField
               select
               label="Priority"
@@ -70,22 +50,7 @@ export default function LabWorklistFilters({
             </TextField>
           </Grid>
 
-          <Grid item xs={12} md={3}>
-            <TextField
-              select
-              label="Date Filter"
-              size="small"
-              fullWidth
-              value={quickDate}
-              onChange={(e) => setQuickDate(e.target.value)}
-              helperText={`Today: ${todayISO()}`}
-            >
-              <MenuItem value="all">All Dates</MenuItem>
-              <MenuItem value="today">Today</MenuItem>
-            </TextField>
-          </Grid>
-
-          <Grid item xs={12} md={9}>
+          <Grid item xs={12}>
             <Box className="flex flex-wrap gap-1.5">
               <Chip
                 size="small"
